@@ -1,0 +1,173 @@
+import { Fragment, useEffect, useRef, useState } from 'react'
+import type { Project, ProjectKey } from '../content'
+import { BRAND, projectByKey } from '../content'
+import { Placeholder } from './Placeholder'
+import { Rich } from './Rich'
+
+interface DetailOverlayProps {
+  openKey: ProjectKey | null
+  onClose: () => void
+  onOpen: (key: ProjectKey) => void
+}
+
+/**
+ * Full-screen detail layer that slides up from translateY(100%). Both projects
+ * share one overlay; the active article persists through the close animation so
+ * the slide-down stays populated.
+ */
+export function DetailOverlay({ openKey, onClose, onOpen }: DetailOverlayProps) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [activeKey, setActiveKey] = useState<ProjectKey | null>(null)
+  const open = openKey !== null
+
+  useEffect(() => {
+    if (openKey) {
+      setActiveKey(openKey)
+      if (ref.current) ref.current.scrollTop = 0
+    }
+  }, [openKey])
+
+  const project = activeKey ? projectByKey[activeKey] : null
+
+  return (
+    <div className={`overlay${open ? ' open' : ''}`} ref={ref} aria-hidden={!open} inert={!open}>
+      <div className="backbar">
+        <button className="backbtn" data-cursor onClick={onClose}>
+          <span className="accent">←</span> 返回 BACK
+        </button>
+        <div className="mark">
+          <span className="ring" />
+          {BRAND}
+        </div>
+      </div>
+      {project ? <DetailArticle project={project} onClose={onClose} onOpen={onOpen} /> : null}
+    </div>
+  )
+}
+
+function DetailArticle({
+  project,
+  onClose,
+  onOpen,
+}: {
+  project: Project
+  onClose: () => void
+  onOpen: (key: ProjectKey) => void
+}) {
+  const other: ProjectKey = project.key === 'aviso' ? 'xiaoyi' : 'aviso'
+
+  return (
+    <div className="detail-wrap">
+      <div className="detail-eyebrow" style={{ color: project.accent }}>
+        <span className="cdot" style={{ background: project.accent }} />
+        {project.detailEyebrow}
+      </div>
+
+      <h1 className="detail-title">{project.name}</h1>
+      <div className="detail-sub" style={{ color: project.accent }}>
+        {project.detailSubtitle}
+      </div>
+
+      <p className="detail-lead">
+        <Rich value={project.lead} />
+      </p>
+
+      <div className="detail-meta">
+        {project.meta.map((m) => (
+          <div className="meta-item" key={m.k}>
+            <div className="k">{m.k}</div>
+            <div className="v">{m.v}</div>
+          </div>
+        ))}
+      </div>
+
+      <Placeholder
+        className="detail-cover"
+        large
+        caption={project.coverCaption}
+        swatch={project.accent}
+      />
+
+      <section className="detail-section">
+        <div className="overview-grid">
+          <div>
+            <div className="sec-kicker">01 / 概述</div>
+            <h3 className="overview-title">
+              {project.overviewTitle.map((line, i) => (
+                <Fragment key={i}>
+                  {line}
+                  {i < project.overviewTitle.length - 1 ? <br /> : null}
+                </Fragment>
+              ))}
+            </h3>
+          </div>
+          <div className="overview-body">
+            {project.overviewBody.map((para, i) => (
+              <p key={i}>
+                <Rich value={para} />
+              </p>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="detail-section">
+        <div className="sec-kicker">{project.listKicker}</div>
+        <ol className="feature-list">
+          {project.features.map((f) => (
+            <li className="feature" key={f.no}>
+              <span className="no" style={{ color: project.accent }}>
+                {f.no}
+              </span>
+              <div>
+                <h4>{f.title}</h4>
+                <p>{f.desc}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section className="detail-section">
+        <div className="sec-kicker">{project.galleryKicker}</div>
+        <div className="gallery-grid">
+          {project.gallery.map((g, i) => (
+            <Placeholder
+              key={i}
+              className={g.wide ? 'wide' : undefined}
+              style={{ aspectRatio: g.aspect }}
+              caption={g.caption}
+            />
+          ))}
+        </div>
+      </section>
+
+      <div className="detail-footer">
+        {project.externalUrl ? (
+          <a
+            className="visit"
+            data-cursor
+            href={project.externalUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ borderBottomColor: project.accent }}
+          >
+            {project.externalLabel} <span style={{ color: project.accent }}>→</span>
+          </a>
+        ) : (
+          <button
+            className="visit"
+            data-cursor
+            onClick={onClose}
+            style={{ borderBottomColor: project.accent, cursor: 'pointer' }}
+          >
+            <span style={{ color: project.accent }}>←</span> 返回作品集 BACK
+          </button>
+        )}
+        <button className="nextlink" data-cursor onClick={() => onOpen(other)}>
+          {project.key === 'aviso' ? '下一个项目 — 小姨家 →' : '上一个项目 — Aviso →'}
+        </button>
+      </div>
+    </div>
+  )
+}
