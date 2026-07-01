@@ -1,9 +1,11 @@
 import { createContext, useContext } from 'react'
 import type { ProjectKey } from './content'
+import type { LightboxData } from './components/Lightbox'
 
 export interface PortfolioCtx {
   openDetail: (key: ProjectKey) => void
   closeDetail: () => void
+  openLightbox: (data: LightboxData) => void
   isMobile: boolean
 }
 

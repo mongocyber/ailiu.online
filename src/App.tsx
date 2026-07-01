@@ -4,7 +4,8 @@ import type { ProjectKey } from './content'
 import { Cursor } from './components/Cursor'
 import { DetailOverlay } from './components/DetailOverlay'
 import { Gallery } from './components/Gallery'
-import { VectorField } from './components/VectorField'
+import type { LightboxData } from './components/Lightbox'
+import { Lightbox } from './components/Lightbox'
 import { useMediaQuery } from './hooks/useMediaQuery'
 import { PortfolioContext } from './portfolio-context'
 
@@ -12,9 +13,11 @@ export default function App() {
   const isMobile = useMediaQuery('(max-width: 820px)')
   const fine = useMediaQuery('(hover: hover) and (pointer: fine)')
   const [detailKey, setDetailKey] = useState<ProjectKey | null>(null)
+  const [lightbox, setLightbox] = useState<LightboxData | null>(null)
 
   const openDetail = useCallback((key: ProjectKey) => setDetailKey(key), [])
   const closeDetail = useCallback(() => setDetailKey(null), [])
+  const openLightbox = useCallback((data: LightboxData) => setLightbox(data), [])
 
   // Progressive-enhancement flag — gates the reveal-hiding CSS.
   useEffect(() => {
@@ -46,8 +49,8 @@ export default function App() {
   }, [detailKey, isMobile])
 
   const ctx = useMemo(
-    () => ({ openDetail, closeDetail, isMobile }),
-    [openDetail, closeDetail, isMobile],
+    () => ({ openDetail, closeDetail, openLightbox, isMobile }),
+    [openDetail, closeDetail, openLightbox, isMobile],
   )
 
   const appClass = ['app', isMobile ? 'is-mobile' : 'is-desktop', fine ? 'cursor-hidden' : '']
@@ -57,9 +60,9 @@ export default function App() {
   return (
     <PortfolioContext.Provider value={ctx}>
       <div className={appClass}>
-        <VectorField />
         <Gallery isMobile={isMobile} detailOpen={detailKey !== null} />
         <DetailOverlay openKey={detailKey} onClose={closeDetail} onOpen={openDetail} />
+        <Lightbox data={lightbox} onClose={() => setLightbox(null)} />
         {fine ? <Cursor /> : null}
       </div>
     </PortfolioContext.Provider>

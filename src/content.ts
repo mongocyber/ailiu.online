@@ -1,7 +1,6 @@
 // =============================================================================
 // Site content. Edit text here — components read from this single source.
-// Placeholders (name / email / wechat / images) are intentionally generic;
-// replace them with real details and assets when ready.
+// Edit project text and asset paths here; components read from this single source.
 // =============================================================================
 
 export type ProjectKey = 'aviso' | 'xiaoyi'
@@ -30,6 +29,8 @@ export interface GalleryItem {
   aspect: string
   /** Spans both columns on desktop. */
   wide?: boolean
+  /** Real image under /public. Omit to render a striped fallback. */
+  src?: string
 }
 
 export interface Project {
@@ -47,7 +48,9 @@ export interface Project {
   subtitle: string // mono tagline on the card
   desc: RichText
   tags?: string[]
-  cover: string // placeholder caption on the card
+  cover: string // fallback caption on the card
+  coverImage?: string // real image for the card; omit to render a striped fallback
+  coverAspect?: string // CSS aspect-ratio for real card images; falls back to the default product render ratio
 
   // -- detail overlay --
   detailEyebrow: string // e.g. 'WORK 01 · CHROME EXTENSION'
@@ -55,6 +58,8 @@ export interface Project {
   lead: RichText
   meta: MetaItem[]
   coverCaption: string
+  detailCoverImage?: string // real image for the detail cover; omit for a striped fallback
+  detailCoverAspect?: string // CSS aspect-ratio for real detail cover images
   overviewTitle: string[] // each entry = one line
   overviewBody: RichText[]
   listKicker: string // '02 / 核心功能' | '02 / 品牌交付'
@@ -73,7 +78,7 @@ export const hero = {
   titleLines: ['Design.', 'Build.'],
   titleAccent: 'Create.',
   lead: '我是一名设计师与 AI Builder。把模糊的想法，做成有设计感、能运行的真实产品 —— 从品牌视觉到 AI 工具。',
-  coords: ['47.6°N  VECTOR FIELD', 'FLOW · INTERACTIVE', 'v 1.0 — 2026'],
+  coords: ['47.6°N  PORTFOLIO SITE', 'DESIGN · BUILD', 'v 1.0 — 2026'],
 }
 
 export const about = {
@@ -96,9 +101,8 @@ export const contact = {
   titleAccent: 'something good.',
   lead: '有想法、想合作，或只是想聊聊设计与 AI —— 随时找我。更多项目正在路上。',
   links: [
-    { label: 'EMAIL', value: 'hello@ailiu.online', href: 'mailto:hello@ailiu.online' },
+    { label: 'EMAIL', value: 'liuliu8765@gmail.com', href: 'mailto:liuliu8765@gmail.com' },
     { label: 'GITHUB', value: '@mongocyber', href: 'https://github.com/mongocyber' },
-    { label: 'WECHAT', value: 'your_id', href: '#' },
   ],
   footerLeft: '© 2026 — 个人作品集',
   footerRight: 'DESIGNED & BUILT WITH AI',
@@ -117,7 +121,9 @@ export const projects: Project[] = [
       text: '一个在你正看的网页里就地调用 AI 的 Chrome 扩展。快捷键唤起命令面板，解释、翻译、润色、总结，结果浮在原文旁边 —— 不跳转、不复制粘贴。BYOK 默认直连模型厂商，隐私边界写进实现本身。',
     },
     tags: ['命令面板', '划词工具栏', '右键菜单', 'BYOK 直连'],
-    cover: '产品界面 · IMAGE PLACEHOLDER',
+    cover: '产品界面',
+    coverImage: '/aviso/aviso-product.jpg',
+    coverAspect: '1512 / 1120',
     detailEyebrow: 'WORK 01 · CHROME EXTENSION',
     detailSubtitle: 'In-page AI, on your terms.',
     lead: {
@@ -129,7 +135,8 @@ export const projects: Project[] = [
       { k: 'PLATFORM', v: 'Chrome 桌面版' },
       { k: 'STATUS', v: '内部试用 · v0.3' },
     ],
-    coverCaption: '命令面板 / 划词工具栏主视图 · COVER PLACEHOLDER',
+    coverCaption: '命令面板 / 划词工具栏主视图',
+    detailCoverImage: '/aviso/aviso-detail.jpg',
     overviewTitle: ['把 AI 放回', '你需要它的', '那一刻'],
     overviewBody: [
       {
@@ -164,9 +171,9 @@ export const projects: Project[] = [
     ],
     galleryKicker: '03 / 界面一览',
     gallery: [
-      { caption: '命令面板 · placeholder', aspect: '4 / 3' },
-      { caption: '页面内浮窗 · placeholder', aspect: '4 / 3' },
-      { caption: '模型配置 / 隐私设置 · placeholder', aspect: '16 / 9', wide: true },
+      { caption: '命令面板', aspect: '1448 / 1086', src: '/aviso/aviso-command-panel.png' },
+      { caption: '页面内浮窗', aspect: '1448 / 1086', src: '/aviso/aviso-chat-dialog.png' },
+      { caption: '模型配置 / 隐私设置', aspect: '1672 / 941', wide: true, src: '/aviso/aviso-model-privacy.png' },
     ],
     externalUrl: 'https://aviso-nine.vercel.app/',
     externalLabel: '访问官网 VISIT SITE',
@@ -181,45 +188,50 @@ export const projects: Project[] = [
     subtitle: 'XIAO YI JIA — TASTE OF HOME',
     desc: {
       text: '一个从 0 到 1 的餐饮品牌创业项目。围绕「家的味道」展开 —— 从命名、logo、视觉系统到空间与包装，建立一套温暖、可被记住的品牌语言。',
-      muted: '（项目介绍占位，更多细节与成片即将补充。）',
     },
-    cover: '品牌主视觉 · IMAGE PLACEHOLDER',
+    cover: '品牌主视觉',
+    coverImage: '/xiaoyi/xiaoyi-cover.png',
+    coverAspect: '1512 / 1120',
     detailEyebrow: 'WORK 02 · F&B BRAND',
     detailSubtitle: 'Xiao Yi Jia — taste of home.',
     lead: {
       text: '一个从 0 到 1 的餐饮品牌创业项目，围绕「家的味道」展开。把熟悉、温暖、可被记住的体验，变成一套能落地的品牌语言。',
-      muted: '（以下为内容占位，正式文案、成片与照片即将补充。）',
     },
     meta: [
       { k: 'ROLE', v: '品牌 / 视觉设计' },
       { k: 'YEAR', v: '2024' },
       { k: 'TYPE', v: '品牌系统' },
-      { k: 'STATUS', v: '进行中 · 占位' },
+      { k: 'STATUS', v: '已结束' },
     ],
-    coverCaption: '品牌主视觉 / logo 应用 · COVER PLACEHOLDER',
+    coverCaption: '品牌主视觉 / logo 应用',
+    detailCoverImage: '/xiaoyi/xiaoyi-detail-cover.png',
+    detailCoverAspect: '1686 / 933',
     overviewTitle: ['从一个名字，', '到一种', '被记住的味道'],
     overviewBody: [
       {
         text: '「小姨家」想传达的是一种亲近感 —— 像去亲戚家吃饭那样，自在、热乎、不拘束。品牌的所有决定都围绕这一句感受展开。',
-        muted: '（占位文案。）',
       },
       {
         text: '从命名、标志、色彩与字体，到菜单、包装与空间，建立一套统一而有温度的视觉系统，让顾客在每个触点都能认出它。',
-        muted: '（占位文案。）',
       },
     ],
     listKicker: '02 / 品牌交付',
     features: [
-      { no: '01', title: '命名与标志', desc: '品牌命名、中英文标志与辅助图形系统。（占位）' },
-      { no: '02', title: '色彩与字体', desc: '温暖基调的主色与字体规范，统一线上线下。（占位）' },
-      { no: '03', title: '菜单与包装', desc: '菜单版式、外卖与堂食包装的视觉应用。（占位）' },
-      { no: '04', title: '空间与导视', desc: '门店空间氛围与导视系统设计。（占位）' },
+      { no: '01', title: '命名与标志', desc: '品牌命名、中英文标志与辅助图形系统。' },
+      { no: '02', title: '色彩与字体', desc: '温暖基调的主色与字体规范，统一线上线下。' },
+      { no: '03', title: '菜单与包装', desc: '菜单版式、外卖与堂食包装的视觉应用。' },
+      { no: '04', title: '空间与导视', desc: '门店空间氛围与导视系统设计。' },
     ],
     galleryKicker: '03 / 视觉一览',
     gallery: [
-      { caption: '主视觉海报 · placeholder', aspect: '16 / 9', wide: true },
-      { caption: '包装应用 · placeholder', aspect: '4 / 3' },
-      { caption: '菜单 / 物料 · placeholder', aspect: '4 / 3' },
+      {
+        caption: '主视觉海报 / KEY VISUAL',
+        aspect: '1686 / 933',
+        wide: true,
+        src: '/xiaoyi/xiaoyi-main-visual.png',
+      },
+      { caption: '包装应用 / PACKAGING', aspect: '4 / 3', src: '/xiaoyi/xiaoyi-packaging.png' },
+      { caption: '菜单 / 物料 / MENU', aspect: '4 / 3', src: '/xiaoyi/xiaoyi-menu-materials.png' },
     ],
   },
 ]

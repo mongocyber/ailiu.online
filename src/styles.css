@@ -2,7 +2,7 @@
    Design tokens — values are pinned from the high-fidelity handoff.
    ========================================================================== */
 :root {
-  --bg: #f2f0ea;
+  --bg: #ffffff;
   --ink: #1a180f;
   --ink-2: #2e2c24;
   --ink-soft: #3a382f;
@@ -14,7 +14,7 @@
   --line: #d8d4c8;
   --line-2: #cdc8bb;
   --line-3: #d2cdc0;
-  --line-bar: #e2ded3;
+  --line-bar: #e8e8e8;
   --accent: #2d2bd4;
 
   --ph-a: #e6e2d8;
@@ -125,17 +125,6 @@ a {
 }
 .app.is-mobile {
   min-height: 100svh;
-}
-
-/* canvas vector field */
-.vfield {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  display: block;
-  pointer-events: none;
 }
 
 /* hide native cursor when the custom cursor is active */
@@ -380,7 +369,8 @@ a {
   font-weight: 800;
   font-size: clamp(54px, 12vw, 182px);
   line-height: 0.9;
-  letter-spacing: -0.035em;
+  /* slightly open tracking — at this weight the g/n in "Design" merge when tight */
+  letter-spacing: 0.02em;
 }
 .hero-lead {
   margin: clamp(26px, 4vh, 46px) 0 0;
@@ -508,6 +498,11 @@ a {
 .work-grid--imgleft .work-imgwrap {
   order: 1;
 }
+@media (min-width: 821px) {
+  .work-grid--imgleft .work-text {
+    padding-left: clamp(28px, 3vw, 72px);
+  }
+}
 .work-eyebrow {
   display: flex;
   align-items: center;
@@ -632,6 +627,69 @@ a {
 .work-img {
   height: min(62vh, 560px);
 }
+.work-photo,
+.detail-cover-photo {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 1px solid var(--line);
+  background: var(--ph-bg);
+  overflow: hidden;
+  cursor: pointer;
+}
+.work-photo {
+  aspect-ratio: 1626 / 967; /* matches aviso-product.jpg — show the full render, no crop */
+}
+.detail-cover-photo {
+  margin-top: clamp(40px, 6vh, 72px);
+  aspect-ratio: 1529 / 1028; /* matches aviso-detail.jpg — show the full render, no crop */
+}
+.work-photo img,
+.detail-cover-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.55s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.work-photo:hover img,
+.work-photo:focus-visible img,
+.detail-cover-photo:hover img,
+.detail-cover-photo:focus-visible img {
+  transform: scale(1.04);
+}
+
+/* Shared zoom badge for clickable photos (card cover + detail cover). */
+.photo-zoom {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  color: var(--ink);
+  background: rgba(242, 240, 234, 0.86);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 0;
+  transform: translateY(-4px);
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+  pointer-events: none;
+}
+.work-photo:hover .photo-zoom,
+.work-photo:focus-visible .photo-zoom,
+.detail-cover-photo:hover .photo-zoom,
+.detail-cover-photo:focus-visible .photo-zoom {
+  opacity: 1;
+  transform: translateY(0);
+}
 
 /* =============================================================================
    Contact
@@ -724,7 +782,7 @@ a {
   justify-content: space-between;
   align-items: center;
   padding: clamp(18px, 2.6vh, 28px) var(--pad-x);
-  background: rgba(242, 240, 234, 0.82);
+  background: rgba(255, 255, 255, 0.88);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--line-bar);
@@ -882,7 +940,7 @@ a {
 }
 .gallery-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: clamp(16px, 2vw, 28px);
 }
 .gallery-grid .ph {
@@ -894,6 +952,143 @@ a {
 .gallery-grid .ph .cap {
   letter-spacing: 0.14em;
 }
+
+/* Clickable gallery image (opens the lightbox) with a hover zoom. */
+.gallery-fig {
+  all: unset;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  cursor: pointer;
+}
+.gallery-fig.wide {
+  grid-column: span 2;
+}
+.gallery-frame {
+  position: relative;
+  display: block;
+  width: 100%;
+  border: 1px solid var(--line);
+  background: var(--ph-bg);
+  overflow: hidden;
+}
+.gallery-frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.55s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.gallery-fig:hover .gallery-frame img,
+.gallery-fig:focus-visible .gallery-frame img {
+  transform: scale(1.045);
+}
+.gallery-zoom {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: var(--ink);
+  background: rgba(242, 240, 234, 0.86);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 0;
+  transform: translateY(-4px);
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+}
+.gallery-fig:hover .gallery-zoom,
+.gallery-fig:focus-visible .gallery-zoom {
+  opacity: 1;
+  transform: translateY(0);
+}
+.gallery-cap {
+  display: block;
+  margin-top: 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--ink-ghost);
+}
+
+/* Lightbox — full-screen image viewer. */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(20px, 5vw, 64px);
+  background: rgba(26, 24, 15, 0.66);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.lightbox.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+.lightbox-fig {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 92vw;
+  transform: scale(0.96);
+  transition: transform 0.34s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.lightbox.open .lightbox-fig {
+  transform: scale(1);
+}
+.lightbox-fig img {
+  display: block;
+  max-width: 100%;
+  max-height: 82vh;
+  object-fit: contain;
+  border: 1px solid rgba(242, 240, 234, 0.25);
+  background: var(--bg);
+}
+.lightbox-fig figcaption {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-align: center;
+  color: rgba(242, 240, 234, 0.85);
+}
+.lightbox-close {
+  position: fixed;
+  top: clamp(18px, 3vh, 32px);
+  right: clamp(18px, 3vw, 36px);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: var(--bg);
+  background: rgba(242, 240, 234, 0.12);
+  border: 1px solid rgba(242, 240, 234, 0.35);
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gallery-frame img,
+  .lightbox,
+  .lightbox-fig {
+    transition: none;
+  }
+}
+
 .detail-footer {
   margin-top: clamp(56px, 9vh, 110px);
   border-top: 1px solid var(--line);
@@ -937,6 +1132,11 @@ a {
   .overview-grid {
     grid-template-columns: 1fr !important;
     gap: clamp(28px, 7vw, 44px);
+  }
+
+  /* A touch more breathing room between the CTA and the cover image. */
+  .work-grid {
+    gap: clamp(38px, 7vw, 54px);
   }
 
   /* Title always reads before the cover image on mobile. */
@@ -984,7 +1184,8 @@ a {
   .gallery-grid {
     grid-template-columns: 1fr;
   }
-  .gallery-grid .ph.wide {
+  .gallery-grid .ph.wide,
+  .gallery-grid .gallery-fig.wide {
     grid-column: auto;
   }
 

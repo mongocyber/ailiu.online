@@ -155,7 +155,6 @@ export function Gallery({ isMobile, detailOpen }: GalleryProps) {
     let targetX = 0
     let idx = 0
     let drag: { start: number; px: number } | null = null
-    let snapT = 0
     let raf = 0
     let prev = 0
 
@@ -165,26 +164,22 @@ export function Gallery({ isMobile, detailOpen }: GalleryProps) {
     }))
 
     const clampX = (v: number) => Math.max(0, Math.min(max, v))
-    const snap = () => {
-      targetX = clampX(Math.round(targetX / W) * W)
-    }
-    const scheduleSnap = () => {
-      clearTimeout(snapT)
-      snapT = window.setTimeout(() => {
-        if (!drag) snap()
-      }, 150)
-    }
     const jump = (i: number) => {
       targetX = clampX(Math.max(0, Math.min(n - 1, i)) * W)
     }
     jumpRef.current = jump
 
+    // Free linear horizontal scroll: wheel/trackpad delta maps straight to the
+    // scroll target (no snap, no lock), and the rAF loop eases x toward it — like a
+    // normal browser scroll, sideways. Robust, and never gets stuck.
     const onWheel = (e: WheelEvent) => {
       if (detailOpenRef.current) return
       e.preventDefault()
-      const d = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX
+      const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? W : 1
+      const dy = e.deltaY * unit
+      const dx = e.deltaX * unit
+      const d = Math.abs(dy) >= Math.abs(dx) ? dy : dx
       targetX = clampX(targetX + d)
-      scheduleSnap()
     }
     const onDown = (e: PointerEvent) => {
       if (detailOpenRef.current) return
@@ -195,10 +190,7 @@ export function Gallery({ isMobile, detailOpen }: GalleryProps) {
       if (drag) targetX = clampX(drag.start - (e.clientX - drag.px))
     }
     const onUp = () => {
-      if (drag) {
-        drag = null
-        snap()
-      }
+      drag = null
     }
     const onKey = (e: KeyboardEvent) => {
       if (detailOpenRef.current) return
@@ -245,7 +237,10 @@ export function Gallery({ isMobile, detailOpen }: GalleryProps) {
 
       for (let i = 0; i < n; i++) {
         const d = (x - i * W) / W
-        const prog = Math.max(0, Math.min(1, 1 - Math.abs(d) / 0.7))
+        const a = Math.abs(d)
+        // Fully visible while the panel occupies the viewport; fade only at the
+        // entrance (right) / exit (left) edges so free scrolling stays readable.
+        const prog = a <= 0.5 ? 1 : Math.max(0, Math.min(1, 1 - (a - 0.5) / 0.45))
         const layer = layers[i]
         for (const el of layer.reveal) {
           const ri = parseInt(el.dataset.ri ?? '0', 10)
@@ -269,7 +264,6 @@ export function Gallery({ isMobile, detailOpen }: GalleryProps) {
     return () => {
       cancelAnimationFrame(raf)
       clearInterval(watchdog)
-      clearTimeout(snapT)
       viewport.removeEventListener('wheel', onWheel)
       viewport.removeEventListener('pointerdown', onDown)
       window.removeEventListener('pointermove', onMove)

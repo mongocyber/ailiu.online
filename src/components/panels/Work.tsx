@@ -56,7 +56,22 @@ export function Work({ project }: { project: Project }) {
         </div>
 
         <div className="work-imgwrap" data-depth="-30">
-          <Placeholder className="work-img" caption={project.cover} swatch={project.accent} />
+          {project.coverImage ? (
+            <button
+              className="work-photo work-photo--enter"
+              style={project.coverAspect ? { aspectRatio: project.coverAspect } : undefined}
+              data-cursor
+              onClick={() => openDetail(project.key)}
+              aria-label={`进入 ${project.name} 项目`}
+            >
+              <img src={project.coverImage} alt={`${project.name} 产品界面`} />
+              <span className="photo-zoom" aria-hidden="true">
+                →
+              </span>
+            </button>
+          ) : (
+            <Placeholder className="work-img" caption={project.cover} swatch={project.accent} />
+          )}
         </div>
       </div>
     </>

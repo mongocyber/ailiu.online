@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import type { Project, ProjectKey } from '../content'
 import { BRAND, projectByKey } from '../content'
+import { usePortfolio } from '../portfolio-context'
 import { Placeholder } from './Placeholder'
 import { Rich } from './Rich'
 
@@ -54,6 +55,7 @@ function DetailArticle({
   onClose: () => void
   onOpen: (key: ProjectKey) => void
 }) {
+  const { openLightbox } = usePortfolio()
   const other: ProjectKey = project.key === 'aviso' ? 'xiaoyi' : 'aviso'
 
   return (
@@ -81,12 +83,32 @@ function DetailArticle({
         ))}
       </div>
 
-      <Placeholder
-        className="detail-cover"
-        large
-        caption={project.coverCaption}
-        swatch={project.accent}
-      />
+      {project.detailCoverImage ? (
+        <button
+          className="detail-cover-photo zoomable"
+          data-cursor
+          style={project.detailCoverAspect ? { aspectRatio: project.detailCoverAspect } : undefined}
+          onClick={() =>
+            openLightbox({
+              src: project.detailCoverImage as string,
+              caption: `${project.name} · ${project.detailSubtitle}`,
+            })
+          }
+          aria-label={`放大查看 ${project.name} 产品全景`}
+        >
+          <img src={project.detailCoverImage} alt={`${project.name} 产品全景`} />
+          <span className="photo-zoom" aria-hidden="true">
+            ⤢
+          </span>
+        </button>
+      ) : (
+        <Placeholder
+          className="detail-cover"
+          large
+          caption={project.coverCaption}
+          swatch={project.accent}
+        />
+      )}
 
       <section className="detail-section">
         <div className="overview-grid">
@@ -131,14 +153,32 @@ function DetailArticle({
       <section className="detail-section">
         <div className="sec-kicker">{project.galleryKicker}</div>
         <div className="gallery-grid">
-          {project.gallery.map((g, i) => (
-            <Placeholder
-              key={i}
-              className={g.wide ? 'wide' : undefined}
-              style={{ aspectRatio: g.aspect }}
-              caption={g.caption}
-            />
-          ))}
+          {project.gallery.map((g, i) =>
+            g.src ? (
+              <button
+                key={i}
+                className={`gallery-fig${g.wide ? ' wide' : ''}`}
+                data-cursor
+                onClick={() => openLightbox({ src: g.src as string, caption: g.caption })}
+                aria-label={`放大查看 ${g.caption}`}
+              >
+                <span className="gallery-frame" style={{ aspectRatio: g.aspect }}>
+                  <img src={g.src} alt={g.caption} loading="lazy" />
+                  <span className="gallery-zoom" aria-hidden="true">
+                    ⤢
+                  </span>
+                </span>
+                <span className="gallery-cap">{g.caption}</span>
+              </button>
+            ) : (
+              <Placeholder
+                key={i}
+                className={g.wide ? 'wide' : undefined}
+                style={{ aspectRatio: g.aspect }}
+                caption={g.caption}
+              />
+            ),
+          )}
         </div>
       </section>
 
