@@ -9,6 +9,8 @@
 - **横向画廊** — 5 个面板（Hero / About / Aviso / 小姨家 / Contact），滚轮、拖拽、方向键、导航圆点皆可切换，桌面端横向平滑浏览。
 - **滚动驱动动效** — 面板内元素随进度错峰淡入上浮，大序号数字水平视差。
 - **项目详情页** — 从底部滑入的全屏纵向详情（概述 / 核心功能 / 界面一览），`Esc` 或返回键关闭。
+- **可抓取作品页** — 构建时生成 `/projects/aviso/index.html`、`/projects/xiaoyi/index.html`，首页仍保留沉浸式 overlay 浏览。
+- **SEO / GEO 基础** — canonical、Open Graph、Twitter Card、JSON-LD、`robots.txt`、`sitemap.xml`、`llms.txt`。
 - **自定义光标** — 仅在精确指针设备上启用，悬停交互元素时放大。
 - **完整响应式** — 桌面端为横向画廊；移动端自动切换为纵向堆叠、单列布局、触摸友好，并隐藏自定义光标。
 - **可访问性** — 尊重 `prefers-reduced-motion`；无 JS 时内容仍完整可见。
@@ -38,6 +40,7 @@ npm run lint     # oxlint 检查
 src/
 ├── App.tsx                 # 编排：模式判定、详情开关、全局副作用
 ├── content.ts              # 所有文案与两个项目的结构化数据（在这里改内容）
+├── seo.ts                  # canonical / Open Graph / 项目 URL 元数据
 ├── styles.css              # 设计令牌 + 全部组件样式 + 响应式
 ├── portfolio-context.ts    # 打开/关闭详情页的 React Context
 ├── hooks/useMediaQuery.ts
@@ -46,6 +49,7 @@ src/
     ├── Chrome.tsx          # 持久 UI：wordmark / 索引 / 圆点 / 进度条
     ├── Gallery.tsx         # 横向画廊（桌面）/ 纵向堆叠（移动）+ 导航逻辑
     ├── DetailOverlay.tsx   # 项目详情页 overlay
+    ├── ProjectPage.tsx     # 可直接访问的项目详情 URL
     ├── Placeholder.tsx     # 条纹占位图块
     ├── Rich.tsx            # 带「占位」弱化注释的富文本
     └── panels/             # Hero / About / Work / Contact 面板内容
@@ -63,6 +67,13 @@ src/
 ## 部署
 
 任意静态托管均可（构建产物在 `dist/`）。推荐连接本仓库到 [Vercel](https://vercel.com/) 或 [Netlify](https://www.netlify.com/) 自动构建部署，框架预设选择 Vite 即可。
+
+当前 `vercel.json` 已包含：
+
+- `www.ailiu.online` → `ailiu.online` 的永久重定向。
+- `/projects/aviso`、`/projects/xiaoyi` → 对应静态项目页 HTML，用于直接访问项目详情页。
+
+上线后需要在 Google Search Console 提交 `https://ailiu.online/sitemap.xml`，并用 URL Inspection 检查首页和两个项目页。
 
 ---
 

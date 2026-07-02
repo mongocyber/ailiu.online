@@ -2,6 +2,7 @@ import { Fragment, useEffect, useRef, useState } from 'react'
 import type { Project, ProjectKey } from '../content'
 import { BRAND, projectByKey } from '../content'
 import { usePortfolio } from '../portfolio-context'
+import { projectPath } from '../seo'
 import { Placeholder } from './Placeholder'
 import { Rich } from './Rich'
 
@@ -41,25 +42,28 @@ export function DetailOverlay({ openKey, onClose, onOpen }: DetailOverlayProps) 
           {BRAND}
         </div>
       </div>
-      {project ? <DetailArticle project={project} onClose={onClose} onOpen={onOpen} /> : null}
+      {project ? <ProjectArticle project={project} onClose={onClose} onOpen={onOpen} /> : null}
     </div>
   )
 }
 
-function DetailArticle({
+export function ProjectArticle({
   project,
   onClose,
   onOpen,
+  variant = 'overlay',
 }: {
   project: Project
-  onClose: () => void
-  onOpen: (key: ProjectKey) => void
+  onClose?: () => void
+  onOpen?: (key: ProjectKey) => void
+  variant?: 'overlay' | 'page'
 }) {
   const { openLightbox } = usePortfolio()
   const other: ProjectKey = project.key === 'aviso' ? 'xiaoyi' : 'aviso'
+  const otherLabel = project.key === 'aviso' ? '下一个项目 — 小姨家 →' : '上一个项目 — Aviso →'
 
   return (
-    <div className="detail-wrap">
+    <article className="detail-wrap">
       <div className="detail-eyebrow" style={{ color: project.accent }}>
         <span className="cdot" style={{ background: project.accent }} />
         {project.detailEyebrow}
@@ -183,7 +187,11 @@ function DetailArticle({
       </section>
 
       <div className="detail-footer">
-        {project.externalUrl ? (
+        {variant === 'page' ? (
+          <a className="visit" data-cursor href="/" style={{ borderBottomColor: project.accent }}>
+            <span style={{ color: project.accent }}>←</span> 返回作品集 BACK
+          </a>
+        ) : project.externalUrl ? (
           <a
             className="visit"
             data-cursor
@@ -194,7 +202,7 @@ function DetailArticle({
           >
             {project.externalLabel} <span style={{ color: project.accent }}>→</span>
           </a>
-        ) : (
+        ) : onClose ? (
           <button
             className="visit"
             data-cursor
@@ -203,11 +211,30 @@ function DetailArticle({
           >
             <span style={{ color: project.accent }}>←</span> 返回作品集 BACK
           </button>
+        ) : null}
+
+        {variant === 'page' && project.externalUrl ? (
+          <a
+            className="nextlink"
+            href={project.externalUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-cursor
+          >
+            {project.externalLabel} →
+          </a>
+        ) : null}
+
+        {variant === 'overlay' && onOpen ? (
+          <button className="nextlink" data-cursor onClick={() => onOpen(other)}>
+            {otherLabel}
+          </button>
+        ) : (
+          <a className="nextlink" data-cursor href={projectPath(other)}>
+            {otherLabel}
+          </a>
         )}
-        <button className="nextlink" data-cursor onClick={() => onOpen(other)}>
-          {project.key === 'aviso' ? '下一个项目 — 小姨家 →' : '上一个项目 — Aviso →'}
-        </button>
       </div>
-    </div>
+    </article>
   )
 }

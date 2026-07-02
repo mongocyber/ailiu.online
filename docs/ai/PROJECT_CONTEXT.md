@@ -19,6 +19,7 @@
 - 仓库：`github.com/mongocyber/ailiu.online`（**私有**），默认分支 `main`。
 - **尚未部署**。目标域名 `ailiu.online`（与仓库同名，owner 已持有该域名待接入）。
 - Aviso 和小姨家详情页已用当前真实项目资料与图片替换占位内容。
+- SEO / GEO 基础已接入：canonical、OG/Twitter meta、JSON-LD、`robots.txt`、`sitemap.xml`、`llms.txt`，构建时生成 `/projects/aviso/index.html`、`/projects/xiaoyi/index.html`。
 
 ## 验证骨架（spine）
 
@@ -44,9 +45,12 @@
 ## 关键文件
 
 - `src/content.ts` —— 所有文案 + 两个项目的结构化数据（**改内容只动这里**）。
+- `src/seo.ts` —— canonical / Open Graph / JSON-LD / 项目 URL 元数据生成。
 - `src/styles.css` —— 设计令牌 + 全部组件样式 + 响应式断点（820px）。
 - `src/components/Gallery.tsx` —— 横向画廊（桌面）/ 纵向堆叠（移动）+ 导航与揭示动效。
 - `src/components/DetailOverlay.tsx` —— 项目详情 overlay。
+- `src/components/ProjectPage.tsx` —— 可直接访问的项目详情页。
+- `public/robots.txt`、`public/sitemap.xml`、`public/llms.txt` —— 搜索与 AI 检索入口。
 - `public/aviso/` —— Aviso 真实图片（社交卡封面、划词工具栏截图、icon）。
 
 ## 已知约定 / 坑
