@@ -13,14 +13,14 @@
 - **SEO / GEO 基础** — canonical、Open Graph、Twitter Card、JSON-LD、`robots.txt`、`sitemap.xml`、`llms.txt`。
 - **自定义光标** — 仅在精确指针设备上启用，悬停交互元素时放大。
 - **完整响应式** — 桌面端为横向画廊；移动端自动切换为纵向堆叠、单列布局、触摸友好，并隐藏自定义光标。
-- **可访问性** — 尊重 `prefers-reduced-motion`；无 JS 时内容仍完整可见。
+- **可访问性** — 尊重 `prefers-reduced-motion`；无 JS 时内容仍完整可见；详情层和灯箱使用 modal 语义与焦点隔离。
 
 ## 🧱 技术栈
 
 - [React 19](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
 - [Vite](https://vite.dev/) 构建
 - 无第三方动画库，核心动效由 `requestAnimationFrame` 驱动
-- 字体：Schibsted Grotesk（标题/UI）、Space Mono（技术信息）、Noto Sans SC（中文正文），来自 Google Fonts
+- 字体：Schibsted Grotesk（标题/UI）与 Space Mono（技术信息）本地托管；中文使用系统字体栈
 
 ## 🚀 本地运行
 
@@ -55,9 +55,9 @@ src/
     └── panels/             # Hero / About / Work / Contact 面板内容
 ```
 
-## ✏️ 上线前确认
+## ✏️ 公开内容确认
 
-当前内容已经换成真实项目资料与图片；公开上线前仍需 owner 最后确认：
+当前内容已经换成真实项目资料与图片；公开内容调整前仍需 owner 最后确认：
 
 - **联系方式** — `src/content.ts` 中公开邮箱与 GitHub 是否可以对外展示。
 - **项目外链** — Aviso 官网链接是否按当前地址公开。
@@ -66,12 +66,19 @@ src/
 
 ## 部署
 
-任意静态托管均可（构建产物在 `dist/`）。推荐连接本仓库到 [Vercel](https://vercel.com/) 或 [Netlify](https://www.netlify.com/) 自动构建部署，框架预设选择 Vite 即可。
+Production 已部署在 [Vercel](https://vercel.com/)：
+
+- 生产域名：`https://ailiu.online`
+- `www.ailiu.online` 永久重定向到 `ailiu.online`
+- Vercel 项目：`jonyliu-projects/ailiu.online`
 
 当前 `vercel.json` 已包含：
 
+- 安全响应头：CSP、frame 防护、`nosniff`、Referrer Policy、Permissions Policy。
 - `www.ailiu.online` → `ailiu.online` 的永久重定向。
 - `/projects/aviso`、`/projects/xiaoyi` → 对应静态项目页 HTML，用于直接访问项目详情页。
+
+DNS 当前由火山引擎 nameserver 托管；生产站点可访问，但 Vercel 控制台仍建议在 DNS provider 设置 apex `A ailiu.online 76.76.21.21`，或切 nameserver 到 Vercel。
 
 上线后需要在 Google Search Console 提交 `https://ailiu.online/sitemap.xml`，并用 URL Inspection 检查首页和两个项目页。
 
