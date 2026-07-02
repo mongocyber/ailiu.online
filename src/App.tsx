@@ -73,6 +73,9 @@ export default function App() {
   const [lightbox, setLightbox] = useState<LightboxData | null>(null)
   const routeProject = routeProjectKey(pathname)
   const isProjectPage = routeProject !== null
+  const isHomePage = pathname === '/'
+  const lightboxOpen = lightbox !== null
+  const mainHidden = detailKey !== null || lightboxOpen
 
   const openDetail = useCallback((key: ProjectKey) => setDetailKey(key), [])
   const closeDetail = useCallback(() => setDetailKey(null), [])
@@ -90,6 +93,12 @@ export default function App() {
     window.addEventListener('popstate', onPopState)
     return () => window.removeEventListener('popstate', onPopState)
   }, [])
+
+  useEffect(() => {
+    if (isHomePage || routeProject) return
+    window.history.replaceState(null, '', '/')
+    setPathname('/')
+  }, [isHomePage, routeProject])
 
   // Drive document-scroll (mobile) vs fixed-stage (desktop) from layout mode.
   useEffect(() => {
@@ -117,18 +126,21 @@ export default function App() {
 
   // Esc closes an open detail overlay.
   useEffect(() => {
-    if (!detailKey) return
+    if (!detailKey || lightboxOpen) return
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') closeDetail()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [detailKey, closeDetail])
+  }, [detailKey, lightboxOpen, closeDetail])
 
-  // Lock background scroll while a detail overlay is open on mobile.
+  // Lock background scroll while a modal layer is open on mobile.
   useEffect(() => {
-    document.documentElement.classList.toggle('detail-locked', Boolean(detailKey) && isMobile)
-  }, [detailKey, isMobile])
+    document.documentElement.classList.toggle(
+      'detail-locked',
+      Boolean(detailKey || lightboxOpen) && isMobile,
+    )
+  }, [detailKey, lightboxOpen, isMobile])
 
   const ctx = useMemo(
     () => ({ openDetail, closeDetail, openLightbox, isMobile }),
@@ -146,12 +158,19 @@ export default function App() {
   return (
     <PortfolioContext.Provider value={ctx}>
       <div className={appClass}>
-        {routeProject ? (
-          <ProjectPage projectKey={routeProject} />
-        ) : (
-          <Gallery isMobile={isMobile} detailOpen={detailKey !== null} />
-        )}
-        <DetailOverlay openKey={detailKey} onClose={closeDetail} onOpen={openDetail} />
+        <div aria-hidden={mainHidden} inert={mainHidden}>
+          {routeProject ? (
+            <ProjectPage projectKey={routeProject} />
+          ) : (
+            <Gallery isMobile={isMobile} detailOpen={detailKey !== null || lightboxOpen} />
+          )}
+        </div>
+        <DetailOverlay
+          openKey={detailKey}
+          onClose={closeDetail}
+          onOpen={openDetail}
+          modalBlocked={lightboxOpen}
+        />
         <Lightbox data={lightbox} onClose={() => setLightbox(null)} />
         {fine ? <Cursor /> : null}
       </div>

@@ -10,6 +10,7 @@ interface DetailOverlayProps {
   openKey: ProjectKey | null
   onClose: () => void
   onOpen: (key: ProjectKey) => void
+  modalBlocked?: boolean
 }
 
 /**
@@ -17,10 +18,17 @@ interface DetailOverlayProps {
  * share one overlay; the active article persists through the close animation so
  * the slide-down stays populated.
  */
-export function DetailOverlay({ openKey, onClose, onOpen }: DetailOverlayProps) {
+export function DetailOverlay({
+  openKey,
+  onClose,
+  onOpen,
+  modalBlocked = false,
+}: DetailOverlayProps) {
   const ref = useRef<HTMLDivElement>(null)
+  const previouslyFocused = useRef<HTMLElement | null>(null)
   const [activeKey, setActiveKey] = useState<ProjectKey | null>(null)
   const open = openKey !== null
+  const hidden = !open || modalBlocked
 
   useEffect(() => {
     if (openKey) {
@@ -29,10 +37,31 @@ export function DetailOverlay({ openKey, onClose, onOpen }: DetailOverlayProps) 
     }
   }, [openKey])
 
+  useEffect(() => {
+    if (!open) return
+    previouslyFocused.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const frame = requestAnimationFrame(() => ref.current?.focus({ preventScroll: true }))
+    return () => {
+      cancelAnimationFrame(frame)
+      previouslyFocused.current?.focus({ preventScroll: true })
+      previouslyFocused.current = null
+    }
+  }, [open])
+
   const project = activeKey ? projectByKey[activeKey] : null
 
   return (
-    <div className={`overlay${open ? ' open' : ''}`} ref={ref} aria-hidden={!open} inert={!open}>
+    <div
+      className={`overlay${open ? ' open' : ''}`}
+      ref={ref}
+      role={open && !modalBlocked ? 'dialog' : undefined}
+      aria-modal={open && !modalBlocked ? true : undefined}
+      aria-labelledby={project && !modalBlocked ? 'detail-overlay-title' : undefined}
+      aria-hidden={hidden}
+      inert={hidden}
+      tabIndex={open && !modalBlocked ? -1 : undefined}
+    >
       <div className="backbar">
         <button className="backbtn" data-cursor onClick={onClose}>
           <span className="accent">←</span> 返回 BACK
@@ -42,7 +71,14 @@ export function DetailOverlay({ openKey, onClose, onOpen }: DetailOverlayProps) 
           {BRAND}
         </div>
       </div>
-      {project ? <ProjectArticle project={project} onClose={onClose} onOpen={onOpen} /> : null}
+      {project ? (
+        <ProjectArticle
+          project={project}
+          onClose={onClose}
+          onOpen={onOpen}
+          titleId="detail-overlay-title"
+        />
+      ) : null}
     </div>
   )
 }
@@ -52,11 +88,13 @@ export function ProjectArticle({
   onClose,
   onOpen,
   variant = 'overlay',
+  titleId,
 }: {
   project: Project
   onClose?: () => void
   onOpen?: (key: ProjectKey) => void
   variant?: 'overlay' | 'page'
+  titleId?: string
 }) {
   const { openLightbox } = usePortfolio()
   const other: ProjectKey = project.key === 'aviso' ? 'xiaoyi' : 'aviso'
@@ -69,7 +107,9 @@ export function ProjectArticle({
         {project.detailEyebrow}
       </div>
 
-      <h1 className="detail-title">{project.name}</h1>
+      <h1 className="detail-title" id={titleId}>
+        {project.name}
+      </h1>
       <div className="detail-sub" style={{ color: project.accent }}>
         {project.detailSubtitle}
       </div>

@@ -4,6 +4,7 @@ Allow: /
 User-agent: OAI-SearchBot
 Allow: /
 
+# Allow search and answer grounding, but do not grant model-training crawl access.
 User-agent: GPTBot
 Disallow: /
 

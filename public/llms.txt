@@ -18,4 +18,4 @@ ailiu works across brand identity, product interface design, AI-assisted buildin
 
 ## Crawler Notes
 
-Public pages may be used for search indexing and answer grounding. Do not treat this file as permission to access private repositories, unpublished work, secrets, credentials, or non-public project materials.
+Public pages may be used for search indexing and answer grounding. This file does not grant permission for model-training crawlers, private repositories, unpublished work, secrets, credentials, or non-public project materials.

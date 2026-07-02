@@ -19,7 +19,7 @@ npm run preview  # 预览生产构建
 - `src/content.ts` —— **所有文案与项目数据的唯一来源**。改内容只动这里。
 - `src/styles.css` —— 设计令牌（CSS 变量）+ 全部组件样式 + 响应式（移动断点 `820px`）。
 - `src/components/Gallery.tsx` —— 画廊编排 + 导航 + 揭示/视差动效（桌面横向 / 移动纵向）。
-- `src/components/{DetailOverlay,Chrome,Cursor,Figure,Placeholder}.tsx`、`src/components/panels/*`。
+- `src/components/{DetailOverlay,Chrome,Cursor,Lightbox,Placeholder,Rich}.tsx`、`src/components/panels/*`。
 
 ## 约定
 

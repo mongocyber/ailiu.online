@@ -17,6 +17,9 @@ export interface LightboxData {
 export function Lightbox({ data, onClose }: { data: LightboxData | null; onClose: () => void }) {
   const open = data !== null
   const openedAt = useRef(0)
+  const ref = useRef<HTMLDivElement>(null)
+  const closeRef = useRef<HTMLButtonElement>(null)
+  const previouslyFocused = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     if (open) openedAt.current = performance.now()
@@ -24,10 +27,45 @@ export function Lightbox({ data, onClose }: { data: LightboxData | null; onClose
 
   useEffect(() => {
     if (!open) return
+    previouslyFocused.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const frame = requestAnimationFrame(() =>
+      (closeRef.current ?? ref.current)?.focus({ preventScroll: true }),
+    )
+    return () => {
+      cancelAnimationFrame(frame)
+      previouslyFocused.current?.focus({ preventScroll: true })
+      previouslyFocused.current = null
+    }
+  }, [open])
+
+  useEffect(() => {
+    if (!open) return
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        e.preventDefault()
         e.stopPropagation()
         onClose()
+        return
+      }
+      if (e.key === 'Tab') {
+        e.preventDefault()
+        e.stopPropagation()
+        closeRef.current?.focus({ preventScroll: true })
+        return
+      }
+      if (
+        e.key === 'ArrowLeft' ||
+        e.key === 'ArrowRight' ||
+        e.key === 'ArrowUp' ||
+        e.key === 'ArrowDown' ||
+        e.key === 'Home' ||
+        e.key === 'End' ||
+        e.key === 'PageUp' ||
+        e.key === 'PageDown'
+      ) {
+        e.preventDefault()
+        e.stopPropagation()
       }
     }
     window.addEventListener('keydown', onKey, true)
@@ -42,9 +80,14 @@ export function Lightbox({ data, onClose }: { data: LightboxData | null; onClose
   return (
     <div
       className={`lightbox${open ? ' open' : ''}`}
+      ref={ref}
       onClick={backdropClose}
+      role={open ? 'dialog' : undefined}
+      aria-modal={open ? true : undefined}
+      aria-label={open ? '图片预览' : undefined}
       aria-hidden={!open}
       inert={!open}
+      tabIndex={open ? -1 : undefined}
     >
       {data ? (
         <figure className="lightbox-fig" onClick={(e) => e.stopPropagation()}>
@@ -55,6 +98,7 @@ export function Lightbox({ data, onClose }: { data: LightboxData | null; onClose
       {data ? (
         <button
           className="lightbox-close"
+          ref={closeRef}
           data-cursor
           onClick={(e) => {
             e.stopPropagation()
