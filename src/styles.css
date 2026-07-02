@@ -569,6 +569,7 @@ a {
   color: var(--ink);
   border-bottom: 1.5px solid var(--accent);
   padding-bottom: 4px;
+  text-decoration: none;
 }
 .work-imgwrap {
   position: relative;
@@ -637,6 +638,7 @@ a {
   background: var(--ph-bg);
   overflow: hidden;
   cursor: pointer;
+  text-decoration: none;
 }
 .work-photo {
   aspect-ratio: 1626 / 967; /* matches aviso-product.jpg — show the full render, no crop */
@@ -805,7 +807,8 @@ a {
   font-weight: 700;
   font-size: 15px;
 }
-.backbar .mark .ring {
+.backbar .mark .ring,
+.project-page-bar .mark .ring {
   width: 15px;
   height: 15px;
 }
@@ -1121,6 +1124,38 @@ a {
   font-size: 13px;
   letter-spacing: 0.12em;
   color: var(--ink-faint);
+  text-decoration: none;
+}
+
+/* Standalone project pages share the detail article system, but scroll as
+   normal pages so each case study has a crawlable URL. */
+.project-page {
+  min-height: 100vh;
+  background: var(--bg);
+}
+.project-page-bar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: clamp(18px, 2.6vh, 28px) var(--pad-x);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line-bar);
+}
+.project-page-bar .backbtn,
+.project-page-bar .mark {
+  text-decoration: none;
+}
+.project-page-bar .mark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 15px;
 }
 
 /* =============================================================================
@@ -1132,6 +1167,19 @@ a {
   .overview-grid {
     grid-template-columns: 1fr !important;
     gap: clamp(28px, 7vw, 44px);
+  }
+
+  .app.is-mobile,
+  .panel-m,
+  .project-page,
+  .detail-wrap,
+  .hero-lead,
+  .detail-lead,
+  .overview-body,
+  .feature p {
+    max-width: 100%;
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 
   /* A touch more breathing room between the CTA and the cover image. */
@@ -1190,7 +1238,9 @@ a {
   }
 
   .detail-meta {
-    gap: 22px 40px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px 28px;
   }
 
   /* Slightly tighter chrome so the top row never collides on small phones. */

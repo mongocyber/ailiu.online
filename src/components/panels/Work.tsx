@@ -1,5 +1,7 @@
+import type { MouseEvent } from 'react'
 import type { Project } from '../../content'
 import { usePortfolio } from '../../portfolio-context'
+import { projectPath } from '../../seo'
 import { Placeholder } from '../Placeholder'
 import { Rich } from '../Rich'
 
@@ -8,6 +10,13 @@ export function Work({ project }: { project: Project }) {
   const gridClass = project.imageSide === 'right' ? 'work-grid--imgright' : 'work-grid--imgleft'
   const numSide = project.imageSide === 'right' ? 'left' : 'right'
   const ctaRi = project.tags ? 5 : 4
+  const openProject = (e: MouseEvent<HTMLAnchorElement>) => {
+    if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+      return
+    }
+    e.preventDefault()
+    openDetail(project.key)
+  }
 
   return (
     <>
@@ -44,31 +53,33 @@ export function Work({ project }: { project: Project }) {
             </div>
           ) : null}
 
-          <button
+          <a
             className="cta"
+            href={projectPath(project.key)}
             data-reveal
             data-ri={ctaRi}
             data-cursor
-            onClick={() => openDetail(project.key)}
+            onClick={openProject}
           >
             查看项目 VIEW CASE <span className="accent">→</span>
-          </button>
+          </a>
         </div>
 
         <div className="work-imgwrap" data-depth="-30">
           {project.coverImage ? (
-            <button
+            <a
               className="work-photo work-photo--enter"
+              href={projectPath(project.key)}
               style={project.coverAspect ? { aspectRatio: project.coverAspect } : undefined}
               data-cursor
-              onClick={() => openDetail(project.key)}
+              onClick={openProject}
               aria-label={`进入 ${project.name} 项目`}
             >
               <img src={project.coverImage} alt={`${project.name} 产品界面`} />
               <span className="photo-zoom" aria-hidden="true">
                 →
               </span>
-            </button>
+            </a>
           ) : (
             <Placeholder className="work-img" caption={project.cover} swatch={project.accent} />
           )}

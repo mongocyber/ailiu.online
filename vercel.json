@@ -23,5 +23,23 @@
       "destination": "https://ailiu.online/:path*",
       "permanent": true
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/projects/aviso",
+      "destination": "/projects/aviso/index.html"
+    },
+    {
+      "source": "/projects/aviso/",
+      "destination": "/projects/aviso/index.html"
+    },
+    {
+      "source": "/projects/xiaoyi",
+      "destination": "/projects/xiaoyi/index.html"
+    },
+    {
+      "source": "/projects/xiaoyi/",
+      "destination": "/projects/xiaoyi/index.html"
+    }
   ]
 }
