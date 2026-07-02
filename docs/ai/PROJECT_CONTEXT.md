@@ -18,7 +18,7 @@
 - 代码已完成；当前本地门禁需以最新 `npm run lint`、`npm run build` 和 PC / 移动预览截图为准。
 - 仓库：`github.com/mongocyber/ailiu.online`（**私有**），默认分支 `main`。
 - **Production live**：Vercel 项目 `jonyliu-projects/ailiu.online`，生产域名 `https://ailiu.online`，`https://www.ailiu.online` 永久重定向到根域名。
-- 最新生产部署：`dpl_CDwJoU7vBw1pVz4rzqsWFKYtPRzg`（2026-07-02），部署 URL `https://ailiuonline-1k0pe1zkf-jonyliu-projects.vercel.app`。
+- 当前生产部署 ID 以 Vercel 为准；用 `vercel inspect https://ailiu.online` 查询，避免 Git 集成自动部署后文档漂移。
 - 域名 DNS 当前由火山引擎 nameserver 托管；站点可访问且解析到 Vercel 边缘，但 Vercel 控制台仍建议在 DNS provider 设置 apex `A ailiu.online 76.76.21.21`，或切 nameserver 到 Vercel。
 - Aviso 和小姨家详情页已用当前真实项目资料与图片替换占位内容。
 - SEO / GEO 基础已接入：canonical、OG/Twitter meta、JSON-LD、`robots.txt`、`sitemap.xml`、`llms.txt`，构建时生成 `/projects/aviso/index.html`、`/projects/xiaoyi/index.html`。
