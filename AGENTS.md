@@ -10,11 +10,13 @@ Capability: core
 
 - [R1] Dynamic scope and acceptance currently come from
   [Linear MON-106](https://linear.app/mongocyber/issue/MON-106/external-proof-adopt-the-core-project-harness-in-ai流).
-  Before editing, read that Issue, [`docs/ai/PROJECT_CONTEXT.md`](docs/ai/PROJECT_CONTEXT.md),
-  and the checked-out Git revision and status. Stop on authority, baseline, or scope drift.
+  Before editing, read that Issue and the checked-out Git revision and status. Stop on
+  authority, baseline, or scope drift.
 - Current implementation truth is the checked-out Git exact revision. Native platforms
-  own review, deployment, and runtime facts; the project context file remains the
-  repository's semantic state and context entry.
+  own review, deployment, and runtime facts.
+- [`docs/ai/PROJECT_CONTEXT.md`](docs/ai/PROJECT_CONTEXT.md) is a legacy project capsule
+  for architectural and historical context. Reverify its dated, deployment, runtime,
+  role, and tool-specific statements against Git, native platforms, and the active Issue.
 
 ## Project map
 
@@ -23,13 +25,13 @@ Capability: core
 - `src/components/Gallery.tsx`: gallery orchestration, navigation, reveal, and parallax.
 - `src/components/{DetailOverlay,Chrome,Cursor,Lightbox,Placeholder,Rich}.tsx` and
   `src/components/panels/*`: supporting presentation components.
-- [`docs/ai/PROJECT_CONTEXT.md`](docs/ai/PROJECT_CONTEXT.md): current semantic context.
+- [`docs/ai/PROJECT_CONTEXT.md`](docs/ai/PROJECT_CONTEXT.md): legacy architecture/history capsule.
 - [`docs/ai/RULE_ACCOUNTABILITY.md`](docs/ai/RULE_ACCOUNTABILITY.md): hard-rule Matrix.
 - [`.github/pull_request_template.md`](.github/pull_request_template.md): native review checklist.
 
 ## Commands
 
-Node.js 20 or newer is required.
+[R13] Use Node.js 20 or newer for setup and verification.
 
 - Development: `npm run dev` at `http://localhost:5173`.
 - Production preview: `npm run preview`.

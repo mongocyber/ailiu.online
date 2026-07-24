@@ -14,10 +14,30 @@ pass() {
   printf 'PASS: %s\n' "$1"
 }
 
+require_clean_worktree() {
+  phase=$1
+  git diff --quiet ||
+    fail "worktree has unstaged tracked changes at $phase"
+  git diff --cached --quiet ||
+    fail "worktree has staged changes at $phase"
+  test -z "$(git ls-files --others --exclude-standard)" ||
+    fail "worktree has untracked files at $phase"
+}
+
+require_clean_worktree "verification entry"
+pass "clean worktree at entry"
+
+command -v node >/dev/null 2>&1 || fail "Node.js is required"
+node_major=$(node -p 'Number(process.versions.node.split(".")[0])')
+case "$node_major" in
+  ''|*[!0-9]*) fail "unable to determine Node.js major version" ;;
+esac
+test "$node_major" -ge 20 ||
+  fail "Node.js 20 or newer is required; found major $node_major"
+pass "Node.js 20+"
+
 temp_dir=$(mktemp -d "${TMPDIR:-/tmp}/ailiu-verify.XXXXXX")
 trap 'rm -rf "$temp_dir"' EXIT HUP INT TERM
-
-git status --porcelain=v1 --untracked-files=all > "$temp_dir/status-before"
 
 for required_file in \
   AGENTS.md \
@@ -118,9 +138,7 @@ pass "lint"
 npm run build
 pass "production build"
 
-git status --porcelain=v1 --untracked-files=all > "$temp_dir/status-after"
-cmp -s "$temp_dir/status-before" "$temp_dir/status-after" ||
-  fail "verification changed tracked or untracked worktree state"
-pass "worktree state unchanged"
+require_clean_worktree "verification exit"
+pass "clean worktree at exit"
 
 printf 'VERIFY OK: ailiu.online core harness checks passed\n'
