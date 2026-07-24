@@ -1,39 +1,72 @@
-# AGENTS.md — ailiu.online
+# ailiu.online Project Instructions
 
-owner 的个人作品集网站（React 19 + Vite + TS）。本文件是项目长期规则；当前状态见
-[`docs/ai/PROJECT_CONTEXT.md`](docs/ai/PROJECT_CONTEXT.md)。本项目由 **Cap（AI CTO）** 托管交付。
+`ailiu.online` is the owner's personal portfolio site, built with React 19, Vite,
+and TypeScript. This file is the canonical, tool- and model-neutral instruction
+entry for the repository.
 
-## 命令
+Capability: core
 
-```bash
-npm run dev      # 本地开发（http://localhost:5173）
-npm run build    # 类型检查 + 生产构建（tsc -b && vite build）→ dist/
-npm run lint     # oxlint
-npm run preview  # 预览生产构建
-```
+## Authority and context
 
-需 Node 20+。
+- [R1] Dynamic scope and acceptance currently come from
+  [Linear MON-106](https://linear.app/mongocyber/issue/MON-106/external-proof-adopt-the-core-project-harness-in-ai流).
+  Before editing, read that Issue, [`docs/ai/PROJECT_CONTEXT.md`](docs/ai/PROJECT_CONTEXT.md),
+  and the checked-out Git revision and status. Stop on authority, baseline, or scope drift.
+- Current implementation truth is the checked-out Git exact revision. Native platforms
+  own review, deployment, and runtime facts; the project context file remains the
+  repository's semantic state and context entry.
 
-## 架构（改之前先读）
+## Project map
 
-- `src/content.ts` —— **所有文案与项目数据的唯一来源**。改内容只动这里。
-- `src/styles.css` —— 设计令牌（CSS 变量）+ 全部组件样式 + 响应式（移动断点 `820px`）。
-- `src/components/Gallery.tsx` —— 画廊编排 + 导航 + 揭示/视差动效（桌面横向 / 移动纵向）。
-- `src/components/{DetailOverlay,Chrome,Cursor,Lightbox,Placeholder,Rich}.tsx`、`src/components/panels/*`。
+- `src/content.ts`: the single source for all copy and project data.
+- `src/styles.css`: design tokens, component styles, and the `820px` mobile breakpoint.
+- `src/components/Gallery.tsx`: gallery orchestration, navigation, reveal, and parallax.
+- `src/components/{DetailOverlay,Chrome,Cursor,Lightbox,Placeholder,Rich}.tsx` and
+  `src/components/panels/*`: supporting presentation components.
+- [`docs/ai/PROJECT_CONTEXT.md`](docs/ai/PROJECT_CONTEXT.md): current semantic context.
+- [`docs/ai/RULE_ACCOUNTABILITY.md`](docs/ai/RULE_ACCOUNTABILITY.md): hard-rule Matrix.
+- [`.github/pull_request_template.md`](.github/pull_request_template.md): native review checklist.
 
-## 约定
+## Commands
 
-1. **先复用再造**：照搬既有组件/令牌/命名，别引第三方动画库或 UI 框架。
-2. **数据驱动**：能放 `content.ts` 的就别硬编码进组件。
-3. **小 diff、聚焦**：一个改动一件事，不顺手大重构或格式化无关文件。
-4. **动效用 rAF + setInterval 看门狗，不用 CSS 过渡**——见 PROJECT_CONTEXT「坑」。
+Node.js 20 or newer is required.
 
-## 完成的定义（done = 真门禁绿）
+- Development: `npm run dev` at `http://localhost:5173`.
+- Production preview: `npm run preview`.
+- Verification: `./scripts/verify.sh`.
 
-每次实现完：`npm run lint` + `npm run build` 真跑过绿；前端改动用浏览器/预览截图核对（PC + 移动两端）。合并前中高风险改动跑 `/code-review`，必要时 `$vet` 跨模型复审。
-用 `python3 ~/.Codex/skills/cap/scripts/cap_facts.py --project-root .` 取 git/CI 真实状态。
+The verification script is the single native verification entry and composes the
+repository's existing lint and production-build gates.
 
-## 边界（硬停，必须先问 owner）
+## Working contract
 
-部署上线 / 接入 `ailiu.online` 域名 / 对外公开 / 新外部服务（访问统计、监控、表单后端）/ 新依赖 / 写入真实联系方式或隐私内容 / 删除重置。
-授权分档（read → write → push → merge → release），每档单独授权，不自动顺延。生产动作永远 owner 人工签字。
+- [R2] Put copy and project-data changes only in `src/content.ts`; do not duplicate
+  that content inside components.
+- Prefer existing components, tokens, data-driven patterns, and naming. Keep diffs
+  focused and avoid unrelated formatting or refactors.
+- [R3] Keep reveal and parallax motion on `requestAnimationFrame` with the existing
+  `setInterval` watchdog; do not replace it with CSS transitions.
+- [R4] After an implementation, run the native verification entry. A passing run must
+  leave tracked and untracked worktree state unchanged.
+- [R5] For a user-visible frontend change, also inspect browser or preview screenshots
+  at desktop and mobile widths before claiming the change is complete.
+- [R11] Use the native PR checklist for any reviewable change.
+- [R12] Medium- or high-risk completion requires a fresh, findings-first semantic
+  review bound to the exact candidate. Implementation self-review is not independent evidence.
+
+## Stop lines
+
+- [R6] Stop and obtain owner approval before deployment, domain or DNS changes,
+  public release, a new external service, a new dependency, real contact or private
+  information, deletion, or reset.
+- [R7] Treat `read`, `write`, `push`, `merge`, and `release` as separate authority
+  levels that never advance automatically. Production action always requires owner approval.
+- [R8] For MON-106, do not change website features, content, runtime, source,
+  package or lock files, build or deployment configuration, or the owner dirty worktree.
+  Do not add a dependency, schema, manifest, database, daemon, scheduler, hosted service,
+  or second task system. Return to the Issue if any of these becomes necessary.
+- [R9] Keep `CLAUDE.md` import-only. Do not call Claude or another external model,
+  and do not make a compatibility claim without new task authority and exact-revision proof.
+- [R10] Register every hard rule in the Rule Accountability Matrix with its trigger,
+  enforcement, evidence, failure action, and removal condition. Guidance without an
+  enforcement channel remains advisory.
