@@ -1,7 +1,7 @@
 # PROJECT_CONTEXT — ailiu.online
 
 > 项目胶囊（保持瘦，≤120 行）。事实用 `scripts/cap_facts.py` 采集，不靠记忆。
-> 最近更新：2026-07-02
+> 最近更新：2026-07-29
 
 ## 是什么
 
@@ -13,7 +13,7 @@
 - 无第三方动画库，核心动效由 `requestAnimationFrame` 驱动
 - oxlint 做 lint；Schibsted Grotesk / Space Mono 走本地字体文件，中文走系统字体栈
 
-## 当前状态（截至 2026-07-02）
+## 当前状态（站点运行事实截至 2026-07-02；Analytics 本地候选截至 2026-07-29）
 
 - 代码已完成；当前本地门禁需以最新 `npm run lint`、`npm run build` 和 PC / 移动预览截图为准。
 - 仓库：`github.com/mongocyber/ailiu.online`（**私有**），默认分支 `main`。
@@ -22,6 +22,7 @@
 - 域名 DNS 当前由火山引擎 nameserver 托管；站点可访问且解析到 Vercel 边缘，但 Vercel 控制台仍建议在 DNS provider 设置 apex `A ailiu.online 76.76.21.21`，或切 nameserver 到 Vercel。
 - Aviso 和小姨家详情页已用当前真实项目资料与图片替换占位内容。
 - SEO / GEO 基础已接入：canonical、OG/Twitter meta、JSON-LD、`robots.txt`、`sitemap.xml`、`llms.txt`，构建时生成 `/projects/aviso/index.html`、`/projects/xiaoyi/index.html`。
+- Vercel Web Analytics 基础 pageview 代码已在本地候选接入，尚未合入或部署；Vercel Dashboard 开关与生产采集均待对应 Owner Gate 重新验证，不补录历史数据。
 
 ## 验证骨架（spine）
 
@@ -40,7 +41,7 @@
 
 1. DNS 收口：在火山引擎 DNS 中确认 apex A 记录是否要改为 Vercel 推荐的 `76.76.21.21`，或改用 Vercel nameserver。
 2. Google Search Console：提交 `https://ailiu.online/sitemap.xml`，用 URL Inspection 检查首页和两个项目页。
-3. Day-2：隐私友好的访问统计 / 监控（新外部服务，需 owner 选型）。
+3. Day-2：待 owner 逐档授权后，依次完成 push / PR / merge、Preview、Production 与真实 pageview 验证；性能监控仍未接入。
 
 ## 边界（硬停，必须 owner 拍板）
 
