@@ -4,7 +4,7 @@
 检查证实的操作路径。动态状态必须在每次操作时重新读回；不得把本文中的历史
 结果当作当前生产事实。
 
-## 1. 当前运行模型与真相源
+## 1. 当前运行模型与真相源 [O1]
 
 - 生产站点：`https://ailiu.online`。
 - `https://www.ailiu.online` 由 Vercel 永久重定向到根域名。
@@ -20,14 +20,16 @@
 不要在文档中长期固定“当前 deployment ID”。需要时从 Vercel 项目重新查询，
 并把当次 ID、Git SHA、target 和状态记录在变更或故障证据中。
 
-## 2. 权限门禁
+## 2. 权限门禁 [O2]
 
 `read`、`write`、`push`、`PR`、`merge`、`production` 和 `rollback`
 是不同权限级别，不得自动升级。
 
 开始发布前必须具备：
 
-1. 当前任务明确授权的范围和 active Issue。
+1. 当前任务有范围匹配的 active Issue，或有明确记录仓库、范围、权限级别和
+   stop lines 的 owner task authorization；已完成或相邻 Issue 只能作为背景，
+   不能授权新工作。
 2. 最新远端 `main` 的完整 SHA，以及候选的完整 SHA、父提交和 changed paths。
 3. 候选工作区洁净，`./scripts/verify.sh` 通过；用户可见改动还需桌面和移动端检查。
 4. medium/high-risk 候选具有绑定 exact candidate 的新鲜独立 review。
@@ -45,7 +47,7 @@
 
 ## 3. Preview 与 Production 发布
 
-### Preview
+### Preview [O3]
 
 1. 取得候选 push/PR 授权后，推送 exact candidate；推送本身不等于 Preview 已成功。
 2. 在 Vercel 项目读回新 deployment：
@@ -60,7 +62,7 @@
    不得用另一个 READY deployment 代替本候选证据，也不得仅凭 API `target: null`
    声称 Preview 或 Production 已验证。
 
-### Production
+### Production [O4]
 
 1. 取得明确 Production 授权，并再次确认 owner 接受 `main` 更新可能由既有
    Git 集成自动触发生产部署。
@@ -76,7 +78,7 @@
 4. `READY` 只证明平台部署完成，不证明页面、Analytics 或用户体验正常。
    必须继续执行生产验证。
 
-## 4. 生产验证
+## 4. 生产验证 [O5]
 
 按顺序记录结果；任何必检项失败都停止后续发布并进入故障处理。
 
@@ -104,26 +106,26 @@ HTTP 200、Vercel `READY`、无 console error 和真实业务结果是不同证�
 证据。前一门禁通过不能替代后一门禁；缺少读回、证据不匹配或请求失败时保持
 `UNKNOWN / NOT VERIFIED`，不得推断为通过。
 
-1. **Gate A — exact deployment 包含获批候选**
+1. **Gate A — exact deployment 包含获批候选 [O6A]**
    - 记录 deployment ID、environment、API `target` 原始值、状态、Git SHA、
      Git ref 和 PR。
    - 对照获批候选，确认该 exact Git SHA 的源码/依赖确实包含 Analytics SDK
      和脚本注入改动。
    - 只有 deployment 与获批候选完全绑定时记 `PASS`；否则记
      `UNKNOWN / NOT VERIFIED`。
-2. **Gate B — Dashboard 开关只读读回**
+2. **Gate B — Dashboard 开关只读读回 [O6B]**
    - 在 Vercel Web Analytics Dashboard 只读确认目标项目和目标 environment
      的开关状态，记录读回时间和原始状态。
    - 只有只读读回明确确认目标 environment 已启用时记 `PASS`；无法读取、
      environment 不明或状态未启用时记 `UNKNOWN / NOT VERIFIED`。
    - 任何启用、关闭或其他设置改变都是独立 owner-gated 写操作；本门禁不授权改变。
-3. **Gate C — 页面实际加载且脚本请求成功**
+3. **Gate C — 页面实际加载且脚本请求成功 [O6C]**
    - 在目标 deployment 页面打开浏览器 Network/console，确认页面实际发起
      `/_vercel/insights/script.js` 请求，并记录该请求的成功响应状态和时间。
    - 同时记录页面 URL、environment、deployment ID 和新增 console error 数。
    - 只有请求由该页面实际发出并成功完成时记 `PASS`；源码、DOM 或日志中仅出现
      endpoint 路径，或单独访问 endpoint，均不能记 `PASS`。
-4. **Gate D — 限定时间窗内读回真实 Production pageview**
+4. **Gate D — 限定时间窗内读回真实 Production pageview [O6D]**
    - Production 发布后，先记录真实生产访问的 URL 和访问时间 `T0`，再从
      `https://ailiu.online` 完成一次真实页面访问。
    - 在操作记录中预先写明查询窗口起止 `T0`–`T1`；到 `T1` 后按 Production
@@ -138,7 +140,7 @@ HTTP 200、Vercel `READY`、无 console error 和真实业务结果是不同证�
 
 Web Analytics 是访问统计，不是 uptime、错误告警、VPS 监控或自动修复。
 
-## 6. 回滚
+## 6. 回滚 [O7]
 
 回滚是 Production 动作，必须由 owner 针对明确目标批准。
 
@@ -155,7 +157,7 @@ Web Analytics 是访问统计，不是 uptime、错误告警、VPS 监控或自�
 不得通过改 DNS、删除历史 deployment、reset、force push 或静默改写 Git 历史回滚。
 如果找不到“此前已验证”的 deployment，保持停线并由 owner 决定，不得自行选取。
 
-## 7. 故障处理
+## 7. 故障处理 [O8]
 
 ### 站点不可用、错误版本或页面回归
 
@@ -175,7 +177,7 @@ Web Analytics 是访问统计，不是 uptime、错误告警、VPS 监控或自�
 只收集当前解析、HTTP/证书和 Vercel domain 状态证据。不得自行改火山引擎 DNS、
 nameserver、Vercel domain 或证书设置；把 exact 证据交给 owner 决策。
 
-## 8. 监控与告警现状
+## 8. 监控与告警现状 [O9]
 
 当前已证实的运行信号只有 Vercel deployment 状态读回和人工 HTTP/浏览器 smoke。
 仓库内没有 GitHub Actions、自动化生产 smoke 或端到端测试配置。
@@ -191,7 +193,7 @@ nameserver、Vercel domain 或证书设置；把 exact 证据交给 owner 决策
 因此，Vercel `READY` 之后的人工生产验证是当前必需门禁。补充任何自动监控、
 告警或运行服务属于新范围，需 owner 选型和批准。
 
-## 9. 每次操作的最小记录
+## 9. 每次操作的最小记录 [O10]
 
 在 active Issue、PR 或独立证据中记录：
 

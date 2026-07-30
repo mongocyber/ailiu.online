@@ -8,15 +8,19 @@ Capability: core
 
 ## Authority and context
 
-- [R1] Dynamic scope and acceptance currently come from
-  [Linear MON-106](https://linear.app/mongocyber/issue/MON-106/external-proof-adopt-the-core-project-harness-in-ai流).
-  Before editing, read that Issue and the checked-out Git revision and status. Stop on
-  authority, baseline, or scope drift.
+- [R1] Dynamic scope and acceptance must come from an active native task whose scope
+  matches the work, or from an explicit owner task-authorization record that names the
+  repository, scope, allowed authority levels, and stop lines. A completed or adjacent
+  Issue is context only and cannot authorize new work. Before editing, read the authority
+  record and the checked-out Git revision and status. Stop on authority, baseline, or
+  scope drift.
+- Completed [Linear MON-106](https://linear.app/mongocyber/issue/MON-106/external-proof-adopt-the-core-project-harness-in-ai流)
+  is historical evidence for the core-harness adoption only, not current task authority.
 - Current implementation truth is the checked-out Git exact revision. Native platforms
   own review, deployment, and runtime facts.
 - [`docs/ai/PROJECT_CONTEXT.md`](docs/ai/PROJECT_CONTEXT.md) is a legacy project capsule
   for architectural and historical context. Reverify its dated, deployment, runtime,
-  role, and tool-specific statements against Git, native platforms, and the active Issue.
+  role, and tool-specific statements against Git, native platforms, and current authority.
 
 ## Project map
 
@@ -25,6 +29,7 @@ Capability: core
 - `src/components/Gallery.tsx`: gallery orchestration, navigation, reveal, and parallax.
 - `src/components/{DetailOverlay,Chrome,Cursor,Lightbox,Placeholder,Rich}.tsx` and
   `src/components/panels/*`: supporting presentation components.
+- [`docs/OPERATIONS.md`](docs/OPERATIONS.md): production operations and evidence gates.
 - [`docs/ai/PROJECT_CONTEXT.md`](docs/ai/PROJECT_CONTEXT.md): legacy architecture/history capsule.
 - [`docs/ai/RULE_ACCOUNTABILITY.md`](docs/ai/RULE_ACCOUNTABILITY.md): hard-rule Matrix.
 - [`.github/pull_request_template.md`](.github/pull_request_template.md): native review checklist.
@@ -63,10 +68,10 @@ repository's existing lint and production-build gates.
   information, deletion, or reset.
 - [R7] Treat `read`, `write`, `push`, `merge`, and `release` as separate authority
   levels that never advance automatically. Production action always requires owner approval.
-- [R8] For MON-106, do not change website features, content, runtime, source,
-  package or lock files, build or deployment configuration, or the owner dirty worktree.
-  Do not add a dependency, schema, manifest, database, daemon, scheduler, hosted service,
-  or second task system. Return to the Issue if any of these becomes necessary.
+- [R8] Keep each task within its authorized paths and authority levels, and do not
+  modify the owner dirty worktree. Do not add a dependency, schema, manifest, database,
+  daemon, scheduler, hosted service, or second task system unless current authority
+  explicitly covers it. Fail closed and return to the owner on scope or authority drift.
 - [R9] Keep `CLAUDE.md` import-only. Do not call Claude or another external model,
   and do not make a compatibility claim without new task authority and exact-revision proof.
 - [R10] Register every hard rule in the Rule Accountability Matrix with its trigger,
