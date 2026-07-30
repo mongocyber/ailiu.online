@@ -50,12 +50,15 @@
 1. 取得候选 push/PR 授权后，推送 exact candidate；推送本身不等于 Preview 已成功。
 2. 在 Vercel 项目读回新 deployment：
    - 项目必须是 `ailiu.online`；
-   - Git SHA、分支和 PR 必须匹配候选；
-   - target 必须是 Preview（API 可能显示为 `null`），不能是 `production`；
+   - Vercel UI/environment 必须明确显示 `Preview`；
+   - API `target` 必须按原始值单独记录；Preview deployment 实际可能为
+     `null`，`null` 绝不能解释为 `production`；
+   - Git SHA、Git ref/分支和 PR 必须分别匹配候选；
    - 状态必须是 `READY`。
 3. 在该 Preview URL 完成与变更风险相称的桌面、移动端和 console 检查。
-4. 任何 SHA、target、项目或状态不匹配都立即停止；不得用另一个 READY
-   deployment 代替本候选证据。
+4. 任何 environment、API `target`、Git SHA/ref/PR、项目或状态不匹配都立即停止；
+   不得用另一个 READY deployment 代替本候选证据，也不得仅凭 API `target: null`
+   声称 Preview 或 Production 已验证。
 
 ### Production
 
@@ -97,14 +100,41 @@ HTTP 200、Vercel `READY`、无 console error 和真实业务结果是不同证�
 
 在取得对应 Preview/Production 授权后，按以下链路逐层验证：
 
-1. deployment 的 exact Git SHA 包含获批的 Analytics 候选。
-2. 目标页面实际注入并请求 `/_vercel/insights/script.js`，且没有新增 console error。
-3. Production 发布后，从生产域名进行一次真实页面访问。
-4. 在 Vercel Web Analytics 中读回该发布之后产生的 pageview，记录查询时间和范围。
+每个门禁必须独立记录 `PASS` 或 `UNKNOWN / NOT VERIFIED`，以及对应时间、环境和
+证据。前一门禁通过不能替代后一门禁；缺少读回、证据不匹配或请求失败时保持
+`UNKNOWN / NOT VERIFIED`，不得推断为通过。
 
-`/_vercel/insights/script.js` 端点可访问，不等于页面已加载脚本；页面加载脚本，
-也不等于 Vercel 设置已启用或 pageview 已入库。Vercel Web Analytics 开关当前
-仍需在 Production gate 中重新验证；若需要改变设置，必须先取得 owner 批准。
+1. **Gate A — exact deployment 包含获批候选**
+   - 记录 deployment ID、environment、API `target` 原始值、状态、Git SHA、
+     Git ref 和 PR。
+   - 对照获批候选，确认该 exact Git SHA 的源码/依赖确实包含 Analytics SDK
+     和脚本注入改动。
+   - 只有 deployment 与获批候选完全绑定时记 `PASS`；否则记
+     `UNKNOWN / NOT VERIFIED`。
+2. **Gate B — Dashboard 开关只读读回**
+   - 在 Vercel Web Analytics Dashboard 只读确认目标项目和目标 environment
+     的开关状态，记录读回时间和原始状态。
+   - 只有只读读回明确确认目标 environment 已启用时记 `PASS`；无法读取、
+     environment 不明或状态未启用时记 `UNKNOWN / NOT VERIFIED`。
+   - 任何启用、关闭或其他设置改变都是独立 owner-gated 写操作；本门禁不授权改变。
+3. **Gate C — 页面实际加载且脚本请求成功**
+   - 在目标 deployment 页面打开浏览器 Network/console，确认页面实际发起
+     `/_vercel/insights/script.js` 请求，并记录该请求的成功响应状态和时间。
+   - 同时记录页面 URL、environment、deployment ID 和新增 console error 数。
+   - 只有请求由该页面实际发出并成功完成时记 `PASS`；源码、DOM 或日志中仅出现
+     endpoint 路径，或单独访问 endpoint，均不能记 `PASS`。
+4. **Gate D — 限定时间窗内读回真实 Production pageview**
+   - Production 发布后，先记录真实生产访问的 URL 和访问时间 `T0`，再从
+     `https://ailiu.online` 完成一次真实页面访问。
+   - 在操作记录中预先写明查询窗口起止 `T0`–`T1`；到 `T1` 后按 Production
+     environment、生产域名和该时间窗过滤 Vercel Web Analytics。
+   - 记录 Dashboard 查询时间、过滤条件和读回结果。只有在该限定时间窗内读回
+     发布后真实 Production pageview 时记 `PASS`；没有限定窗口、读不到数据或
+     无法确认 environment/域名时记 `UNKNOWN / NOT VERIFIED`。
+
+`/_vercel/insights/script.js` endpoint 路径出现，不等于请求已发出或成功响应；
+脚本请求成功，也不等于 Dashboard 开关已启用或 pageview 已入库。四个门禁必须
+分别留证，不能合并为一个“Analytics 正常”结论。
 
 Web Analytics 是访问统计，不是 uptime、错误告警、VPS 监控或自动修复。
 
