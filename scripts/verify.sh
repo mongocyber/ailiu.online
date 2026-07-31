@@ -42,6 +42,7 @@ trap 'rm -rf "$temp_dir"' EXIT HUP INT TERM
 for required_file in \
   AGENTS.md \
   CLAUDE.md \
+  docs/OPERATIONS.md \
   docs/ai/PROJECT_CONTEXT.md \
   docs/ai/RULE_ACCOUNTABILITY.md \
   .github/pull_request_template.md
@@ -79,45 +80,358 @@ test "$(cat CLAUDE.md)" = '@AGENTS.md' ||
   fail "CLAUDE.md must contain only @AGENTS.md"
 pass "CLAUDE.md import-only contract"
 
-matrix_header='| Rule | Trigger | Enforcement Layer | Evidence | Failure Action | Removal Condition |'
-grep -Fxq "$matrix_header" docs/ai/RULE_ACCOUNTABILITY.md ||
-  fail "Rule Accountability Matrix header is incomplete"
-awk -F '|' '
-  /^\| R[0-9]+ / {
-    rows++
-    for (column = 2; column <= 7; column++) {
-      value = $column
-      gsub(/^[[:space:]]+|[[:space:]]+$/, "", value)
-      if (value == "") {
-        printf "incomplete Matrix field at line %d\n", NR > "/dev/stderr"
+parse_rule_matrix() {
+  matrix_file=$1
+  output_file=$2
+
+  awk -F '|' '
+    function report(message) {
+      printf "%s at line %d\n", message, NR > "/dev/stderr"
+      invalid = 1
+    }
+    function canonical_field(raw, value) {
+      if (length(raw) < 3 || substr(raw, 1, 1) != " " ||
+          substr(raw, length(raw), 1) != " ") {
+        return ""
+      }
+      value = substr(raw, 2, length(raw) - 2)
+      if (value == "" || value ~ /^[[:space:]]/ || value ~ /[[:space:]]$/) {
+        return ""
+      }
+      return value
+    }
+    function valid_enforcement(value, parts, count, item, seen) {
+      gsub(/, and /, ",", value)
+      gsub(/ and /, ",", value)
+      gsub(/, /, ",", value)
+      count = split(value, parts, ",")
+      if (count == 0) {
+        return 0
+      }
+      split("", seen)
+      for (item = 1; item <= count; item++) {
+        if (parts[item] !~ /^(Deterministic|Executable|Semantic|Human)$/ ||
+            seen[parts[item]]++) {
+          return 0
+        }
+      }
+      return 1
+    }
+    BEGIN {
+      header = "| Rule | Trigger | Enforcement Layer | Evidence | Failure Action | Removal Condition |"
+      separator = "| --- | --- | --- | --- | --- | --- |"
+      phase = "preamble"
+    }
+    $0 == header {
+      if (phase != "preamble" || header_seen) {
+        report("duplicate or misplaced Matrix header")
+      } else {
+        header_seen = 1
+        phase = "separator"
+      }
+      next
+    }
+    phase == "preamble" {
+      next
+    }
+    phase == "separator" {
+      if ($0 != separator) {
+        report("Matrix separator must use the canonical six-column format")
+      } else {
+        separator_seen = 1
+        phase = "rows"
+      }
+      next
+    }
+    phase == "rows" {
+      rows++
+      row_invalid = 0
+      if (NF != 8 || $1 != "" || $8 != "") {
+        report("Matrix row must be an opening-pipe, six-column canonical table row")
+        next
+      }
+      for (column = 2; column <= 7; column++) {
+        fields[column] = canonical_field($column)
+        if (fields[column] == "") {
+          report("Matrix row contains an empty or non-canonical field")
+          row_invalid = 1
+        }
+      }
+      rule_separator = index(fields[2], " — ")
+      if (rule_separator < 2 ||
+          substr(fields[2], rule_separator + 3) == "") {
+        report("Matrix rule field must contain a canonical ID and title")
+        row_invalid = 1
+      } else {
+        rule_id = substr(fields[2], 1, rule_separator - 1)
+        if (rule_id !~ /^(R[1-9][0-9]*|O[1-9][0-9]*[A-Z]?)$/) {
+          report("Matrix rule ID is non-canonical")
+          row_invalid = 1
+        }
+      }
+      if (!valid_enforcement(fields[4])) {
+        report("Matrix row has an invalid enforcement layer")
+        row_invalid = 1
+      }
+      if (!row_invalid) {
+        if (seen[rule_id]++) {
+          report("Matrix contains a duplicate rule ID")
+        } else {
+          print rule_id
+          if (rule_id ~ /^R/) {
+            r_rows++
+          } else {
+            o_rows++
+          }
+        }
+      }
+      next
+    }
+    END {
+      if (!header_seen) {
+        print "Matrix has no canonical header" > "/dev/stderr"
+        invalid = 1
+      }
+      if (!separator_seen) {
+        print "Matrix has no canonical separator" > "/dev/stderr"
+        invalid = 1
+      }
+      if (rows == 0 || r_rows == 0 || o_rows == 0) {
+        print "Matrix must contain canonical R and O rule rows" > "/dev/stderr"
+        invalid = 1
+      }
+      if (invalid) {
         exit 1
       }
     }
-    if ($4 !~ /(Deterministic|Executable|Semantic|Human)/) {
-      printf "missing enforcement layer at line %d\n", NR > "/dev/stderr"
-      exit 1
-    }
-  }
-  END {
-    if (rows == 0) {
-      print "Matrix has no rule rows" > "/dev/stderr"
-      exit 1
-    }
-  }
-' docs/ai/RULE_ACCOUNTABILITY.md ||
-  fail "Rule Accountability Matrix rows are incomplete"
+  ' "$matrix_file" > "$output_file"
+}
 
-grep -Eo '\[R[0-9]+\]' AGENTS.md | tr -d '[]' | sort -u > "$temp_dir/agent-rules"
-sed -n 's/^| \(R[0-9][0-9]*\) .*/\1/p' docs/ai/RULE_ACCOUNTABILITY.md |
-  sort > "$temp_dir/matrix-rules"
-test -s "$temp_dir/matrix-rules" || fail "Rule Accountability Matrix has no parseable IDs"
-test -z "$(comm -23 "$temp_dir/agent-rules" "$temp_dir/matrix-rules")" ||
-  fail "an AGENTS.md hard rule is missing from the Matrix"
-test -z "$(comm -13 "$temp_dir/agent-rules" "$temp_dir/matrix-rules")" ||
-  fail "the Matrix contains a rule absent from AGENTS.md"
-test -z "$(uniq -d "$temp_dir/matrix-rules")" ||
-  fail "Rule Accountability Matrix contains duplicate rule IDs"
-pass "Rule Accountability Matrix completeness"
+extract_source_rule_ids() {
+  source_kind=$1
+  source_file=$2
+  output_file=$3
+
+  awk -v source_kind="$source_kind" '
+    source_kind == "R" &&
+      ($0 ~ /^- \[R[1-9][0-9]*\] / || $0 ~ /^\[R[1-9][0-9]*\] /) {
+      value = $0
+      sub(/^-? ?\[/, "", value)
+      sub(/\].*$/, "", value)
+      print value
+      next
+    }
+    source_kind == "O" &&
+      ($0 ~ /^##+ [^[]+ \[O[1-9][0-9]*[A-Z]?\]$/ ||
+       $0 ~ /^[1-9][0-9]*\. \*\*[^[]+ \[O[1-9][0-9]*[A-Z]?\]\*\*$/) {
+      value = $0
+      sub(/^.*\[/, "", value)
+      sub(/\].*$/, "", value)
+      print value
+    }
+  ' "$source_file" > "$output_file"
+}
+
+verify_rule_accountability() {
+  agents_file=$1
+  operations_file=$2
+  matrix_file=$3
+  scratch_dir=$4
+
+  mkdir -p "$scratch_dir"
+  parse_rule_matrix "$matrix_file" "$scratch_dir/matrix-rules-raw" ||
+    return 1
+  extract_source_rule_ids R "$agents_file" "$scratch_dir/agent-rules-raw"
+  extract_source_rule_ids O "$operations_file" "$scratch_dir/operations-rules-raw"
+
+  for rule_source in agent operations matrix
+  do
+    LC_ALL=C sort "$scratch_dir/$rule_source-rules-raw" \
+      > "$scratch_dir/$rule_source-rules"
+    test -s "$scratch_dir/$rule_source-rules" || {
+      printf '%s\n' "$rule_source rule source has no canonical IDs" >&2
+      return 1
+    }
+    test -z "$(uniq -d "$scratch_dir/$rule_source-rules")" || {
+      printf '%s\n' "$rule_source rule source contains duplicate rule IDs" >&2
+      return 1
+    }
+  done
+
+  grep '^R' "$scratch_dir/matrix-rules" > "$scratch_dir/matrix-r-rules" ||
+    return 1
+  grep '^O' "$scratch_dir/matrix-rules" > "$scratch_dir/matrix-o-rules" ||
+    return 1
+  test -z "$(comm -23 "$scratch_dir/agent-rules" "$scratch_dir/matrix-r-rules")" ||
+    return 1
+  test -z "$(comm -13 "$scratch_dir/agent-rules" "$scratch_dir/matrix-r-rules")" ||
+    return 1
+  test -z "$(comm -23 "$scratch_dir/operations-rules" "$scratch_dir/matrix-o-rules")" ||
+    return 1
+  test -z "$(comm -13 "$scratch_dir/operations-rules" "$scratch_dir/matrix-o-rules")" ||
+    return 1
+}
+
+make_matrix_mutation() {
+  mutation=$1
+  output_file=$2
+
+  awk -F '|' -v OFS='|' -v mutation="$mutation" '
+    $0 == "| Rule | Trigger | Enforcement Layer | Evidence | Failure Action | Removal Condition |" &&
+      mutation == "prose_before_table" {
+      print "R999 — prose with | separators is not a Matrix table row"
+      applied = 1
+    }
+    $0 == "| Rule | Trigger | Enforcement Layer | Evidence | Failure Action | Removal Condition |" &&
+      mutation == "prose_cannot_replace_row" {
+      print "O6D — prose mention | cannot replace a Matrix table row"
+      applied = 1
+    }
+    index($0, "| R1 — ") == 1 && mutation == "leading_space" {
+      print " " $0
+      applied = 1
+      next
+    }
+    index($0, "| R1 — ") == 1 && mutation == "three_leading_spaces" {
+      print "   " $0
+      applied = 1
+      next
+    }
+    index($0, "| R1 — ") == 1 && mutation == "missing_opening_pipe" {
+      print substr($0, 3)
+      applied = 1
+      next
+    }
+    index($0, "| R1 — ") == 1 && mutation == "missing_r_row" {
+      applied = 1
+      next
+    }
+    index($0, "| O6D — ") == 1 && mutation == "missing_o_row" {
+      applied = 1
+      next
+    }
+    index($0, "| O6D — ") == 1 && mutation == "prose_cannot_replace_row" {
+      next
+    }
+    index($0, "| O6D — ") == 1 && mutation == "padded_id" {
+      sub(/^\| O6D/, "|  O6D")
+      print
+      applied = 1
+      next
+    }
+    index($0, "| O6D — ") == 1 && mutation == "duplicate_id" {
+      print
+      print
+      applied = 1
+      next
+    }
+    index($0, "| O6D — ") == 1 && mutation == "canonical_row" {
+      $2 = " O6D — Canonical parser probe "
+      print
+      applied = 1
+      next
+    }
+    index($0, "| O6C — ") == 1 && mutation == "empty_trigger" {
+      $3 = " "
+      print
+      applied = 1
+      next
+    }
+    index($0, "| O6C — ") == 1 && mutation == "empty_enforcement" {
+      $4 = " "
+      print
+      applied = 1
+      next
+    }
+    index($0, "| O6C — ") == 1 && mutation == "invalid_enforcement" {
+      $4 = " Advisory "
+      print
+      applied = 1
+      next
+    }
+    index($0, "| O6C — ") == 1 && mutation == "empty_evidence" {
+      $5 = " "
+      print
+      applied = 1
+      next
+    }
+    index($0, "| O6C — ") == 1 && mutation == "empty_failure_action" {
+      $6 = " "
+      print
+      applied = 1
+      next
+    }
+    index($0, "| O6C — ") == 1 && mutation == "empty_removal" {
+      $7 = " "
+      print
+      applied = 1
+      next
+    }
+    {
+      print
+    }
+    END {
+      if (!applied) {
+        exit 1
+      }
+    }
+  ' docs/ai/RULE_ACCOUNTABILITY.md > "$output_file"
+}
+
+run_matrix_probe() {
+  probe_name=$1
+  mutation=$2
+  expectation=$3
+  probe_dir="$temp_dir/probe-$probe_name"
+  probe_matrix="$probe_dir/RULE_ACCOUNTABILITY.md"
+  probe_log="$probe_dir/output.log"
+
+  mkdir -p "$probe_dir"
+  make_matrix_mutation "$mutation" "$probe_matrix" ||
+    fail "unable to build Matrix mutation probe: $probe_name"
+  if test "$expectation" = pass; then
+    verify_rule_accountability \
+      AGENTS.md \
+      docs/OPERATIONS.md \
+      "$probe_matrix" \
+      "$probe_dir/check" > "$probe_log" 2>&1 || {
+        sed -n '1,20p' "$probe_log" >&2
+        fail "valid Matrix mutation probe was rejected: $probe_name"
+      }
+  elif verify_rule_accountability \
+    AGENTS.md \
+    docs/OPERATIONS.md \
+    "$probe_matrix" \
+    "$probe_dir/check" > "$probe_log" 2>&1
+  then
+    fail "invalid Matrix mutation probe was accepted: $probe_name"
+  fi
+}
+
+verify_rule_accountability \
+  AGENTS.md \
+  docs/OPERATIONS.md \
+  docs/ai/RULE_ACCOUNTABILITY.md \
+  "$temp_dir/live-accountability" ||
+  fail "Rule Accountability Matrix is incomplete or inconsistent"
+
+run_matrix_probe canonical-row canonical_row pass
+run_matrix_probe prose-before-table prose_before_table pass
+run_matrix_probe leading-space leading_space fail
+run_matrix_probe three-leading-spaces three_leading_spaces fail
+run_matrix_probe missing-opening-pipe missing_opening_pipe fail
+run_matrix_probe padded-id padded_id fail
+run_matrix_probe duplicate-id duplicate_id fail
+run_matrix_probe missing-r-row missing_r_row fail
+run_matrix_probe missing-o-row missing_o_row fail
+run_matrix_probe prose-cannot-replace-row prose_cannot_replace_row fail
+run_matrix_probe empty-trigger empty_trigger fail
+run_matrix_probe empty-enforcement empty_enforcement fail
+run_matrix_probe invalid-enforcement invalid_enforcement fail
+run_matrix_probe empty-evidence empty_evidence fail
+run_matrix_probe empty-failure-action empty_failure_action fail
+run_matrix_probe empty-removal empty_removal fail
+pass "Rule Accountability Matrix parser and mutation probes"
 
 for checklist_field in \
   'Target state:' \
