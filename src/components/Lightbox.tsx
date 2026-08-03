@@ -1,8 +1,10 @@
 import { useEffect, useRef } from 'react'
+import { usePortfolio } from '../portfolio-context'
 
 export interface LightboxData {
   src: string
   caption: string
+  alt: string
 }
 
 /**
@@ -15,6 +17,7 @@ export interface LightboxData {
  * the freshly-rendered full-screen backdrop and immediately close it.
  */
 export function Lightbox({ data, onClose }: { data: LightboxData | null; onClose: () => void }) {
+  const { content } = usePortfolio()
   const open = data !== null
   const openedAt = useRef(0)
   const ref = useRef<HTMLDivElement>(null)
@@ -84,14 +87,14 @@ export function Lightbox({ data, onClose }: { data: LightboxData | null; onClose
       onClick={backdropClose}
       role={open ? 'dialog' : undefined}
       aria-modal={open ? true : undefined}
-      aria-label={open ? '图片预览' : undefined}
+      aria-label={open ? content.ui.imagePreview : undefined}
       aria-hidden={!open}
       inert={!open}
       tabIndex={open ? -1 : undefined}
     >
       {data ? (
         <figure className="lightbox-fig" onClick={(e) => e.stopPropagation()}>
-          <img src={data.src} alt={data.caption} />
+          <img src={data.src} alt={data.alt} />
           <figcaption>{data.caption}</figcaption>
         </figure>
       ) : null}
@@ -104,7 +107,7 @@ export function Lightbox({ data, onClose }: { data: LightboxData | null; onClose
             e.stopPropagation()
             onClose()
           }}
-          aria-label="关闭"
+          aria-label={content.ui.closeImage}
         >
           ✕
         </button>

@@ -1,7 +1,9 @@
 import { Fragment } from 'react'
-import { about } from '../../content'
+import { usePortfolio } from '../../portfolio-context'
 
 export function About() {
+  const { content } = usePortfolio()
+  const { about } = content
   return (
     <>
       <div className="about-tag" data-depth="-60">
@@ -27,10 +29,10 @@ export function About() {
         <div className="about-col" data-reveal data-ri="2">
           <p className="about-para">{about.para}</p>
           <div className="caplist">
-            {about.capabilities.map((c) => (
-              <div className="caprow" key={c.en}>
-                <span className="cn">{c.cn}</span>
-                <span className="en">{c.en}</span>
+            {about.capabilities.map((capability) => (
+              <div className="caprow" key={capability.descriptor}>
+                <span className="cn">{capability.label}</span>
+                <span className="en">{capability.descriptor}</span>
               </div>
             ))}
           </div>

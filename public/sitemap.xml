@@ -1,20 +1,56 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://ailiu.online/</loc>
-    <lastmod>2026-07-02</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ailiu.online/" />
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://ailiu.online/zh" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ailiu.online/" />
+    <lastmod>2026-08-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://ailiu.online/projects/aviso</loc>
-    <lastmod>2026-07-02</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ailiu.online/projects/aviso" />
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://ailiu.online/zh/projects/aviso" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ailiu.online/projects/aviso" />
+    <lastmod>2026-08-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ailiu.online/projects/xiaoyi</loc>
-    <lastmod>2026-07-02</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ailiu.online/projects/xiaoyi" />
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://ailiu.online/zh/projects/xiaoyi" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ailiu.online/projects/xiaoyi" />
+    <lastmod>2026-08-03</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ailiu.online/zh</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ailiu.online/" />
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://ailiu.online/zh" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ailiu.online/" />
+    <lastmod>2026-08-03</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://ailiu.online/zh/projects/aviso</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ailiu.online/projects/aviso" />
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://ailiu.online/zh/projects/aviso" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ailiu.online/projects/aviso" />
+    <lastmod>2026-08-03</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ailiu.online/zh/projects/xiaoyi</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ailiu.online/projects/xiaoyi" />
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://ailiu.online/zh/projects/xiaoyi" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ailiu.online/projects/xiaoyi" />
+    <lastmod>2026-08-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

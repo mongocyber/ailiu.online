@@ -1,8 +1,13 @@
 import { createContext, useContext } from 'react'
-import type { ProjectKey } from './content'
+import type { Locale, ProjectKey, SiteContent } from './content'
 import type { LightboxData } from './components/Lightbox'
 
 export interface PortfolioCtx {
+  locale: Locale
+  content: SiteContent
+  routeProjectKey: ProjectKey | null
+  homePath: string
+  projectPath: (key: ProjectKey) => string
   openDetail: (key: ProjectKey) => void
   closeDetail: () => void
   openLightbox: (data: LightboxData) => void

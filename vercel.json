@@ -67,6 +67,30 @@
     {
       "source": "/projects/xiaoyi/",
       "destination": "/projects/xiaoyi/index.html"
+    },
+    {
+      "source": "/zh",
+      "destination": "/zh/index.html"
+    },
+    {
+      "source": "/zh/",
+      "destination": "/zh/index.html"
+    },
+    {
+      "source": "/zh/projects/aviso",
+      "destination": "/zh/projects/aviso/index.html"
+    },
+    {
+      "source": "/zh/projects/aviso/",
+      "destination": "/zh/projects/aviso/index.html"
+    },
+    {
+      "source": "/zh/projects/xiaoyi",
+      "destination": "/zh/projects/xiaoyi/index.html"
+    },
+    {
+      "source": "/zh/projects/xiaoyi/",
+      "destination": "/zh/projects/xiaoyi/index.html"
     }
   ]
 }

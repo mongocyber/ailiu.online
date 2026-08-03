@@ -6,19 +6,16 @@ import { Gallery } from './components/Gallery'
 import type { LightboxData } from './components/Lightbox'
 import { Lightbox } from './components/Lightbox'
 import { ProjectPage } from './components/ProjectPage'
-import { projects, type ProjectKey } from './content'
+import { DEFAULT_LOCALE, getContent, type ProjectKey } from './content'
 import { useMediaQuery } from './hooks/useMediaQuery'
 import { PortfolioContext } from './portfolio-context'
-import { pageMeta, structuredData } from './seo'
-
-const projectKeys = new Set<ProjectKey>(projects.map((project) => project.key))
-
-function routeProjectKey(pathname: string): ProjectKey | null {
-  const match = pathname.match(/^\/projects\/([^/]+)\/?$/)
-  if (!match) return null
-  const key = match[1] as ProjectKey
-  return projectKeys.has(key) ? key : null
-}
+import {
+  homePath,
+  pageMeta,
+  parsePortfolioPath,
+  projectPath,
+  structuredData,
+} from './seo'
 
 function setMeta(name: string, content: string) {
   const selector = `meta[name="${name}"]`
@@ -52,7 +49,20 @@ function setCanonical(url: string) {
   canonical.href = url
 }
 
-function setJsonLd(projectKey: ProjectKey | null) {
+function setAlternate(hreflang: string, href: string) {
+  let alternate = document.head.querySelector<HTMLLinkElement>(
+    `link[rel="alternate"][hreflang="${hreflang}"]`,
+  )
+  if (!alternate) {
+    alternate = document.createElement('link')
+    alternate.rel = 'alternate'
+    alternate.hreflang = hreflang
+    document.head.appendChild(alternate)
+  }
+  alternate.href = href
+}
+
+function setJsonLd(locale: 'en' | 'zh', projectKey: ProjectKey | null) {
   let script = document.head.querySelector<HTMLScriptElement>(
     'script[type="application/ld+json"][data-seo="primary"]',
   )
@@ -62,7 +72,7 @@ function setJsonLd(projectKey: ProjectKey | null) {
     script.dataset.seo = 'primary'
     document.head.appendChild(script)
   }
-  script.textContent = JSON.stringify(structuredData(projectKey))
+  script.textContent = JSON.stringify(structuredData(locale, projectKey))
 }
 
 export default function App() {
@@ -71,9 +81,11 @@ export default function App() {
   const [pathname, setPathname] = useState(() => window.location.pathname)
   const [detailKey, setDetailKey] = useState<ProjectKey | null>(null)
   const [lightbox, setLightbox] = useState<LightboxData | null>(null)
-  const routeProject = routeProjectKey(pathname)
+  const parsedRoute = parsePortfolioPath(pathname)
+  const locale = parsedRoute?.locale ?? DEFAULT_LOCALE
+  const routeProject = parsedRoute?.projectKey ?? null
+  const content = getContent(locale)
   const isProjectPage = routeProject !== null
-  const isHomePage = pathname === '/'
   const lightboxOpen = lightbox !== null
   const mainHidden = detailKey !== null || lightboxOpen
 
@@ -95,10 +107,10 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    if (isHomePage || routeProject) return
+    if (parsedRoute) return
     window.history.replaceState(null, '', '/')
     setPathname('/')
-  }, [isHomePage, routeProject])
+  }, [parsedRoute])
 
   // Drive document-scroll (mobile) vs fixed-stage (desktop) from layout mode.
   useEffect(() => {
@@ -109,26 +121,31 @@ export default function App() {
   }, [isMobile, isProjectPage])
 
   useEffect(() => {
-    const meta = pageMeta(routeProject)
+    const meta = pageMeta(locale, routeProject)
+    document.documentElement.lang = meta.htmlLang
     document.title = meta.title
     setMeta('description', meta.description)
     setMeta('twitter:title', meta.title)
     setMeta('twitter:description', meta.description)
     setMeta('twitter:image', meta.image)
+    setMeta('twitter:image:alt', meta.imageAlt)
     setPropertyMeta('og:title', meta.title)
     setPropertyMeta('og:description', meta.description)
     setPropertyMeta('og:url', meta.url)
     setPropertyMeta('og:image', meta.image)
     setPropertyMeta('og:image:alt', meta.imageAlt)
+    setPropertyMeta('og:locale', meta.ogLocale)
+    setPropertyMeta('og:locale:alternate', meta.alternateOgLocale)
     setCanonical(meta.url)
-    setJsonLd(routeProject)
-  }, [routeProject])
+    meta.alternates.forEach((alternate) => setAlternate(alternate.hreflang, alternate.href))
+    setJsonLd(locale, routeProject)
+  }, [locale, routeProject])
 
   // Esc closes an open detail overlay.
   useEffect(() => {
     if (!detailKey || lightboxOpen) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeDetail()
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') closeDetail()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -142,9 +159,33 @@ export default function App() {
     )
   }, [detailKey, lightboxOpen, isMobile])
 
+  const localizedProjectPath = useCallback(
+    (key: ProjectKey) => projectPath(key, locale),
+    [locale],
+  )
+
   const ctx = useMemo(
-    () => ({ openDetail, closeDetail, openLightbox, isMobile }),
-    [openDetail, closeDetail, openLightbox, isMobile],
+    () => ({
+      locale,
+      content,
+      routeProjectKey: routeProject,
+      homePath: homePath(locale),
+      projectPath: localizedProjectPath,
+      openDetail,
+      closeDetail,
+      openLightbox,
+      isMobile,
+    }),
+    [
+      locale,
+      content,
+      routeProject,
+      localizedProjectPath,
+      openDetail,
+      closeDetail,
+      openLightbox,
+      isMobile,
+    ],
   )
 
   const appClass = [

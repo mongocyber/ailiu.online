@@ -1,5 +1,7 @@
 import type { RefObject } from 'react'
 import { BRAND } from '../content'
+import { usePortfolio } from '../portfolio-context'
+import { LanguageSwitcher } from './LanguageSwitcher'
 
 interface ChromeProps {
   n: number
@@ -16,6 +18,7 @@ interface ChromeProps {
  * written imperatively by the gallery loop / scroll listener via the refs.
  */
 export function Chrome({ n, isMobile, idxRef, dotsRef, progRef, onJump }: ChromeProps) {
+  const { content } = usePortfolio()
   const total = String(n).padStart(2, '0')
 
   return (
@@ -26,6 +29,7 @@ export function Chrome({ n, isMobile, idxRef, dotsRef, progRef, onJump }: Chrome
       </div>
 
       <div className="nav">
+        <LanguageSwitcher projectKey={null} />
         <span className="idx" ref={idxRef}>
           01 / {total}
         </span>
@@ -36,7 +40,7 @@ export function Chrome({ n, isMobile, idxRef, dotsRef, progRef, onJump }: Chrome
               className="dot"
               data-i={i}
               data-cursor
-              aria-label={`跳转到第 ${i + 1} 屏`}
+              aria-label={content.ui.panelLabel(i + 1)}
               onClick={() => onJump(i)}
             />
           ))}
@@ -44,7 +48,7 @@ export function Chrome({ n, isMobile, idxRef, dotsRef, progRef, onJump }: Chrome
       </div>
 
       <div className={`scrollhint${isMobile ? ' vertical' : ''}`}>
-        {isMobile ? 'SCROLL' : 'SCROLL / DRAG'}{' '}
+        {isMobile ? content.ui.scroll : content.ui.scrollDrag}{' '}
         <span className="arrow">{isMobile ? '↓' : '→'}</span>
       </div>
 

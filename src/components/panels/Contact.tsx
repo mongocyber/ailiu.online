@@ -1,7 +1,9 @@
 import { Fragment } from 'react'
-import { contact } from '../../content'
+import { usePortfolio } from '../../portfolio-context'
 
 export function Contact() {
+  const { content } = usePortfolio()
+  const { contact } = content
   return (
     <>
       <div className="contact-kicker" data-reveal data-ri="0">

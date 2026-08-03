@@ -1,7 +1,9 @@
 import { Fragment } from 'react'
-import { hero } from '../../content'
+import { usePortfolio } from '../../portfolio-context'
 
 export function Hero() {
+  const { content } = usePortfolio()
+  const { hero } = content
   return (
     <>
       <div className="hero-coords" data-depth="34">
