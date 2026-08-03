@@ -151,8 +151,17 @@ Web Analytics 是访问统计，不是 uptime、错误告警、VPS 监控或自�
 3. 由 owner 批准这个 exact 回滚目标。
 4. 在 Vercel 使用平台的 rollback，或将已验证的目标 deployment 重新指向
    Production。CLI、Dashboard 或 API 的实际写操作都需要单独授权。
-5. 读回 production alias、target、状态和 Git SHA，并重新执行第 4 节全部验证。
-6. 用新的可审查 revert/fix 候选修复 `main` 真相；重新走验证、review 和发布门禁。
+5. 回滚后只读核对 `Current deployment`、production alias、target、状态、Git SHA
+   和 auto-assignment，并重新执行第 4 节全部验证。
+6. Vercel Instant Rollback 会关闭生产域名的 auto-assignment；在该状态下，后续
+   `main` push 不会自动 live。不得用新 deployment 的 `READY` 或 `main` 已更新
+   推断生产域名已切换。
+7. 通过 **Undo Rollback** 或 **promote** 恢复 auto-assignment 是新的 Production
+   写操作，必须取得独立 owner 授权；原回滚授权不自动覆盖恢复动作。
+8. 执行获批的恢复动作后，只读核对 `Current deployment`、production alias、
+   Git SHA 和 auto-assignment 状态，并重新执行第 4 节全部验证；无法读回的字段
+   保持 `UNKNOWN / NOT VERIFIED`。
+9. 用新的可审查 revert/fix 候选修复 `main` 真相；重新走验证、review 和发布门禁。
 
 不得通过改 DNS、删除历史 deployment、reset、force push 或静默改写 Git 历史回滚。
 如果找不到“此前已验证”的 deployment，保持停线并由 owner 决定，不得自行选取。

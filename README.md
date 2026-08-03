@@ -11,7 +11,7 @@
 - **项目详情页** — 从底部滑入的全屏纵向详情（概述 / 核心功能 / 界面一览），`Esc` 或返回键关闭。
 - **可抓取作品页** — 构建时生成 `/projects/aviso/index.html`、`/projects/xiaoyi/index.html`，首页仍保留沉浸式 overlay 浏览。
 - **SEO / GEO 基础** — canonical、Open Graph、Twitter Card、JSON-LD、`robots.txt`、`sitemap.xml`、`llms.txt`。
-- **访问统计（本地候选）** — Vercel Web Analytics 基础 pageview 代码已接入，尚未合入或部署；仅在经 owner 批准的生产部署后采集，不补录历史数据。
+- **访问统计（实现证据）** — Vercel Web Analytics 基础 pageview 的 implementation evidence 已存在；是否已 pushed、merged、deployed 或产生采集，须分别绑定 exact revision、environment、deployment 与 Dashboard readback 判断。Preview 和 Production 各有独立 Owner Gate；未验证不得写成 deployed / live，且不补录历史数据。
 - **自定义光标** — 仅在精确指针设备上启用，悬停交互元素时放大。
 - **完整响应式** — 桌面端为横向画廊；移动端自动切换为纵向堆叠、单列布局、触摸友好，并隐藏自定义光标。
 - **可访问性** — 尊重 `prefers-reduced-motion`；无 JS 时内容仍完整可见；详情层和灯箱使用 modal 语义与焦点隔离。
