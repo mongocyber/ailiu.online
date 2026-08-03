@@ -899,6 +899,10 @@ a {
   letter-spacing: 0.14em;
   color: var(--ink);
 }
+.backbtn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
 .backbar .mark {
   display: flex;
   align-items: center;
@@ -1229,6 +1233,10 @@ a {
   letter-spacing: 0.12em;
   color: var(--ink-faint);
   text-decoration: none;
+}
+.nextlink:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
 }
 
 /* Standalone project pages share the detail article system, but scroll as

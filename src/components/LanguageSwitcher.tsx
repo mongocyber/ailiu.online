@@ -36,12 +36,11 @@ export function LanguageSwitcher({ projectKey }: { projectKey?: ProjectKey | nul
               className="language-option"
               href={localizedPath(option.locale, currentProject)}
               hrefLang={HTML_LANG[option.locale]}
-              lang={HTML_LANG[option.locale]}
               aria-current={current ? 'page' : undefined}
               aria-label={ariaLabel}
               data-cursor
             >
-              {option.shortLabel}
+              <span lang={HTML_LANG[option.locale]}>{option.shortLabel}</span>
             </a>
           </span>
         )

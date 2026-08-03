@@ -13,6 +13,9 @@ interface DetailOverlayProps {
   modalBlocked?: boolean
 }
 
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
 /**
  * Full-screen detail layer that slides up from translateY(100%). Both projects
  * share one overlay; the active article persists through the close animation so
@@ -49,6 +52,42 @@ export function DetailOverlay({
       previouslyFocused.current = null
     }
   }, [open])
+
+  useEffect(() => {
+    if (!open || modalBlocked) return
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab' || !ref.current) return
+      const focusable = Array.from(
+        ref.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+      )
+      if (!focusable.length) {
+        event.preventDefault()
+        event.stopPropagation()
+        ref.current.focus({ preventScroll: true })
+        return
+      }
+
+      const active = document.activeElement
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (!focusable.includes(active as HTMLElement)) {
+        event.preventDefault()
+        event.stopPropagation()
+        const target = event.shiftKey ? last : first
+        target.focus({ preventScroll: true })
+      } else if (event.shiftKey && active === first) {
+        event.preventDefault()
+        event.stopPropagation()
+        last.focus({ preventScroll: true })
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault()
+        event.stopPropagation()
+        first.focus({ preventScroll: true })
+      }
+    }
+    window.addEventListener('keydown', onKey, true)
+    return () => window.removeEventListener('keydown', onKey, true)
+  }, [open, modalBlocked])
 
   const project = activeKey ? getProject(locale, activeKey) : null
 
