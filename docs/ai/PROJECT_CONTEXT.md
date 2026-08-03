@@ -1,7 +1,7 @@
 # PROJECT_CONTEXT — ailiu.online
 
 > 项目胶囊（保持瘦，≤120 行）。事实用 `scripts/cap_facts.py` 采集，不靠记忆。
-> 最近更新：2026-07-29
+> 最近更新：2026-08-03
 
 ## 是什么
 
@@ -30,7 +30,7 @@
 | --- | --- |
 | lint (`npm run lint`) | ✅ |
 | typecheck + build (`npm run build` = `tsc -b && vite build`) | ✅ |
-| npm audit | ✅ 0 vulnerabilities |
+| npm audit（2026-07-31；candidate `51a8e0a6b1e9b3f07a40a032173f190d7b3d8227` vs baseline `37c588ec60bb16549dec4a952078aa480398c26d`；`--registry=https://registry.npmjs.org`） | 完整 audit：两者均有同一个 pre-existing dev-only High（`postcss@8.5.15`，经 Vite 依赖链引入）；production-only `npm audit --omit=dev`：两者均为 0；该 High 非 `@vercel/analytics@2.0.1` 引入 |
 | production deploy | ✅ Vercel production `dpl_CDwJoU7vBw1pVz4rzqsWFKYtPRzg` |
 | live smoke | ✅ `ailiu.online`、`www` redirect、项目页、sitemap、llms、桌面/移动 Playwright |
 | CI（GitHub Actions） | ⬜ 暂未启用（当前发布走本地 lint/build/audit + Vercel 部署） |
