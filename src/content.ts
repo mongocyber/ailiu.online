@@ -10,6 +10,15 @@ export const DEFAULT_LOCALE: Locale = 'en'
 export const LOCALES: Locale[] = ['en', 'zh']
 export const PROJECT_KEYS: ProjectKey[] = ['aviso', 'xiaoyi']
 
+export interface LanguageOptionCopy {
+  shortLabel: string
+}
+
+export const LANGUAGE_OPTIONS = {
+  en: { shortLabel: 'EN' },
+  zh: { shortLabel: '中文' },
+} satisfies Record<Locale, LanguageOptionCopy>
+
 /** A short rich paragraph: main text plus an optional trailing muted note. */
 export interface RichText {
   text: string

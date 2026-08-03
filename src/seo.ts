@@ -3,6 +3,7 @@ import {
   DEFAULT_LOCALE,
   getContent,
   getProject,
+  LANGUAGE_OPTIONS,
   LOCALES,
   PROJECT_KEYS,
   type Locale,
@@ -267,9 +268,9 @@ const richTextHtml = (value: { text: string; muted?: string }) =>
 const languageLinksHtml = (locale: Locale, projectKey?: ProjectKey | null) => {
   const content = getContent(locale)
   return `<nav aria-label="${escapeHtmlText(content.ui.languageSwitcherLabel)}">
-  <a href="${localizedPath('en', projectKey)}" hreflang="en" lang="en">EN</a>
+  <a href="${localizedPath('en', projectKey)}" hreflang="en" lang="en">${escapeHtmlText(LANGUAGE_OPTIONS.en.shortLabel)}</a>
   <span aria-hidden="true"> / </span>
-  <a href="${localizedPath('zh', projectKey)}" hreflang="zh-CN" lang="zh-CN">中文</a>
+  <a href="${localizedPath('zh', projectKey)}" hreflang="zh-CN" lang="zh-CN">${escapeHtmlText(LANGUAGE_OPTIONS.zh.shortLabel)}</a>
 </nav>`
 }
 

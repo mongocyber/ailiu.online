@@ -1,4 +1,4 @@
-import type { ProjectKey } from '../content'
+import { LANGUAGE_OPTIONS, type ProjectKey } from '../content'
 import { usePortfolio } from '../portfolio-context'
 import { HTML_LANG, localizedPath } from '../seo'
 
@@ -8,12 +8,12 @@ export function LanguageSwitcher({ projectKey }: { projectKey?: ProjectKey | nul
   const options = [
     {
       locale: 'en' as const,
-      shortLabel: 'EN',
+      shortLabel: LANGUAGE_OPTIONS.en.shortLabel,
       label: content.ui.englishLanguage,
     },
     {
       locale: 'zh' as const,
-      shortLabel: '中文',
+      shortLabel: LANGUAGE_OPTIONS.zh.shortLabel,
       label: content.ui.chineseLanguage,
     },
   ]
