@@ -50,7 +50,7 @@ export interface GalleryItem {
 
 export interface Project {
   key: ProjectKey
-  /** Identity color (sage for Aviso, terracotta for Antis Home). */
+  /** Identity color (sage for Aviso, terracotta for Aunt’s Home). */
   accent: string
   /** Big faint backdrop number, e.g. '01'. */
   bignum: string
@@ -260,19 +260,19 @@ const englishProjects: Project[] = [
     bignum: '02',
     imageSide: 'left',
     eyebrow: 'WORK 02 — FOOD & BEVERAGE · BRAND',
-    name: 'Antis Home',
+    name: 'Aunt’s Home',
     subtitle: 'A TASTE OF HOME',
     desc: {
       text: 'A food-and-beverage brand built from the ground up around the feeling of home. Naming, identity, spatial touchpoints, menus, and packaging come together as one warm, recognizable system.',
     },
     cover: 'Brand key visual',
-    coverAlt: 'Antis Home restaurant identity applied across signs, menus, and packaging',
+    coverAlt: 'Aunt’s Home restaurant identity applied across signs, menus, and packaging',
     coverImage: '/xiaoyi/xiaoyi-cover.png',
     coverAspect: '1512 / 1120',
     detailEyebrow: 'WORK 02 · F&B BRAND',
-    detailSubtitle: 'Antis Home — a taste of home.',
+    detailSubtitle: 'Aunt’s Home — a taste of home.',
     lead: {
-      text: 'Antis Home is a food-and-beverage venture shaped from zero to one around a simple promise: food that feels like home. The project turns familiarity, warmth, and ease into a brand language that can work in the real world.',
+      text: 'Aunt’s Home is a food-and-beverage venture shaped from zero to one around a simple promise: food that feels like home. The project turns familiarity, warmth, and ease into a brand language that can work in the real world.',
     },
     meta: [
       { k: 'ROLE', v: 'Brand / Visual Design' },
@@ -281,13 +281,13 @@ const englishProjects: Project[] = [
       { k: 'STATUS', v: 'Ended' },
     ],
     coverCaption: 'Brand key visual and identity applications',
-    detailCoverAlt: 'Antis Home terracotta identity shown across restaurant brand applications',
+    detailCoverAlt: 'Aunt’s Home terracotta identity shown across restaurant brand applications',
     detailCoverImage: '/xiaoyi/xiaoyi-detail-cover.png',
     detailCoverAspect: '1686 / 933',
     overviewTitle: ['From a name', 'to a flavor', 'people remember'],
     overviewBody: [
       {
-        text: 'The name Antis Home is meant to feel close and unforced—like arriving at Your Antis Place for a warm meal. Every brand decision begins with that emotional brief.',
+        text: 'The name Aunt’s Home is meant to feel close and unforced—like arriving at Your Aunt’s Place for a warm meal. Every brand decision begins with that emotional brief.',
       },
       {
         text: 'Naming, marks, color, typography, menus, packaging, space, and wayfinding were designed as one coherent system, giving the brand a recognizable voice at every customer touchpoint.',
@@ -320,27 +320,27 @@ const englishProjects: Project[] = [
     gallery: [
       {
         caption: 'Brand key visual',
-        alt: 'Antis Home terracotta key visual and original bilingual wordmark',
+        alt: 'Aunt’s Home terracotta key visual and original bilingual wordmark',
         aspect: '1686 / 933',
         wide: true,
         src: '/xiaoyi/xiaoyi-main-visual.png',
       },
       {
         caption: 'Packaging applications',
-        alt: 'Antis Home takeaway packaging in the terracotta brand system',
+        alt: 'Aunt’s Home takeaway packaging in the terracotta brand system',
         aspect: '4 / 3',
         src: '/xiaoyi/xiaoyi-packaging.png',
       },
       {
         caption: 'Menus and printed materials',
-        alt: 'Antis Home menus and printed restaurant materials',
+        alt: 'Aunt’s Home menus and printed restaurant materials',
         aspect: '4 / 3',
         src: '/xiaoyi/xiaoyi-menu-materials.png',
       },
     ],
-    seoTitle: 'Antis Home — Food & Beverage Brand Identity | ailiu',
+    seoTitle: 'Aunt’s Home — Food & Beverage Brand Identity | ailiu',
     seoDescription:
-      'Antis Home is a food-and-beverage identity project spanning naming, visual language, menus, packaging, space, and wayfinding.',
+      'Aunt’s Home is a food-and-beverage identity project spanning naming, visual language, menus, packaging, space, and wayfinding.',
   },
 ]
 

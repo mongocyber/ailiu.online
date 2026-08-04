@@ -6,7 +6,7 @@
 
 - [Home](https://ailiu.online/): Portfolio homepage covering product design, brand identity, AI-assisted building, and prototyping.
 - [Aviso](https://ailiu.online/projects/aviso): Case study for a privacy-conscious Chrome extension with in-page AI commands, selected-text actions, local history, and direct BYOK model access.
-- [Antis Home](https://ailiu.online/projects/xiaoyi): Case study for a food-and-beverage identity spanning naming, visual language, menus, packaging, space, and wayfinding.
+- [Aunt’s Home](https://ailiu.online/projects/xiaoyi): Case study for a food-and-beverage identity spanning naming, visual language, menus, packaging, space, and wayfinding.
 
 ## 中文页面
 
