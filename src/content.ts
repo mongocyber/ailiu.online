@@ -50,7 +50,7 @@ export interface GalleryItem {
 
 export interface Project {
   key: ProjectKey
-  /** Identity color (sage for Aviso, terracotta for Xiao Yi Jia). */
+  /** Identity color (sage for Aviso, terracotta for Antis Home). */
   accent: string
   /** Big faint backdrop number, e.g. '01'. */
   bignum: string
