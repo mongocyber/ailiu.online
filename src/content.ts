@@ -189,7 +189,7 @@ const englishProjects: Project[] = [
       { k: 'ROLE', v: 'Product / Design / Engineering' },
       { k: 'YEAR', v: '2026' },
       { k: 'PLATFORM', v: 'Chrome desktop' },
-      { k: 'STATUS', v: 'Internal beta · v0.3' },
+      { k: 'STATUS', v: 'Internal testing · v0.3' },
     ],
     coverCaption: 'Command palette and selection toolbar',
     detailCoverAlt: 'Aviso command palette beside an in-page AI conversation',
@@ -208,7 +208,7 @@ const englishProjects: Project[] = [
       {
         no: '01',
         title: 'Command palette',
-        desc: 'Open it anywhere with ⌘⇧Space to search local history, bookmarks, and previous AI conversations—or press Enter to ask AI directly.',
+        desc: 'Open it anywhere with ⌘⇧Space to search local history, bookmarks, and previous AI conversations. If there are no local results, press Enter to ask AI directly.',
       },
       {
         no: '02',
@@ -260,34 +260,34 @@ const englishProjects: Project[] = [
     bignum: '02',
     imageSide: 'left',
     eyebrow: 'WORK 02 — FOOD & BEVERAGE · BRAND',
-    name: 'Xiao Yi Jia',
+    name: 'Antis Home',
     subtitle: 'A TASTE OF HOME',
     desc: {
       text: 'A food-and-beverage brand built from the ground up around the feeling of home. Naming, identity, spatial touchpoints, menus, and packaging come together as one warm, recognizable system.',
     },
     cover: 'Brand key visual',
-    coverAlt: 'Xiao Yi Jia restaurant identity applied across signs, menus, and packaging',
+    coverAlt: 'Antis Home restaurant identity applied across signs, menus, and packaging',
     coverImage: '/xiaoyi/xiaoyi-cover.png',
     coverAspect: '1512 / 1120',
     detailEyebrow: 'WORK 02 · F&B BRAND',
-    detailSubtitle: 'Xiao Yi Jia — a taste of home.',
+    detailSubtitle: 'Antis Home — a taste of home.',
     lead: {
-      text: 'Xiao Yi Jia is a food-and-beverage venture shaped from zero to one around a simple promise: food that feels like home. The project turns familiarity, warmth, and ease into a brand language that can work in the real world.',
+      text: 'Antis Home is a food-and-beverage venture shaped from zero to one around a simple promise: food that feels like home. The project turns familiarity, warmth, and ease into a brand language that can work in the real world.',
     },
     meta: [
       { k: 'ROLE', v: 'Brand / Visual Design' },
       { k: 'YEAR', v: '2024' },
       { k: 'TYPE', v: 'Brand system' },
-      { k: 'STATUS', v: 'Completed' },
+      { k: 'STATUS', v: 'Ended' },
     ],
     coverCaption: 'Brand key visual and identity applications',
-    detailCoverAlt: 'Xiao Yi Jia terracotta identity shown across restaurant brand applications',
+    detailCoverAlt: 'Antis Home terracotta identity shown across restaurant brand applications',
     detailCoverImage: '/xiaoyi/xiaoyi-detail-cover.png',
     detailCoverAspect: '1686 / 933',
     overviewTitle: ['From a name', 'to a flavor', 'people remember'],
     overviewBody: [
       {
-        text: 'The name Xiao Yi Jia is meant to feel close and unforced—like arriving at a relative’s home for a warm meal. Every brand decision begins with that emotional brief.',
+        text: 'The name Antis Home is meant to feel close and unforced—like arriving at Your Antis Place for a warm meal. Every brand decision begins with that emotional brief.',
       },
       {
         text: 'Naming, marks, color, typography, menus, packaging, space, and wayfinding were designed as one coherent system, giving the brand a recognizable voice at every customer touchpoint.',
@@ -320,27 +320,27 @@ const englishProjects: Project[] = [
     gallery: [
       {
         caption: 'Brand key visual',
-        alt: 'Xiao Yi Jia terracotta key visual and original bilingual wordmark',
+        alt: 'Antis Home terracotta key visual and original bilingual wordmark',
         aspect: '1686 / 933',
         wide: true,
         src: '/xiaoyi/xiaoyi-main-visual.png',
       },
       {
         caption: 'Packaging applications',
-        alt: 'Xiao Yi Jia takeaway packaging in the terracotta brand system',
+        alt: 'Antis Home takeaway packaging in the terracotta brand system',
         aspect: '4 / 3',
         src: '/xiaoyi/xiaoyi-packaging.png',
       },
       {
         caption: 'Menus and printed materials',
-        alt: 'Xiao Yi Jia menus and printed restaurant materials',
+        alt: 'Antis Home menus and printed restaurant materials',
         aspect: '4 / 3',
         src: '/xiaoyi/xiaoyi-menu-materials.png',
       },
     ],
-    seoTitle: 'Xiao Yi Jia — Food & Beverage Brand Identity | ailiu',
+    seoTitle: 'Antis Home — Food & Beverage Brand Identity | ailiu',
     seoDescription:
-      'Xiao Yi Jia is a food-and-beverage identity project spanning naming, visual language, menus, packaging, space, and wayfinding.',
+      'Antis Home is a food-and-beverage identity project spanning naming, visual language, menus, packaging, space, and wayfinding.',
   },
 ]
 
@@ -545,7 +545,7 @@ export const contentByLocale: Record<Locale, SiteContent> = {
       titleLines: ['Design and AI', 'are the same'],
       titleAccent: 'material.',
       sub: 'DESIGN & CODE — ONE MATERIAL',
-      para: 'I care about more than how an interface looks. I work across the full path from an early idea to a product that can be used, tested, and improved—using design to create order and AI to shorten the distance to something real.',
+      para: 'I care about more than how an interface looks; I care about the full journey of a product, from concept and form to implementation. Design creates order, and AI accelerates execution—so ideas can quickly become things people can use, give feedback on, and iterate.',
       capabilities: [
         { label: 'Brand & identity', descriptor: 'SYSTEMS / EXPRESSION' },
         { label: 'Product & interface', descriptor: 'PRODUCT / UI' },
@@ -555,12 +555,12 @@ export const contentByLocale: Record<Locale, SiteContent> = {
     },
     contact: {
       kicker: '( 05 / 05 · CONTACT )',
-      titleLines: ["Let's make"],
-      titleAccent: 'something real.',
+      titleLines: ["Let's build"],
+      titleAccent: 'something good.',
       lead: 'Have an idea, a collaboration in mind, or simply want to talk about design and AI? Get in touch. More work is already on the way.',
       links: contactLinks,
       footerLeft: '© 2026 — PERSONAL PORTFOLIO',
-      footerRight: 'DESIGNED & BUILT WITH AI',
+      footerRight: 'MADE WITH DESIGN & AI',
     },
     projects: englishProjects,
     seo: {
