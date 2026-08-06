@@ -1,16 +1,18 @@
 # ailiu.online
 
-> ailiu.online is the personal portfolio of a designer and AI builder. The site presents product, brand, and AI tool work with concise case studies, visuals, roles, platforms, and project status.
+> ailiu.online is the bilingual personal portfolio of a designer and AI builder. English is the default at the root path, with complete Chinese counterparts under /zh.
 
-## Core Pages
+## English Pages
 
-- [Home](https://ailiu.online/): Personal portfolio homepage for ailiu, a designer and AI builder focused on turning early ideas into polished, working products.
-- [Aviso](https://ailiu.online/projects/aviso): Case study for a Chrome extension that brings in-page AI commands, selected-text actions, local history, and BYOK model access into the browsing workflow.
-- [小姨家](https://ailiu.online/projects/xiaoyi): Case study for a food and beverage brand system built around the feeling of home, including naming, identity, packaging, menu, and spatial touchpoints.
+- [Home](https://ailiu.online/): Portfolio homepage covering product design, brand identity, AI-assisted building, and prototyping.
+- [Aviso](https://ailiu.online/projects/aviso): Case study for a privacy-conscious Chrome extension with in-page AI commands, selected-text actions, local history, and direct BYOK model access.
+- [Aunt’s Home](https://ailiu.online/projects/xiaoyi): Case study for a food-and-beverage identity spanning naming, visual language, menus, packaging, space, and wayfinding.
 
-## About
+## 中文页面
 
-ailiu works across brand identity, product interface design, AI-assisted building, prototyping, and shipping. The portfolio is primarily in Chinese, with English project and role labels where useful.
+- [首页](https://ailiu.online/zh)：设计师与 AI 构建者的个人作品集，涵盖产品设计、品牌视觉、AI 辅助构建与原型落地。
+- [Aviso](https://ailiu.online/zh/projects/aviso)：注重隐私的 Chrome 扩展案例，提供页面内 AI 命令、划词操作、本地历史与 BYOK 模型直连。
+- [小姨家](https://ailiu.online/zh/projects/xiaoyi)：从命名、视觉语言到菜单、包装、空间与导视的餐饮品牌设计案例。
 
 ## Public Profile
 
@@ -18,4 +20,4 @@ ailiu works across brand identity, product interface design, AI-assisted buildin
 
 ## Crawler Notes
 
-Public pages may be used for search indexing and answer grounding. This file does not grant permission for model-training crawlers, private repositories, unpublished work, secrets, credentials, or non-public project materials.
+Each English page and Chinese page is a language counterpart of the same portfolio content. Public pages may be used for search indexing and answer grounding. This file does not grant permission for model-training crawlers, private repositories, unpublished work, secrets, credentials, or non-public project materials.

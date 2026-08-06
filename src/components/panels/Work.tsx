@@ -1,12 +1,11 @@
 import type { MouseEvent } from 'react'
 import type { Project } from '../../content'
 import { usePortfolio } from '../../portfolio-context'
-import { projectPath } from '../../seo'
 import { Placeholder } from '../Placeholder'
 import { Rich } from '../Rich'
 
 export function Work({ project }: { project: Project }) {
-  const { openDetail } = usePortfolio()
+  const { content, openDetail, projectPath } = usePortfolio()
   const gridClass = project.imageSide === 'right' ? 'work-grid--imgright' : 'work-grid--imgleft'
   const numSide = project.imageSide === 'right' ? 'left' : 'right'
   const ctaRi = project.tags ? 5 : 4
@@ -61,7 +60,7 @@ export function Work({ project }: { project: Project }) {
             data-cursor
             onClick={openProject}
           >
-            查看项目 VIEW CASE <span className="accent">→</span>
+            {content.ui.viewCase} <span className="accent">→</span>
           </a>
         </div>
 
@@ -73,9 +72,9 @@ export function Work({ project }: { project: Project }) {
               style={project.coverAspect ? { aspectRatio: project.coverAspect } : undefined}
               data-cursor
               onClick={openProject}
-              aria-label={`进入 ${project.name} 项目`}
+              aria-label={content.ui.enterProject(project.name)}
             >
-              <img src={project.coverImage} alt={`${project.name} 产品界面`} />
+              <img src={project.coverImage} alt={project.coverAlt} />
               <span className="photo-zoom" aria-hidden="true">
                 →
               </span>

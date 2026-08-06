@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
-import { PANEL_COUNT, projects } from '../content'
+import { PANEL_COUNT } from '../content'
+import { usePortfolio } from '../portfolio-context'
 import { Chrome } from './Chrome'
 import { About } from './panels/About'
 import { Contact } from './panels/Contact'
@@ -19,6 +20,8 @@ const COLUMN_PANELS = new Set([0, PANEL_COUNT - 1])
 const alignClass = (i: number) => (COLUMN_PANELS.has(i) ? 'align-col' : 'align-center')
 
 export function Gallery({ isMobile, detailOpen }: GalleryProps) {
+  const { content } = usePortfolio()
+  const { projects } = content
   const trackRef = useRef<HTMLDivElement>(null)
   const idxRef = useRef<HTMLSpanElement>(null)
   const dotsRef = useRef<HTMLDivElement>(null)

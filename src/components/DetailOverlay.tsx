@@ -1,8 +1,8 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import type { Project, ProjectKey } from '../content'
-import { BRAND, projectByKey } from '../content'
+import { BRAND, getProject } from '../content'
 import { usePortfolio } from '../portfolio-context'
-import { projectPath } from '../seo'
+import { LanguageSwitcher } from './LanguageSwitcher'
 import { Placeholder } from './Placeholder'
 import { Rich } from './Rich'
 
@@ -12,6 +12,9 @@ interface DetailOverlayProps {
   onOpen: (key: ProjectKey) => void
   modalBlocked?: boolean
 }
+
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
 /**
  * Full-screen detail layer that slides up from translateY(100%). Both projects
@@ -24,6 +27,7 @@ export function DetailOverlay({
   onOpen,
   modalBlocked = false,
 }: DetailOverlayProps) {
+  const { content, locale } = usePortfolio()
   const ref = useRef<HTMLDivElement>(null)
   const previouslyFocused = useRef<HTMLElement | null>(null)
   const [activeKey, setActiveKey] = useState<ProjectKey | null>(null)
@@ -49,7 +53,43 @@ export function DetailOverlay({
     }
   }, [open])
 
-  const project = activeKey ? projectByKey[activeKey] : null
+  useEffect(() => {
+    if (!open || modalBlocked) return
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab' || !ref.current) return
+      const focusable = Array.from(
+        ref.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+      )
+      if (!focusable.length) {
+        event.preventDefault()
+        event.stopPropagation()
+        ref.current.focus({ preventScroll: true })
+        return
+      }
+
+      const active = document.activeElement
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (!focusable.includes(active as HTMLElement)) {
+        event.preventDefault()
+        event.stopPropagation()
+        const target = event.shiftKey ? last : first
+        target.focus({ preventScroll: true })
+      } else if (event.shiftKey && active === first) {
+        event.preventDefault()
+        event.stopPropagation()
+        last.focus({ preventScroll: true })
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault()
+        event.stopPropagation()
+        first.focus({ preventScroll: true })
+      }
+    }
+    window.addEventListener('keydown', onKey, true)
+    return () => window.removeEventListener('keydown', onKey, true)
+  }, [open, modalBlocked])
+
+  const project = activeKey ? getProject(locale, activeKey) : null
 
   return (
     <div
@@ -64,11 +104,14 @@ export function DetailOverlay({
     >
       <div className="backbar">
         <button className="backbtn" data-cursor onClick={onClose}>
-          <span className="accent">←</span> 返回 BACK
+          <span className="accent">←</span> {content.ui.back}
         </button>
-        <div className="mark">
-          <span className="ring" />
-          {BRAND}
+        <div className="header-actions">
+          <LanguageSwitcher projectKey={openKey ?? activeKey} />
+          <div className="mark">
+            <span className="ring" />
+            {BRAND}
+          </div>
         </div>
       </div>
       {project ? (
@@ -96,9 +139,13 @@ export function ProjectArticle({
   variant?: 'overlay' | 'page'
   titleId?: string
 }) {
-  const { openLightbox } = usePortfolio()
+  const { content, homePath, locale, openLightbox, projectPath } = usePortfolio()
   const other: ProjectKey = project.key === 'aviso' ? 'xiaoyi' : 'aviso'
-  const otherLabel = project.key === 'aviso' ? '下一个项目 — 小姨家 →' : '上一个项目 — Aviso →'
+  const otherProject = getProject(locale, other)
+  const otherLabel =
+    project.key === 'aviso'
+      ? content.ui.nextProject(otherProject.name)
+      : content.ui.previousProject(otherProject.name)
 
   return (
     <article className="detail-wrap">
@@ -136,11 +183,12 @@ export function ProjectArticle({
             openLightbox({
               src: project.detailCoverImage as string,
               caption: `${project.name} · ${project.detailSubtitle}`,
+              alt: project.detailCoverAlt,
             })
           }
-          aria-label={`放大查看 ${project.name} 产品全景`}
+          aria-label={content.ui.zoomProject(project.name)}
         >
-          <img src={project.detailCoverImage} alt={`${project.name} 产品全景`} />
+          <img src={project.detailCoverImage} alt={project.detailCoverAlt} />
           <span className="photo-zoom" aria-hidden="true">
             ⤢
           </span>
@@ -157,7 +205,7 @@ export function ProjectArticle({
       <section className="detail-section">
         <div className="overview-grid">
           <div>
-            <div className="sec-kicker">01 / 概述</div>
+            <div className="sec-kicker">{content.ui.overviewKicker}</div>
             <h3 className="overview-title">
               {project.overviewTitle.map((line, i) => (
                 <Fragment key={i}>
@@ -203,11 +251,13 @@ export function ProjectArticle({
                 key={i}
                 className={`gallery-fig${g.wide ? ' wide' : ''}`}
                 data-cursor
-                onClick={() => openLightbox({ src: g.src as string, caption: g.caption })}
-                aria-label={`放大查看 ${g.caption}`}
+                onClick={() =>
+                  openLightbox({ src: g.src as string, caption: g.caption, alt: g.alt })
+                }
+                aria-label={content.ui.zoomImage(g.caption)}
               >
                 <span className="gallery-frame" style={{ aspectRatio: g.aspect }}>
-                  <img src={g.src} alt={g.caption} loading="lazy" />
+                  <img src={g.src} alt={g.alt} loading="lazy" />
                   <span className="gallery-zoom" aria-hidden="true">
                     ⤢
                   </span>
@@ -228,8 +278,13 @@ export function ProjectArticle({
 
       <div className="detail-footer">
         {variant === 'page' ? (
-          <a className="visit" data-cursor href="/" style={{ borderBottomColor: project.accent }}>
-            <span style={{ color: project.accent }}>←</span> 返回作品集 BACK
+          <a
+            className="visit"
+            data-cursor
+            href={homePath}
+            style={{ borderBottomColor: project.accent }}
+          >
+            <span style={{ color: project.accent }}>←</span> {content.ui.backToPortfolio}
           </a>
         ) : project.externalUrl ? (
           <a
@@ -249,7 +304,7 @@ export function ProjectArticle({
             onClick={onClose}
             style={{ borderBottomColor: project.accent, cursor: 'pointer' }}
           >
-            <span style={{ color: project.accent }}>←</span> 返回作品集 BACK
+            <span style={{ color: project.accent }}>←</span> {content.ui.backToPortfolio}
           </button>
         ) : null}
 
