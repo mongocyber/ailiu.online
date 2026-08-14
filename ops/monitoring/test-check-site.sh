@@ -7,6 +7,7 @@ CHECKER="$ROOT_DIR/ops/monitoring/check-site.sh"
 SERVICE="$ROOT_DIR/ops/monitoring/check-site.service"
 TIMER="$ROOT_DIR/ops/monitoring/check-site.timer"
 TEST_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/ailiu-monitor-test.XXXXXX")
+TEST_ROOT=$(CDPATH= cd -P -- "$TEST_ROOT" && pwd -P)
 PASS_COUNT=0
 
 cleanup() {
@@ -128,6 +129,17 @@ test "$(state_value consecutive_failures "$STATE0/state")" -eq 0 ||
   fail "healthy fixture must persist zero failures"
 test "$(count_events alert "$SINK0")" -eq 0 || fail "healthy fixture emitted alert"
 test "$(count_events recovery "$SINK0")" -eq 0 || fail "healthy fixture emitted recovery"
+
+HEARTBEAT_FAIL_STATE="$TEST_ROOT/heartbeat-fail-state"
+HEARTBEAT_FAIL_SINK="$TEST_ROOT/heartbeat-fail-missing/events"
+run_fixture "$HEALTHY" "$HEARTBEAT_FAIL_STATE" "$HEARTBEAT_FAIL_SINK" \
+  "$TEST_ROOT/heartbeat-fail.log"
+test "$RUN_RC" -eq 4 || fail "healthy cycle with failed heartbeat must exit 4"
+grep -Fq 'status=UNKNOWN_INTERNAL reason=heartbeat_delivery_failed' \
+  "$TEST_ROOT/heartbeat-fail.log" || fail "heartbeat failure lacks UNKNOWN result"
+if grep -Fq 'status=HEALTHY' "$TEST_ROOT/heartbeat-fail.log"; then
+  fail "heartbeat failure emitted a final healthy status"
+fi
 pass raw-transport-healthy
 
 DNS_FAIL="$TEST_ROOT/dns-fail"
@@ -170,6 +182,15 @@ clone_fixture "$DNS_FAIL" "$PRIORITY_FAIL"
 write_value "$PRIORITY_FAIL/home.status" 503
 expect_primary "$PRIORITY_FAIL" DNS priority
 pass deterministic-failure-classification
+
+for noncanonical_success_status in 201 206 299 0200
+do
+  EXACT_STATUS_FAIL="$TEST_ROOT/exact-status-$noncanonical_success_status"
+  clone_fixture "$HEALTHY" "$EXACT_STATUS_FAIL"
+  write_value "$EXACT_STATUS_FAIL/home.status" "$noncanonical_success_status"
+  expect_primary "$EXACT_STATUS_FAIL" HTTP_STATUS "exact-status-$noncanonical_success_status"
+done
+pass exact-http-200-required
 
 STATE1="$TEST_ROOT/state1"
 SINK1="$TEST_ROOT/sink1/events"
@@ -263,6 +284,52 @@ test "$(count_events alert "$GOOD_SINK")" -eq 1 || fail "alert retry not deliver
 grep -Fq "alert|$RETRY_ID|" "$GOOD_SINK" || fail "alert retry changed event id"
 pass alert-retry-keeps-stable-event-id
 
+STATE3B="$TEST_ROOT/state3b"
+BAD_SINK3B="$TEST_ROOT/missing-parent-3b/events"
+GOOD_SINK3B="$TEST_ROOT/sink3b/events"
+mkdir -p "$STATE3B"
+run_fixture "$DNS_FAIL" "$STATE3B" "$BAD_SINK3B" "$TEST_ROOT/recovered-alert-1.log"
+run_fixture "$TLS_FAIL" "$STATE3B" "$BAD_SINK3B" "$TEST_ROOT/recovered-alert-2.log"
+run_fixture "$HTTP_STATUS_FAIL" "$STATE3B" "$BAD_SINK3B" "$TEST_ROOT/recovered-alert-3.log"
+test "$RUN_RC" -eq 1 || fail "undelivered threshold alert must remain failed"
+RECOVERED_ALERT_ID=$(state_value incident_event_id "$STATE3B/state")
+test "$(state_value alert_delivered "$STATE3B/state")" -eq 0 ||
+  fail "undelivered threshold alert marked delivered"
+run_fixture "$HEALTHY" "$STATE3B" "$BAD_SINK3B" "$TEST_ROOT/recovered-alert-4-pending.log"
+test "$RUN_RC" -eq 1 || fail "healthy site with undelivered alert must remain pending"
+test "$(state_value incident_open "$STATE3B/state")" -eq 1 ||
+  fail "healthy site closed an incident whose alert was not delivered"
+test "$(state_value alert_delivered "$STATE3B/state")" -eq 0 ||
+  fail "failed alert retry was recorded as delivered"
+test "$(state_value recovery_pending "$STATE3B/state")" -eq 1 ||
+  fail "healthy result was not persisted for ordered recovery"
+test "$(state_value incident_event_id "$STATE3B/state")" = "$RECOVERED_ALERT_ID" ||
+  fail "healthy pending cycle changed the incident ID"
+mkdir -p "$(dirname "$GOOD_SINK3B")"
+run_fixture "$HEALTHY" "$STATE3B" "$GOOD_SINK3B" "$TEST_ROOT/recovered-alert-5.log"
+test "$RUN_RC" -eq 1 || fail "pending alert delivery must keep recovery queued"
+test "$(count_events alert "$GOOD_SINK3B")" -eq 1 ||
+  fail "recovered site lost its pending alert"
+test "$(count_events recovery "$GOOD_SINK3B")" -eq 0 ||
+  fail "recovery was emitted in the same bounded cycle as a pending alert"
+test "$(state_value recovery_pending "$STATE3B/state")" -eq 1 ||
+  fail "recovery was not kept pending after alert delivery"
+run_fixture "$HEALTHY" "$STATE3B" "$GOOD_SINK3B" "$TEST_ROOT/recovered-alert-6.log"
+test "$RUN_RC" -eq 0 || fail "next healthy cycle must deliver queued recovery"
+test "$(count_events recovery "$GOOD_SINK3B")" -eq 1 ||
+  fail "recovered site did not emit queued recovery"
+test "$(sed -n '1s/|.*//p' "$GOOD_SINK3B")" = alert ||
+  fail "recovery was delivered before the pending alert"
+grep -Fq "alert|$RECOVERED_ALERT_ID|HTTP_STATUS|" "$GOOD_SINK3B" ||
+  fail "pending alert changed ID or original failure class"
+grep -Fq 'home=fail,class=HTTP_STATUS,latency_ms=42,detail=status=503' "$GOOD_SINK3B" ||
+  fail "pending alert was rebuilt from the healthy cycle"
+grep -Fq "recovery|$RECOVERED_ALERT_ID|NONE|" "$GOOD_SINK3B" ||
+  fail "recovery did not reuse the incident ID"
+test "$(state_value incident_open "$STATE3B/state")" -eq 0 ||
+  fail "delivered alert and recovery did not close incident"
+pass recovered-site-delivers-pending-alert-first
+
 run_fixture "$HEALTHY" "$STATE3" "$BAD_SINK" "$TEST_ROOT/recovery-retry-1.log"
 test "$RUN_RC" -eq 1 || fail "failed recovery delivery must fail"
 test "$(state_value recovery_pending "$STATE3/state")" -eq 1 ||
@@ -279,13 +346,28 @@ STATE4="$TEST_ROOT/state4"
 SINK4="$TEST_ROOT/sink4/events"
 mkdir -p "$STATE4" "$(dirname "$SINK4")"
 printf '%s\n' \
-  'version=1' \
+  'version=2' \
   'consecutive_failures=2' \
   'incident_open=0' \
   'incident_event_id=NONE' \
   'incident_started_at=NONE' \
+  'incident_deployment_reference=NONE' \
   'alert_delivered=0' \
   'recovery_pending=0' \
+  'alert_result_dns=NONE' \
+  'alert_result_tls=NONE' \
+  'alert_result_home=NONE' \
+  'alert_result_aviso=NONE' \
+  'alert_result_xiaoyi=NONE' \
+  'alert_result_sitemap=NONE' \
+  'recovery_checked_at=NONE' \
+  'recovery_deployment_reference=NONE' \
+  'recovery_result_dns=NONE' \
+  'recovery_result_tls=NONE' \
+  'recovery_result_home=NONE' \
+  'recovery_result_aviso=NONE' \
+  'recovery_result_xiaoyi=NONE' \
+  'recovery_result_sitemap=NONE' \
   'evil=$(touch /tmp/ailiu-monitor-must-not-exist)' > "$STATE4/state"
 STATE4_BEFORE=$(cksum "$STATE4/state")
 run_fixture "$DNS_FAIL" "$STATE4" "$SINK4" "$TEST_ROOT/corrupt.log"
@@ -323,6 +405,59 @@ test "$RUN_RC" -eq 2 || fail "state-file symlink must fail"
 test "$(cksum "$STATE_FILE_EXTERNAL")" = "$STATE_FILE_EXTERNAL_BEFORE" ||
   fail "state-file symlink changed external target"
 
+ANCESTOR_EXTERNAL="$TEST_ROOT/ancestor-external"
+ANCESTOR_LINK="$TEST_ROOT/ancestor-link"
+ANCESTOR_SINK="$TEST_ROOT/ancestor-sink/events"
+mkdir -p "$ANCESTOR_EXTERNAL" "$(dirname "$ANCESTOR_SINK")"
+ln -s "$ANCESTOR_EXTERNAL" "$ANCESTOR_LINK"
+run_fixture "$HEALTHY" "$ANCESTOR_LINK/state" "$ANCESTOR_SINK" \
+  "$TEST_ROOT/state-ancestor-symlink.log"
+test "$RUN_RC" -eq 2 || fail "state ancestor symlink must fail"
+test ! -e "$ANCESTOR_EXTERNAL/state" ||
+  fail "state ancestor symlink created external state"
+test ! -e "$ANCESTOR_SINK" || fail "state ancestor symlink emitted event"
+
+DANGLING_STATE_DIR="$TEST_ROOT/dangling-state"
+DANGLING_STATE_TARGET="$TEST_ROOT/dangling-state-target"
+DANGLING_STATE_SINK="$TEST_ROOT/dangling-state-sink/events"
+mkdir -p "$DANGLING_STATE_DIR" "$(dirname "$DANGLING_STATE_SINK")"
+ln -s "$DANGLING_STATE_TARGET" "$DANGLING_STATE_DIR/state"
+run_fixture "$HEALTHY" "$DANGLING_STATE_DIR" "$DANGLING_STATE_SINK" \
+  "$TEST_ROOT/dangling-state-symlink.log"
+test "$RUN_RC" -eq 2 || fail "dangling state-file symlink must fail"
+test ! -e "$DANGLING_STATE_TARGET" ||
+  fail "dangling state-file symlink created its target"
+test ! -e "$DANGLING_STATE_SINK" || fail "dangling state-file symlink emitted event"
+
+FIXTURE_ANCESTOR_LINK="$TEST_ROOT/fixture-ancestor-link"
+ln -s "$TEST_ROOT" "$FIXTURE_ANCESTOR_LINK"
+if MONITOR_STATE_DIR="$TEST_ROOT/fixture-ancestor-state" \
+  MONITOR_EVENT_SINK="$TEST_ROOT/fixture-ancestor-sink/events" \
+  "$CHECKER" --fixture "$FIXTURE_ANCESTOR_LINK/healthy" \
+    > "$TEST_ROOT/fixture-ancestor-symlink.log" 2>&1
+then
+  fail "fixture ancestor symlink was accepted"
+else
+  test "$?" -eq 2 || fail "fixture ancestor symlink must exit 2"
+fi
+test ! -e "$TEST_ROOT/fixture-ancestor-state" ||
+  fail "fixture ancestor symlink changed state"
+
+CONFIG_ANCESTOR_LINK="$TEST_ROOT/config-ancestor-link"
+ln -s "$TEST_ROOT" "$CONFIG_ANCESTOR_LINK"
+if ALERT_CURL_CONFIG_FILE="$CONFIG_ANCESTOR_LINK/missing.curl" \
+  MONITOR_STATE_DIR="$TEST_ROOT/config-ancestor-state" \
+  "$CHECKER" --fixture "$HEALTHY" > "$TEST_ROOT/config-ancestor-symlink.log" 2>&1
+then
+  fail "delivery config ancestor symlink was accepted"
+else
+  test "$?" -eq 2 || fail "delivery config ancestor symlink must exit 2"
+fi
+test ! -e "$TEST_ROOT/config-ancestor-state" ||
+  fail "delivery config ancestor symlink changed state"
+
+pass ancestor-and-dangling-symlinks-fail-closed
+
 STATE_TEMP_DIR="$TEST_ROOT/state-temp-symlink"
 STATE_TEMP_EXTERNAL="$TEST_ROOT/state-temp-external-must-not-exist"
 STATE_TEMP_SINK="$TEST_ROOT/state-temp-sink/events"
@@ -355,7 +490,7 @@ write_value "$SINK_SYMLINK_EXTERNAL" external-sink-canary
 SINK_SYMLINK_EXTERNAL_BEFORE=$(cksum "$SINK_SYMLINK_EXTERNAL")
 ln -s "$SINK_SYMLINK_EXTERNAL" "$SINK_SYMLINK"
 run_fixture "$HEALTHY" "$SINK_SYMLINK_STATE" "$SINK_SYMLINK" "$TEST_ROOT/sink-symlink.log"
-test "$RUN_RC" -eq 4 || fail "fixture heartbeat sink symlink must fail closed"
+test "$RUN_RC" -eq 2 || fail "fixture event sink symlink must fail before checks"
 test "$(cksum "$SINK_SYMLINK_EXTERNAL")" = "$SINK_SYMLINK_EXTERNAL_BEFORE" ||
   fail "fixture sink symlink changed external target"
 if MONITOR_STATE_DIR="$TEST_ROOT/path/../escape" \
@@ -373,7 +508,9 @@ LIVE_CALL_LOG="$TEST_ROOT/live-calls.log"
 LIVE_CAPTURE_DIR="$TEST_ROOT/live-payloads"
 LIVE_SITE_MODE_FILE="$TEST_ROOT/live-site-mode"
 LIVE_ALERT_STATUS_FILE="$TEST_ROOT/live-alert-status"
+LIVE_RECOVERY_STATUS_FILE="$TEST_ROOT/live-recovery-status"
 LIVE_HEARTBEAT_STATUS_FILE="$TEST_ROOT/live-heartbeat-status"
+LIVE_UNSAFE_HELPER_MARKER="$TEST_ROOT/live-unsafe-helper-called"
 mkdir -p "$LIVE_BIN" "$LIVE_CAPTURE_DIR"
 : > "$LIVE_CALL_LOG"
 
@@ -384,48 +521,18 @@ test "$#" -eq 2 && test "$1" = ahosts && test "$2" = ailiu.online || exit 99
 printf '203.0.113.10 STREAM ailiu.online\n'
 EOF
 
-cat > "$LIVE_BIN/openssl" <<'EOF'
+cat > "$LIVE_BIN/date" <<'EOF'
 #!/bin/sh
 set -eu
-case ${1:-} in
-  s_client)
-    test "$#" -eq 8 || exit 99
-    test "$2" = -connect && test "$3" = ailiu.online:443 || exit 99
-    test "$4" = -servername && test "$5" = ailiu.online || exit 99
-    test "$6" = -verify_hostname && test "$7" = ailiu.online || exit 99
-    test "$8" = -verify_return_error || exit 99
-    printf '%s\n' fake-certificate
-    ;;
-  x509)
-    shift
-    input=
-    output=
-    checkend=
-    enddate=0
-    while test "$#" -gt 0
-    do
-      case $1 in
-        -in) test "$#" -ge 2 || exit 99; input=$2; shift 2 ;;
-        -out) test "$#" -ge 2 || exit 99; output=$2; shift 2 ;;
-        -checkend) test "$#" -ge 2 || exit 99; checkend=$2; shift 2 ;;
-        -enddate) enddate=1; shift ;;
-        -noout) shift ;;
-        *) exit 99 ;;
-      esac
-    done
-    test -n "$input" && test -f "$input" || exit 99
-    if test -n "$output"; then
-      printf '%s\n' fake-certificate > "$output"
-    elif test -n "$checkend"; then
-      test "$checkend" = 604800 || exit 99
-    elif test "$enddate" -eq 1; then
-      printf '%s\n' 'notAfter=Dec 31 23:59:59 2030 GMT'
-    else
-      exit 99
-    fi
-    ;;
-  *) exit 99 ;;
-esac
+printf 'date\n' >> "$FAKE_UNSAFE_HELPER_MARKER"
+exit 99
+EOF
+
+cat > "$LIVE_BIN/sleep" <<'EOF'
+#!/bin/sh
+set -eu
+printf 'sleep\n' >> "$FAKE_UNSAFE_HELPER_MARKER"
+exit 99
 EOF
 
 cat > "$LIVE_BIN/curl" <<'EOF'
@@ -443,6 +550,7 @@ url=
 show_error=0
 tls12=0
 no_location=0
+disable_default_config=0
 header_count=0
 
 printf 'curl' >> "$FAKE_CALL_LOG"
@@ -451,6 +559,7 @@ do
   printf '|%s' "$1" >> "$FAKE_CALL_LOG"
   case $1 in
     --silent) shift ;;
+    --disable) disable_default_config=1; shift ;;
     --show-error) show_error=1; shift ;;
     --tlsv1.2) tls12=1; shift ;;
     --no-location) no_location=1; shift ;;
@@ -489,10 +598,11 @@ done
 printf '\n' >> "$FAKE_CALL_LOG"
 
 test "$proto" = '=https' || exit 99
+test "$disable_default_config" -eq 1 || exit 99
 if test -n "$config"; then
   test -f "$config" || exit 99
   test "$no_location" -eq 1 || exit 99
-  test "$connect_timeout" = 5 && test "$max_time" = 15 || exit 99
+  test "$connect_timeout" = 2 && test "$max_time" = 4 || exit 99
   test "$request" = POST && test "$output" = /dev/null || exit 99
   test "$write_out" = '%{http_code}' || exit 99
   if test -n "$data_binary"; then
@@ -502,8 +612,13 @@ if test -n "$config"; then
     capture_count=$(find "$FAKE_CAPTURE_DIR" -type f -name 'payload-*.json' | wc -l | tr -d ' ')
     capture_file="$FAKE_CAPTURE_DIR/payload-$((capture_count + 1)).json"
     cp "$payload" "$capture_file"
-    status=$(sed -n '1p' "$FAKE_ALERT_STATUS_FILE")
-    if grep -Fq '"event":"alert"' "$payload"; then kind=alert; else kind=recovery; fi
+    if grep -Fq '"event":"alert"' "$payload"; then
+      kind=alert
+      status=$(sed -n '1p' "$FAKE_ALERT_STATUS_FILE")
+    else
+      kind=recovery
+      status=$(sed -n '1p' "$FAKE_RECOVERY_STATUS_FILE")
+    fi
     printf 'delivery|%s|status=%s\n' "$kind" "$status" >> "$FAKE_CALL_LOG"
   else
     test "$header_count" -eq 0 || exit 99
@@ -515,9 +630,14 @@ if test -n "$config"; then
 fi
 
 test "$show_error" -eq 1 && test "$tls12" -eq 1 && test "$no_location" -eq 0 || exit 99
-test "$connect_timeout" = 12 && test "$max_time" = 12 || exit 99
-test -n "$output" && test "$write_out" = '%{http_code}|%{time_total}|%{url_effective}' || exit 99
+test "$connect_timeout" = 4 && test "$max_time" = 4 || exit 99
 test -z "$request" && test -z "$data_binary" && test "$header_count" -eq 0 || exit 99
+if test "$write_out" = '%{ssl_verify_result}|%{http_code}'; then
+  test "$output" = /dev/null && test "$url" = https://ailiu.online/ || exit 99
+  printf '0|200'
+  exit 0
+fi
+test -n "$output" && test "$write_out" = '%{http_code}|%{time_total}|%{url_effective}' || exit 99
 site_mode=$(sed -n '1p' "$FAKE_SITE_MODE_FILE")
 status=200
 case $url in
@@ -539,7 +659,7 @@ esac
 printf '%s\n' "$marker" > "$output"
 printf '%s|0.042|%s' "$status" "$url"
 EOF
-chmod 700 "$LIVE_BIN/getent" "$LIVE_BIN/openssl" "$LIVE_BIN/curl"
+chmod 700 "$LIVE_BIN/getent" "$LIVE_BIN/curl" "$LIVE_BIN/date" "$LIVE_BIN/sleep"
 
 SECRET_CANARY='secret-canary-MON117'
 LIVE_ALERT_CONFIG="$TEST_ROOT/alert.curl"
@@ -555,6 +675,7 @@ LIVE_STATE="$TEST_ROOT/live-state"
 mkdir -p "$LIVE_STATE"
 write_value "$LIVE_SITE_MODE_FILE" fail
 write_value "$LIVE_ALERT_STATUS_FILE" 503
+write_value "$LIVE_RECOVERY_STATUS_FILE" 204
 write_value "$LIVE_HEARTBEAT_STATUS_FILE" 204
 
 run_live_stub() {
@@ -564,7 +685,9 @@ run_live_stub() {
     FAKE_CAPTURE_DIR="$LIVE_CAPTURE_DIR" \
     FAKE_SITE_MODE_FILE="$LIVE_SITE_MODE_FILE" \
     FAKE_ALERT_STATUS_FILE="$LIVE_ALERT_STATUS_FILE" \
+    FAKE_RECOVERY_STATUS_FILE="$LIVE_RECOVERY_STATUS_FILE" \
     FAKE_HEARTBEAT_STATUS_FILE="$LIVE_HEARTBEAT_STATUS_FILE" \
+    FAKE_UNSAFE_HELPER_MARKER="$LIVE_UNSAFE_HELPER_MARKER" \
     MONITOR_STATE_DIR="$LIVE_STATE" \
     DEPLOYMENT_ID_FILE="$LIVE_DEPLOYMENT_FILE" \
     ALERT_CURL_CONFIG_FILE="$LIVE_ALERT_CONFIG" \
@@ -596,13 +719,19 @@ test "$(state_value alert_delivered "$LIVE_STATE/state")" -eq 1 ||
   fail "webhook 204 did not mark alert delivered"
 test "$(find "$LIVE_CAPTURE_DIR" -type f -name 'payload-*.json' | wc -l | tr -d ' ')" -eq 2 ||
   fail "webhook retry must create exactly two transport attempts"
+cmp "$LIVE_CAPTURE_DIR/payload-1.json" "$LIVE_CAPTURE_DIR/payload-2.json" >/dev/null ||
+  fail "alert retry payload changed after the first attempt"
 
 write_value "$LIVE_SITE_MODE_FILE" healthy
+write_value "$LIVE_RECOVERY_STATUS_FILE" 503
+run_live_stub "$TEST_ROOT/live-recovery-503.log"
+test "$RUN_RC" -eq 1 || fail "non-2xx live-stub recovery must remain pending"
+write_value "$LIVE_RECOVERY_STATUS_FILE" 204
 run_live_stub "$TEST_ROOT/live-recovery-204.log"
-test "$RUN_RC" -eq 0 || fail "live-stub recovery and heartbeat must pass"
-test "$(find "$LIVE_CAPTURE_DIR" -type f -name 'payload-*.json' | wc -l | tr -d ' ')" -eq 3 ||
-  fail "recovery webhook attempt missing"
-for payload_number in 1 2 3
+test "$RUN_RC" -eq 0 || fail "live-stub recovery retry and heartbeat must pass"
+test "$(find "$LIVE_CAPTURE_DIR" -type f -name 'payload-*.json' | wc -l | tr -d ' ')" -eq 4 ||
+  fail "recovery webhook retry attempts missing"
+for payload_number in 1 2 3 4
 do
   payload_id=$(sed -n 's/.*"event_id":"\([^"]*\)".*/\1/p' \
     "$LIVE_CAPTURE_DIR/payload-$payload_number.json")
@@ -612,25 +741,109 @@ grep -Fq '"event":"alert"' "$LIVE_CAPTURE_DIR/payload-1.json" ||
   fail "first webhook payload is not alert"
 grep -Fq '"event":"recovery"' "$LIVE_CAPTURE_DIR/payload-3.json" ||
   fail "third webhook payload is not recovery"
+cmp "$LIVE_CAPTURE_DIR/payload-3.json" "$LIVE_CAPTURE_DIR/payload-4.json" >/dev/null ||
+  fail "recovery retry payload changed after the first attempt"
 test "$(grep -Fxc 'delivery|alert|status=503' "$LIVE_CALL_LOG")" -eq 1 ||
   fail "non-2xx alert transport not exercised exactly once"
 test "$(grep -Fxc 'delivery|alert|status=204' "$LIVE_CALL_LOG")" -eq 1 ||
   fail "2xx alert retry not exercised exactly once"
+test "$(grep -Fxc 'delivery|recovery|status=503' "$LIVE_CALL_LOG")" -eq 1 ||
+  fail "non-2xx recovery transport not exercised exactly once"
 test "$(grep -Fxc 'delivery|recovery|status=204' "$LIVE_CALL_LOG")" -eq 1 ||
-  fail "2xx recovery transport not exercised exactly once"
-test "$(grep -Fxc 'delivery|heartbeat|status=204' "$LIVE_CALL_LOG")" -eq 5 ||
+  fail "2xx recovery retry not exercised exactly once"
+test "$(grep -Fxc 'delivery|heartbeat|status=204' "$LIVE_CALL_LOG")" -eq 6 ||
   fail "completed failed and healthy cycles must all deliver heartbeat"
 if grep -R -Fq "$SECRET_CANARY" \
   "$TEST_ROOT/live-failure-1.log" \
   "$TEST_ROOT/live-failure-2.log" \
   "$TEST_ROOT/live-alert-503.log" \
   "$TEST_ROOT/live-alert-204.log" \
+  "$TEST_ROOT/live-recovery-503.log" \
   "$TEST_ROOT/live-recovery-204.log" \
   "$LIVE_STATE" "$LIVE_CALL_LOG" "$LIVE_CAPTURE_DIR" 2>/dev/null
 then
   fail "secret canary leaked from the live delivery code path"
 fi
+test ! -e "$LIVE_UNSAFE_HELPER_MARKER" ||
+  fail "live cycle used a PATH-overridden standard helper"
 pass live-stub-webhook-status-retry-and-secret-redaction
+
+script_constant() {
+  constant_name=$1
+  constant_value=$(sed -n "s/^$constant_name=\\([0-9][0-9]*\\)$/\\1/p" "$CHECKER")
+  test "$(printf '%s\n' "$constant_value" | awk 'NF { count++ } END { print count + 0 }')" -eq 1 ||
+    fail "missing or duplicate numeric constant: $constant_name"
+  printf '%s' "$constant_value"
+}
+
+HTTP_TIMEOUT_MAX=$(script_constant HTTP_TIMEOUT_MAX_SECONDS)
+DELIVERY_TIMEOUT=$(script_constant DELIVERY_TIMEOUT_SECONDS)
+WATCHDOG_GRACE=$(script_constant WATCHDOG_KILL_GRACE_SECONDS)
+SERVICE_TIMEOUT=$(sed -n 's/^TimeoutStartSec=\([0-9][0-9]*\)s$/\1/p' "$SERVICE")
+test -n "$SERVICE_TIMEOUT" || fail "service timeout is missing or noncanonical"
+EXTERNAL_WORST_CASE=$((
+  HTTP_TIMEOUT_MAX + WATCHDOG_GRACE +
+  HTTP_TIMEOUT_MAX + WATCHDOG_GRACE +
+  4 * (HTTP_TIMEOUT_MAX + WATCHDOG_GRACE) +
+  DELIVERY_TIMEOUT + WATCHDOG_GRACE +
+  DELIVERY_TIMEOUT + WATCHDOG_GRACE
+))
+test "$EXTERNAL_WORST_CASE" -eq 40 || fail "unexpected external timeout budget"
+test "$EXTERNAL_WORST_CASE" -lt "$SERVICE_TIMEOUT" ||
+  fail "external timeout budget does not fit within systemd timeout"
+grep -Fq 'kill -9 "$ACTIVE_CHILD_PID"' "$CHECKER" ||
+  fail "bounded command watchdog lacks hard-stop grace path"
+if grep -Fq 'CYCLE_TIMEOUT_SECONDS=' "$CHECKER" ||
+  grep -Fq 'reason=cycle_timeout' "$CHECKER"
+then
+  fail "checker claims an unverified standalone whole-cycle timeout"
+fi
+
+SLOW_BIN="$TEST_ROOT/slow-bin"
+SLOW_TRANSPORT_PID_FILE="$TEST_ROOT/slow-transport-pid"
+SLOW_STATE="$TEST_ROOT/slow-state"
+mkdir -p "$SLOW_BIN" "$SLOW_STATE"
+cat > "$SLOW_BIN/getent" <<'EOF'
+#!/bin/sh
+set -eu
+printf '%s\n' "$$" > "$FAKE_SLOW_TRANSPORT_PID_FILE"
+exec /bin/sleep 10
+EOF
+cp "$LIVE_BIN/curl" "$SLOW_BIN/curl"
+cp "$LIVE_BIN/sleep" "$SLOW_BIN/sleep"
+chmod 700 "$SLOW_BIN/getent" "$SLOW_BIN/curl" "$SLOW_BIN/sleep"
+if PATH="$SLOW_BIN:/usr/bin:/bin" \
+  FAKE_SLOW_TRANSPORT_PID_FILE="$SLOW_TRANSPORT_PID_FILE" \
+  FAKE_UNSAFE_HELPER_MARKER="$LIVE_UNSAFE_HELPER_MARKER" \
+  FAKE_CALL_LOG="$LIVE_CALL_LOG" \
+  FAKE_CAPTURE_DIR="$LIVE_CAPTURE_DIR" \
+  FAKE_SITE_MODE_FILE="$LIVE_SITE_MODE_FILE" \
+  FAKE_ALERT_STATUS_FILE="$LIVE_ALERT_STATUS_FILE" \
+  FAKE_RECOVERY_STATUS_FILE="$LIVE_RECOVERY_STATUS_FILE" \
+  FAKE_HEARTBEAT_STATUS_FILE="$LIVE_HEARTBEAT_STATUS_FILE" \
+  HTTP_TIMEOUT_SECONDS=1 \
+  MONITOR_STATE_DIR="$SLOW_STATE" \
+  DEPLOYMENT_ID_FILE="$LIVE_DEPLOYMENT_FILE" \
+  ALERT_CURL_CONFIG_FILE="$LIVE_ALERT_CONFIG" \
+  HEARTBEAT_CURL_CONFIG_FILE="$LIVE_HEARTBEAT_CONFIG" \
+  "$CHECKER" > "$TEST_ROOT/slow-transport.log" 2>&1
+then
+  fail "timed-out direct transport was reported healthy"
+else
+  SLOW_RUN_RC=$?
+  if test "$SLOW_RUN_RC" -ne 1; then
+    command -p sed -n '1,80p' "$TEST_ROOT/slow-transport.log" >&2
+    fail "timed-out direct transport must be a site failure (rc=$SLOW_RUN_RC)"
+  fi
+fi
+test -s "$SLOW_TRANSPORT_PID_FILE" || fail "slow direct transport did not start"
+SLOW_TRANSPORT_PID=$(sed -n '1p' "$SLOW_TRANSPORT_PID_FILE")
+if kill -0 "$SLOW_TRANSPORT_PID" 2>/dev/null; then
+  fail "timed-out direct transport process remains alive"
+fi
+test ! -e "$LIVE_UNSAFE_HELPER_MARKER" ||
+  fail "timed-out cycle used a PATH-overridden standard helper"
+pass bounded-cycle-budget-under-systemd-timeout
 
 BAD_FIXTURE="$TEST_ROOT/bad-fixture"
 clone_fixture "$HEALTHY" "$BAD_FIXTURE"
@@ -808,5 +1021,5 @@ do
 done
 pass systemd-canonical-parser-and-negative-mutations
 
-test "$PASS_COUNT" -eq 14 || fail "expected 14 test groups, found $PASS_COUNT"
-printf 'TEST SUMMARY: 14 passed\n'
+test "$PASS_COUNT" -eq 18 || fail "expected 18 test groups, found $PASS_COUNT"
+printf 'TEST SUMMARY: 18 passed\n'

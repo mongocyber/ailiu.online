@@ -197,7 +197,9 @@ MON-117 Phase A 的准确状态只能写成：
 ### 检查与故障分类合同 [O9A]
 
 - `ops/monitoring/check-site.sh` 固定检查 DNS、TLS、英文首页、两个英文项目页和
-  sitemap。它不跟随重定向，不接受非 HTTPS 或其他域名作为成功结果。
+  sitemap。四个 HTTP 路由只有精确状态 `200` 才算成功；`201`、`206` 或其他
+  2xx 仍归类为 `HTTP_STATUS`。它不跟随重定向，不接受非 HTTPS 或其他域名作为
+  成功结果。
 - 故障主分类固定按 `DNS`、`TLS`、`HTTP_TRANSPORT`、`HTTP_STATUS`、
   `CONTENT` 的顺序选择；同一次检查可以保留多个失败分类，但不能
   用后续 HTTP 或内容结果覆盖更早的 DNS/TLS 失败。
@@ -207,6 +209,13 @@ MON-117 Phase A 的准确状态只能写成：
   并读回，真实 drift 检测仍是后续 owner-gated 能力。
 - `--fixture` 和 `--dry-run` 只接受本地原始 transport facts，不访问真实 DNS、TLS、
   HTTP、告警或 heartbeat endpoint。fixture 通过只能证明分类代码，不证明生产可用。
+- DNS、TLS、HTTP 和 delivery 全部同时使用 TERM→KILL POSIX watchdog；curl 路径
+  另有自身 hard timeout。验证器把单 cycle 最坏外部等待锁为 40 秒，严格小于
+  systemd 模板的 50 秒整组停止线；并用真实 PID 探针验证脚本直接启动的 timeout
+  transport 已退出。脚本不宣称 standalone whole-cycle hard stop；任意 provider
+  helper 的后代进程、50 秒 cgroup 停止和 timeout 后清理只能在目标 systemd 安装后
+  验证，当前保持 `UNKNOWN / NOT VERIFIED`。任何 timeout 都不得伪造 heartbeat 或
+  健康结论。
 
 ### Incident、去重与恢复合同 [O9B]
 
@@ -214,6 +223,11 @@ MON-117 Phase A 的准确状态只能写成：
   cycle 才打开 incident，只有所有必检项成功才清零或进入 recovery。
 - 每个 incident 生成一个稳定 `event_id`。告警或 recovery 未取得明确 2xx 时，
   后续重试必须沿用同一 ID；持续失败不能创建第二个逻辑 alert event。
+- incident 打开时必须把首次失败结果随 state v2 一起原子持久化。即使下一 cycle
+  已恢复，未获 2xx 的 alert 也不能被关闭或用健康结果重造；必须先按原 ID、原时间、
+  原失败快照补送 alert，再按同一 ID 发送持久化 recovery。recovery 重试同样不得
+  改写首次 recovery 快照。为守住 40 秒 transport 上限，每个 cycle 最多投递一个
+  alert 或 recovery；若旧 alert 本 cycle 才成功，recovery 保持 pending 到下一 cycle。
 - 只要一个检查 cycle 已完整执行，无论站点健康或失败，都必须尝试发送 VPS
   heartbeat；只有 lock、损坏 state 或内部崩溃等未完成 cycle 才能缺席，避免把站点
   故障误报成监控进程/VPS 故障。
@@ -221,13 +235,15 @@ MON-117 Phase A 的准确状态只能写成：
   实现并验证幂等后，才能声称远端去重；否则只能声称“一次逻辑事件”，远端物理
   重复保持 `UNKNOWN / NOT VERIFIED`。
 - 损坏/恶意 state、已有 lock、路径逃逸或不安全 symlink 必须 fail closed，且不得
-  访问网络、改写 state、发送事件或伪造 recovery。
+  访问网络、改写 state、发送事件或伪造 recovery。检查必须覆盖完整路径的每个
+  ancestor 和最终组件，并在 `test -e` 前拒绝 dangling symlink。
 
 ### Repo-local fixture 与 systemd 模板合同 [O9C]
 
 - `ops/monitoring/test-check-site.sh` 必须在临时目录中覆盖健康、分类变化、三连败、
-  持续失败去重、单次恢复、投递失败同 ID 重试、state 损坏、lock、路径和 secret
-  canary；测试不得访问 Production。
+  exact-200、持续失败去重、恢复前补送未投递 alert、alert/recovery 原快照重试、
+  state 损坏、lock、ancestor/dangling symlink、timeout budget 和 secret canary；
+  测试不得访问 Production。
 - service 必须是非 root oneshot、唯一绝对 `ExecStart`、必填绝对
   `EnvironmentFile`、私有 state 目录并启用最小权限 hardening；timer 固定每分钟
   触发同一 service。仓库模板不会自行 install、enable 或 start。

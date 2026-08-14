@@ -92,26 +92,32 @@ ops/monitoring/test-check-site.sh > "$monitor_test_log" 2>&1 || {
 for monitor_test_name in \
   raw-transport-healthy \
   deterministic-failure-classification \
+  exact-http-200-required \
   persistent-failure-count-across-classes \
   third-failure-single-logical-alert \
   single-recovery-after-all-checks-pass \
   repeated-incidents-remain-independent \
   transient-failures-do-not-create-events \
   alert-retry-keeps-stable-event-id \
+  recovered-site-delivers-pending-alert-first \
   recovery-retry-keeps-stable-event-id \
   corrupt-state-fails-closed \
+  ancestor-and-dangling-symlinks-fail-closed \
   lock-and-state-path-safety \
   live-stub-webhook-status-retry-and-secret-redaction \
+  bounded-cycle-budget-under-systemd-timeout \
   raw-fixture-schema-fails-closed \
   systemd-canonical-parser-and-negative-mutations
 do
   test "$(grep -Fxc "TEST PASS: $monitor_test_name" "$monitor_test_log")" -eq 1 ||
     fail "missing or duplicate monitoring test evidence: $monitor_test_name"
 done
-test "$(grep -c '^TEST PASS:' "$monitor_test_log")" -eq 14 ||
+test "$(grep -c '^TEST PASS:' "$monitor_test_log")" -eq 18 ||
   fail "monitoring fixture suite emitted an unexpected test set"
-test "$(grep -Fxc 'TEST SUMMARY: 14 passed' "$monitor_test_log")" -eq 1 ||
+test "$(grep -Fxc 'TEST SUMMARY: 18 passed' "$monitor_test_log")" -eq 1 ||
   fail "monitoring fixture suite summary mismatch"
+test "$(grep -Fxc 'HTTP_TIMEOUT_SECONDS=4' ops/monitoring/check-site.env.example)" -eq 1 ||
+  fail "monitoring HTTP timeout must preserve the verified four-second budget"
 test "$(grep -Fxc 'ALERT_CURL_CONFIG_FILE=' ops/monitoring/check-site.env.example)" -eq 1 ||
   fail "alert curl config example must remain empty"
 test "$(grep -Fxc 'HEARTBEAT_CURL_CONFIG_FILE=' ops/monitoring/check-site.env.example)" -eq 1 ||
