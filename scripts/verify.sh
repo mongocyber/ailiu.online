@@ -45,11 +45,96 @@ for required_file in \
   docs/OPERATIONS.md \
   docs/ai/PROJECT_CONTEXT.md \
   docs/ai/RULE_ACCOUNTABILITY.md \
-  .github/pull_request_template.md
+  .github/pull_request_template.md \
+  ops/monitoring/check-site.sh \
+  ops/monitoring/check-site.env.example \
+  ops/monitoring/check-site.service \
+  ops/monitoring/check-site.timer \
+  ops/monitoring/test-check-site.sh
 do
   test -f "$required_file" || fail "missing required file: $required_file"
 done
 pass "required core surfaces exist"
+
+require_tracked_regular_mode() {
+  required_path=$1
+  expected_mode=$2
+  tracked_entry=$(git ls-files -s -- "$required_path")
+  tracked_count=$(printf '%s\n' "$tracked_entry" | awk 'NF { count++ } END { print count + 0 }')
+  test "$tracked_count" -eq 1 ||
+    fail "monitoring artifact must be tracked exactly once: $required_path"
+  actual_mode=$(printf '%s\n' "$tracked_entry" | awk 'NF { print $1 }')
+  test "$actual_mode" = "$expected_mode" ||
+    fail "monitoring artifact mode mismatch for $required_path: $actual_mode"
+  test -f "$required_path" && test ! -L "$required_path" ||
+    fail "monitoring artifact must be a regular non-symlink: $required_path"
+}
+
+require_tracked_regular_mode ops/monitoring/check-site.sh 100755
+require_tracked_regular_mode ops/monitoring/test-check-site.sh 100755
+for monitoring_data_file in \
+  ops/monitoring/check-site.env.example \
+  ops/monitoring/check-site.service \
+  ops/monitoring/check-site.timer
+do
+  require_tracked_regular_mode "$monitoring_data_file" 100644
+done
+pass "tracked monitoring artifacts and exact modes"
+
+sh -n ops/monitoring/check-site.sh || fail "monitor checker shell syntax"
+sh -n ops/monitoring/test-check-site.sh || fail "monitor test shell syntax"
+
+monitor_test_log="$temp_dir/monitor-tests.log"
+ops/monitoring/test-check-site.sh > "$monitor_test_log" 2>&1 || {
+  sed -n '1,80p' "$monitor_test_log" >&2
+  fail "offline monitoring fixture suite"
+}
+for monitor_test_name in \
+  raw-transport-healthy \
+  deterministic-failure-classification \
+  persistent-failure-count-across-classes \
+  third-failure-single-logical-alert \
+  single-recovery-after-all-checks-pass \
+  repeated-incidents-remain-independent \
+  transient-failures-do-not-create-events \
+  alert-retry-keeps-stable-event-id \
+  recovery-retry-keeps-stable-event-id \
+  corrupt-state-fails-closed \
+  lock-and-state-path-safety \
+  live-stub-webhook-status-retry-and-secret-redaction \
+  raw-fixture-schema-fails-closed \
+  systemd-canonical-parser-and-negative-mutations
+do
+  test "$(grep -Fxc "TEST PASS: $monitor_test_name" "$monitor_test_log")" -eq 1 ||
+    fail "missing or duplicate monitoring test evidence: $monitor_test_name"
+done
+test "$(grep -c '^TEST PASS:' "$monitor_test_log")" -eq 14 ||
+  fail "monitoring fixture suite emitted an unexpected test set"
+test "$(grep -Fxc 'TEST SUMMARY: 14 passed' "$monitor_test_log")" -eq 1 ||
+  fail "monitoring fixture suite summary mismatch"
+test "$(grep -Fxc 'ALERT_CURL_CONFIG_FILE=' ops/monitoring/check-site.env.example)" -eq 1 ||
+  fail "alert curl config example must remain empty"
+test "$(grep -Fxc 'HEARTBEAT_CURL_CONFIG_FILE=' ops/monitoring/check-site.env.example)" -eq 1 ||
+  fail "heartbeat curl config example must remain empty"
+awk -F '=' '
+  /^[[:space:]]*#/ || /^[[:space:]]*$/ { next }
+  NF != 2 || $1 !~ /^[A-Z][A-Z0-9_]*$/ { exit 1 }
+  { print $1 }
+' ops/monitoring/check-site.env.example > "$temp_dir/monitor-env-keys-raw" ||
+  fail "monitoring environment example is non-canonical"
+LC_ALL=C sort "$temp_dir/monitor-env-keys-raw" > "$temp_dir/monitor-env-keys"
+monitor_env_keys=$(cat "$temp_dir/monitor-env-keys")
+expected_monitor_env_keys=$(printf '%s\n' \
+  ALERT_CURL_CONFIG_FILE \
+  DEPLOYMENT_ID_FILE \
+  HEARTBEAT_CURL_CONFIG_FILE \
+  HTTP_TIMEOUT_SECONDS \
+  MONITOR_STATE_DIR \
+  SITE_BASE_URL \
+  SITE_HOST | LC_ALL=C sort)
+test "$monitor_env_keys" = "$expected_monitor_env_keys" ||
+  fail "monitoring environment example key allowlist mismatch"
+pass "offline monitoring state, classification, secret, and systemd contracts"
 
 agent_lines=$(wc -l < AGENTS.md | tr -d ' ')
 if test "$agent_lines" -lt 50 || test "$agent_lines" -gt 100; then
@@ -83,8 +168,11 @@ pass "CLAUDE.md import-only contract"
 parse_rule_matrix() {
   matrix_file=$1
   output_file=$2
+  contracts_file=$3
 
-  awk -F '|' '
+  : > "$contracts_file"
+
+  awk -F '|' -v contracts_file="$contracts_file" '
     function report(message) {
       printf "%s at line %d\n", message, NR > "/dev/stderr"
       invalid = 1
@@ -178,6 +266,7 @@ parse_rule_matrix() {
           report("Matrix contains a duplicate rule ID")
         } else {
           print rule_id
+          printf "%s|%s\n", rule_id, fields[4] >> contracts_file
           if (rule_id ~ /^R/) {
             r_rows++
           } else {
@@ -239,7 +328,10 @@ verify_rule_accountability() {
   scratch_dir=$4
 
   mkdir -p "$scratch_dir"
-  parse_rule_matrix "$matrix_file" "$scratch_dir/matrix-rules-raw" ||
+  parse_rule_matrix \
+    "$matrix_file" \
+    "$scratch_dir/matrix-rules-raw" \
+    "$scratch_dir/matrix-contracts-raw" ||
     return 1
   extract_source_rule_ids R "$agents_file" "$scratch_dir/agent-rules-raw"
   extract_source_rule_ids O "$operations_file" "$scratch_dir/operations-rules-raw"
@@ -270,6 +362,20 @@ verify_rule_accountability() {
     return 1
   test -z "$(comm -13 "$scratch_dir/operations-rules" "$scratch_dir/matrix-o-rules")" ||
     return 1
+
+  for monitoring_contract in \
+    'O9|Executable, Semantic, and Human' \
+    'O9A|Deterministic and Executable' \
+    'O9B|Deterministic, Executable, and Semantic' \
+    'O9C|Deterministic and Executable' \
+    'O9D|Semantic and Human'
+  do
+    test "$(grep -Fxc "$monitoring_contract" "$scratch_dir/matrix-contracts-raw")" -eq 1 ||
+      return 1
+  done
+  test "$(grep -Fxc \
+    '`IMPLEMENTED / VERIFIED WITH FIXTURES ONLY / NOT INSTALLED / NOT DEPLOYED / NOT LIVE`。' \
+    "$operations_file")" -eq 1 || return 1
 }
 
 make_matrix_mutation() {
@@ -307,6 +413,22 @@ make_matrix_mutation() {
       next
     }
     index($0, "| O6D — ") == 1 && mutation == "missing_o_row" {
+      applied = 1
+      next
+    }
+    index($0, "| O9C — ") == 1 && mutation == "missing_monitoring_row" {
+      applied = 1
+      next
+    }
+    index($0, "| O9A — ") == 1 && mutation == "downgrade_o9a_enforcement" {
+      $4 = " Semantic "
+      print
+      applied = 1
+      next
+    }
+    index($0, "| O9C — ") == 1 && mutation == "downgrade_o9c_enforcement" {
+      $4 = " Semantic and Human "
+      print
       applied = 1
       next
     }
@@ -378,6 +500,36 @@ make_matrix_mutation() {
   ' docs/ai/RULE_ACCOUNTABILITY.md > "$output_file"
 }
 
+make_operations_mutation() {
+  output_file=$1
+  awk '
+    $0 == "`IMPLEMENTED / VERIFIED WITH FIXTURES ONLY / NOT INSTALLED / NOT DEPLOYED / NOT LIVE`。" {
+      print "`IMPLEMENTED / VERIFIED / INSTALLED / DEPLOYED / LIVE`。"
+      applied = 1
+      next
+    }
+    { print }
+    END { if (!applied) exit 1 }
+  ' docs/OPERATIONS.md > "$output_file"
+}
+
+run_operations_status_probe() {
+  probe_dir="$temp_dir/probe-monitoring-status-live"
+  probe_operations="$probe_dir/OPERATIONS.md"
+  probe_log="$probe_dir/output.log"
+  mkdir -p "$probe_dir"
+  make_operations_mutation "$probe_operations" ||
+    fail "unable to build monitoring status mutation probe"
+  if verify_rule_accountability \
+    AGENTS.md \
+    "$probe_operations" \
+    docs/ai/RULE_ACCOUNTABILITY.md \
+    "$probe_dir/check" > "$probe_log" 2>&1
+  then
+    fail "invalid monitoring LIVE status mutation was accepted"
+  fi
+}
+
 run_matrix_probe() {
   probe_name=$1
   mutation=$2
@@ -424,6 +576,9 @@ run_matrix_probe padded-id padded_id fail
 run_matrix_probe duplicate-id duplicate_id fail
 run_matrix_probe missing-r-row missing_r_row fail
 run_matrix_probe missing-o-row missing_o_row fail
+run_matrix_probe missing-monitoring-row missing_monitoring_row fail
+run_matrix_probe downgrade-o9a-enforcement downgrade_o9a_enforcement fail
+run_matrix_probe downgrade-o9c-enforcement downgrade_o9c_enforcement fail
 run_matrix_probe prose-cannot-replace-row prose_cannot_replace_row fail
 run_matrix_probe empty-trigger empty_trigger fail
 run_matrix_probe empty-enforcement empty_enforcement fail
@@ -431,6 +586,7 @@ run_matrix_probe invalid-enforcement invalid_enforcement fail
 run_matrix_probe empty-evidence empty_evidence fail
 run_matrix_probe empty-failure-action empty_failure_action fail
 run_matrix_probe empty-removal empty_removal fail
+run_operations_status_probe
 pass "Rule Accountability Matrix parser and mutation probes"
 
 for checklist_field in \
