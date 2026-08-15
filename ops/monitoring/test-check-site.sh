@@ -9,8 +9,13 @@ TIMER="$ROOT_DIR/ops/monitoring/check-site.timer"
 TEST_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/ailiu-monitor-test.XXXXXX")
 TEST_ROOT=$(CDPATH= cd -P -- "$TEST_ROOT" && pwd -P)
 PASS_COUNT=0
+ACTIVE_TEST_PID=
 
 cleanup() {
+  if test -n "$ACTIVE_TEST_PID"; then
+    kill -TERM "$ACTIVE_TEST_PID" 2>/dev/null || true
+    wait "$ACTIVE_TEST_PID" 2>/dev/null || true
+  fi
   rm -rf "$TEST_ROOT"
 }
 trap cleanup EXIT HUP INT TERM
@@ -812,7 +817,7 @@ EOF
 cp "$LIVE_BIN/curl" "$SLOW_BIN/curl"
 cp "$LIVE_BIN/sleep" "$SLOW_BIN/sleep"
 chmod 700 "$SLOW_BIN/getent" "$SLOW_BIN/curl" "$SLOW_BIN/sleep"
-if PATH="$SLOW_BIN:/usr/bin:/bin" \
+PATH="$SLOW_BIN:/usr/bin:/bin" \
   FAKE_SLOW_TRANSPORT_PID_FILE="$SLOW_TRANSPORT_PID_FILE" \
   FAKE_UNSAFE_HELPER_MARKER="$LIVE_UNSAFE_HELPER_MARKER" \
   FAKE_CALL_LOG="$LIVE_CALL_LOG" \
@@ -821,22 +826,39 @@ if PATH="$SLOW_BIN:/usr/bin:/bin" \
   FAKE_ALERT_STATUS_FILE="$LIVE_ALERT_STATUS_FILE" \
   FAKE_RECOVERY_STATUS_FILE="$LIVE_RECOVERY_STATUS_FILE" \
   FAKE_HEARTBEAT_STATUS_FILE="$LIVE_HEARTBEAT_STATUS_FILE" \
-  HTTP_TIMEOUT_SECONDS=1 \
+  HTTP_TIMEOUT_SECONDS=4 \
   MONITOR_STATE_DIR="$SLOW_STATE" \
   DEPLOYMENT_ID_FILE="$LIVE_DEPLOYMENT_FILE" \
   ALERT_CURL_CONFIG_FILE="$LIVE_ALERT_CONFIG" \
   HEARTBEAT_CURL_CONFIG_FILE="$LIVE_HEARTBEAT_CONFIG" \
-  "$CHECKER" > "$TEST_ROOT/slow-transport.log" 2>&1
+  "$CHECKER" > "$TEST_ROOT/slow-transport.log" 2>&1 &
+ACTIVE_TEST_PID=$!
+SLOW_START_WAIT=0
+while test "$SLOW_START_WAIT" -lt 40 && \
+  test ! -s "$SLOW_TRANSPORT_PID_FILE" && \
+  kill -0 "$ACTIVE_TEST_PID" 2>/dev/null
+do
+  command -p sleep 0.1
+  SLOW_START_WAIT=$((SLOW_START_WAIT + 1))
+done
+SLOW_TRANSPORT_STARTED=0
+test -s "$SLOW_TRANSPORT_PID_FILE" && SLOW_TRANSPORT_STARTED=1
+if wait "$ACTIVE_TEST_PID"
 then
-  fail "timed-out direct transport was reported healthy"
+  SLOW_RUN_RC=0
 else
   SLOW_RUN_RC=$?
-  if test "$SLOW_RUN_RC" -ne 1; then
-    command -p sed -n '1,80p' "$TEST_ROOT/slow-transport.log" >&2
-    fail "timed-out direct transport must be a site failure (rc=$SLOW_RUN_RC)"
-  fi
 fi
-test -s "$SLOW_TRANSPORT_PID_FILE" || fail "slow direct transport did not start"
+ACTIVE_TEST_PID=
+test "$SLOW_TRANSPORT_STARTED" -eq 1 ||
+  fail "slow direct transport was not observed within the bounded startup window"
+if test "$SLOW_RUN_RC" -eq 0; then
+  fail "timed-out direct transport was reported healthy"
+fi
+if test "$SLOW_RUN_RC" -ne 1; then
+  command -p sed -n '1,80p' "$TEST_ROOT/slow-transport.log" >&2
+  fail "timed-out direct transport must be a site failure (rc=$SLOW_RUN_RC)"
+fi
 SLOW_TRANSPORT_PID=$(sed -n '1p' "$SLOW_TRANSPORT_PID_FILE")
 if kill -0 "$SLOW_TRANSPORT_PID" 2>/dev/null; then
   fail "timed-out direct transport process remains alive"
