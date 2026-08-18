@@ -23,7 +23,7 @@
 - Aviso 和小姨家详情页已用当前真实项目资料与图片替换占位内容。
 - SEO / GEO 基础已接入：canonical、OG/Twitter meta、JSON-LD、`robots.txt`、`sitemap.xml`、`llms.txt`，构建时生成 `/projects/aviso/index.html`、`/projects/xiaoyi/index.html`。
 - Vercel Web Analytics 基础 pageview 的 implementation evidence 已在 revision `51a8e0a6b1e9b3f07a40a032173f190d7b3d8227` 验证；pushed / merged / deployed / collection 状态须分别绑定当前 exact revision、environment、deployment 与 Dashboard readback。Preview 与 Production 各有独立 Owner Gate；未验证不得写成 deployed / live，不补录历史数据。
-- ICP：2026-08-17 已在火山引擎控制台核验 `ailiu.online` 服务状态为“正常”，服务备案号为 `冀ICP备2026029440号-1`，备案记录关联 IP 为 `14.103.220.193`。本候选仅实现所有中英文动态页面与构建期静态 HTML 的备案号展示；尚未 push / merge / deploy，当前 Production 仍在 Vercel，线上展示与大陆接入均不得据此写成 live。
+- ICP：2026-08-17 已在火山引擎控制台核验 `ailiu.online` 服务状态为“正常”，服务备案号为 `冀ICP备2026029440号-1`，备案记录关联 IP 为 `14.103.220.193`。MON-126 仅实现所有中英文动态页面与构建期静态 HTML 的备案号展示；是否已 merge / deploy / live 必须分别从 GitHub `main`、Vercel exact deployment 和生产 HTTP / 浏览器读回，且不得据此推断大陆接入已完成。
 
 ## 验证骨架（spine）
 
@@ -40,9 +40,8 @@
 
 ## 下一步（next）
 
-1. MON-126 Phase B：ICP 页脚候选已完成 lint、build、静态 HTML 与 PC / 移动浏览器验证；尚未 push / PR / merge / deploy，后续各 gate 需 owner 分别授权。
-2. 大陆接入：核验备案关联火山资源的产品、地域、运行状态、有效期与静态站点发布路径，再单独决定 Production 迁移、DNS 切换和回滚目标。
-3. 公安联网备案：真实大陆接入稳定后，由 owner 使用真实接入商、IP 与主体材料在全国互联网安全管理服务平台提交；审核通过后再独立加入公安备案图标与编号。
+1. 大陆接入：核验备案关联火山资源的产品、地域、运行状态、有效期与静态站点发布路径，再单独决定 Production 迁移、DNS 切换和回滚目标。
+2. 公安联网备案：真实大陆接入稳定后，由 owner 使用真实接入商、IP 与主体材料在全国互联网安全管理服务平台提交；审核通过后再独立加入公安备案图标与编号。
 
 ## 边界（硬停，必须 owner 拍板）
 
