@@ -3,6 +3,7 @@ import type { Project, ProjectKey } from '../content'
 import { BRAND, getProject } from '../content'
 import { usePortfolio } from '../portfolio-context'
 import { LanguageSwitcher } from './LanguageSwitcher'
+import { IcpLink } from './IcpLink'
 import { Placeholder } from './Placeholder'
 import { Rich } from './Rich'
 
@@ -330,6 +331,11 @@ export function ProjectArticle({
           </a>
         )}
       </div>
+      {variant === 'page' ? (
+        <footer className="project-compliance">
+          <IcpLink />
+        </footer>
+      ) : null}
     </article>
   )
 }

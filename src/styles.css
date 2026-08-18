@@ -847,8 +847,9 @@ a {
   bottom: clamp(28px, 5vh, 56px);
   left: var(--pad-x);
   right: var(--pad-x);
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: start;
   gap: 16px;
   font-family: var(--font-mono);
   font-size: 11px;
@@ -856,6 +857,34 @@ a {
   color: var(--ink-ghost-2);
   border-top: 1px solid var(--line);
   padding-top: 16px;
+}
+.contact-footer > :last-child {
+  justify-self: end;
+  text-align: right;
+}
+.icp-link {
+  color: var(--ink-faint);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+.icp-link:hover {
+  color: var(--ink);
+}
+.icp-link:focus-visible {
+  color: var(--ink);
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.contact-footer .icp-link {
+  justify-self: center;
+  color: inherit;
+  font-size: inherit;
+  letter-spacing: inherit;
 }
 
 /* =============================================================================
@@ -1210,6 +1239,10 @@ a {
   justify-content: space-between;
   align-items: center;
 }
+.project-compliance {
+  margin-top: 28px;
+  text-align: center;
+}
 .visit {
   display: inline-flex;
   align-items: center;
@@ -1293,6 +1326,17 @@ a {
   height: auto;
   margin-top: 24px;
 }
+.static-compliance {
+  margin-top: 64px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+  text-align: center;
+}
+.static-compliance a {
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
 
 /* =============================================================================
    Mobile adaptation
@@ -1360,9 +1404,15 @@ a {
   .contact-footer {
     position: static;
     margin-top: clamp(40px, 8vh, 64px);
-    flex-direction: column;
+    grid-template-columns: 1fr;
+    justify-items: center;
     gap: 8px;
-    align-items: flex-start;
+    align-items: center;
+    text-align: center;
+  }
+  .contact-footer > :last-child {
+    justify-self: center;
+    text-align: center;
   }
 
   .gallery-grid {

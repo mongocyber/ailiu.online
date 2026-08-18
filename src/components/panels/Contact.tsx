@@ -1,5 +1,6 @@
 import { Fragment } from 'react'
 import { usePortfolio } from '../../portfolio-context'
+import { IcpLink } from '../IcpLink'
 
 export function Contact() {
   const { content } = usePortfolio()
@@ -44,6 +45,7 @@ export function Contact() {
 
       <div className="contact-footer" data-reveal data-ri="4">
         <span>{contact.footerLeft}</span>
+        <IcpLink />
         <span>{contact.footerRight}</span>
       </div>
     </>

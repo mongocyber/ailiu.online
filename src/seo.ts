@@ -3,6 +3,7 @@ import {
   DEFAULT_LOCALE,
   getContent,
   getProject,
+  ICP_FILING,
   LANGUAGE_OPTIONS,
   LOCALES,
   PROJECT_KEYS,
@@ -265,6 +266,10 @@ const escapeHtmlText = (value: string) =>
 const richTextHtml = (value: { text: string; muted?: string }) =>
   `${escapeHtmlText(value.text)}${value.muted ? ` <span>${escapeHtmlText(value.muted)}</span>` : ''}`
 
+const icpFilingHtml = () => `<footer class="static-compliance">
+  <a href="${escapeHtmlText(ICP_FILING.href)}">${escapeHtmlText(ICP_FILING.number)}</a>
+</footer>`
+
 const languageLinksHtml = (locale: Locale, projectKey?: ProjectKey | null) => {
   const content = getContent(locale)
   return `<nav aria-label="${escapeHtmlText(content.ui.languageSwitcherLabel)}">
@@ -317,6 +322,7 @@ function homeFallback(locale: Locale) {
       )
       .join('')}</ul>
   </section>
+  ${icpFilingHtml()}
 </main>`
 }
 
@@ -365,6 +371,7 @@ function projectFallback(locale: Locale, projectKey: ProjectKey) {
     </section>
     ${project.externalUrl && project.externalLabel ? `<p><a href="${project.externalUrl}">${escapeHtmlText(project.externalLabel)}</a></p>` : ''}
   </article>
+  ${icpFilingHtml()}
 </main>`
 }
 
