@@ -10,6 +10,11 @@ export const DEFAULT_LOCALE: Locale = 'en'
 export const LOCALES: Locale[] = ['en', 'zh']
 export const PROJECT_KEYS: ProjectKey[] = ['aviso', 'xiaoyi']
 
+export const ICP_FILING = {
+  number: '冀ICP备2026029440号-1',
+  href: 'https://beian.miit.gov.cn',
+} as const
+
 export interface LanguageOptionCopy {
   shortLabel: string
 }
