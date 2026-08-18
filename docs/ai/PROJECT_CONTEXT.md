@@ -1,7 +1,7 @@
 # PROJECT_CONTEXT — ailiu.online
 
 > 项目胶囊（保持瘦，≤120 行）。事实用 `scripts/cap_facts.py` 采集，不靠记忆。
-> 最近更新：2026-08-17
+> 最近更新：2026-08-18
 
 ## 是什么
 
@@ -40,7 +40,7 @@
 
 ## 下一步（next）
 
-1. MON-126 Phase B：完成 ICP 页脚候选的 lint、build、静态 HTML 与 PC / 移动浏览器验证；push / PR / merge / deploy 仍需各自 owner gate。
+1. MON-126 Phase B：ICP 页脚候选已完成 lint、build、静态 HTML 与 PC / 移动浏览器验证；尚未 push / PR / merge / deploy，后续各 gate 需 owner 分别授权。
 2. 大陆接入：核验备案关联火山资源的产品、地域、运行状态、有效期与静态站点发布路径，再单独决定 Production 迁移、DNS 切换和回滚目标。
 3. 公安联网备案：真实大陆接入稳定后，由 owner 使用真实接入商、IP 与主体材料在全国互联网安全管理服务平台提交；审核通过后再独立加入公安备案图标与编号。
 
