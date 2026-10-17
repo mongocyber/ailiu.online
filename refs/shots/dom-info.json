@@ -1,0 +1,210 @@
+{
+ "nodeck": {
+  "title": "Nodeck | A Presentation Website That Hates Presentations",
+  "bg": "rgb(255, 135, 171)",
+  "color": "rgb(0, 0, 0)",
+  "fonts": [
+   "\"DM Sans\"",
+   "\"BN Dime Display\"",
+   "\"IBM VGA\""
+  ],
+  "libs": {
+   "gsap": false,
+   "ScrollTrigger": false,
+   "Lenis": false,
+   "THREE": false,
+   "locomotive": false
+  },
+  "canvas": 0,
+  "video": 0,
+  "svg": 26,
+  "scripts": [
+   "https://www.nodeck.online/assets/main-BqI5seD_.js",
+   "https://www.nodeck.online/_vercel/insights/script.js",
+   "https://www.nodeck.online/_vercel/speed-insights/script.js"
+  ],
+  "height": 900
+ },
+ "perappelgren": {
+  "title": "Per Appelgren",
+  "bg": "rgb(255, 255, 255)",
+  "color": "rgb(33, 53, 71)",
+  "fonts": [
+   "neueMontreal"
+  ],
+  "libs": {
+   "gsap": false,
+   "ScrollTrigger": false,
+   "Lenis": false,
+   "THREE": false,
+   "locomotive": false
+  },
+  "canvas": 2,
+  "video": 0,
+  "svg": 3,
+  "scripts": [
+   "https://perappelgren.de/_next/static/chunks/14x4ulv7j4.e5.js",
+   "https://perappelgren.de/_next/static/chunks/0rwwge57xnfls.js",
+   "https://perappelgren.de/_next/static/chunks/178a4ynnpox30.js",
+   "https://perappelgren.de/_next/static/chunks/0yu_1~b4-6wf1.js",
+   "https://perappelgren.de/_next/static/chunks/turbopack-003v0.gkfhz2f.js",
+   "https://perappelgren.de/_next/static/chunks/139s40d9u_kia.js",
+   "https://perappelgren.de/_next/static/chunks/0v3n.lrkztt~w.js",
+   "https://perappelgren.de/_next/static/chunks/0i.l9589uvx0j.js",
+   "https://perappelgren.de/_next/static/chunks/0976y2syno-~3.js",
+   "https://perappelgren.de/_next/static/chunks/0x-a7jlqeiyrk.js",
+   "https://perappelgren.de/_next/static/chunks/095nm813hj10w.js",
+   "https://perappelgren.de/_next/static/chunks/0r~rwv0qdg8jm.js"
+  ],
+  "height": 900
+ },
+ "riddle": {
+  "title": "Roman \u2014 AI automation engineer",
+  "bg": "rgb(10, 10, 10)",
+  "color": "rgb(250, 250, 250)",
+  "fonts": [
+   "\"JetBrains Mono\"",
+   "ui-monospace",
+   "Geist"
+  ],
+  "libs": {
+   "gsap": false,
+   "ScrollTrigger": false,
+   "Lenis": false,
+   "THREE": false,
+   "locomotive": false
+  },
+  "canvas": 0,
+  "video": 0,
+  "svg": 13,
+  "scripts": [
+   "https://riddle-portfolio.vercel.app/src/i18n.js",
+   "https://riddle-portfolio.vercel.app/src/app.js"
+  ],
+  "height": 10028
+ },
+ "mirabelli": {
+  "title": "Studio Mirabelli \u2014 Framer Gallery",
+  "bg": "rgb(17, 17, 17)",
+  "color": "rgb(255, 255, 255)",
+  "fonts": [
+   "walsheim",
+   "inter"
+  ],
+  "libs": {
+   "gsap": false,
+   "ScrollTrigger": false,
+   "Lenis": false,
+   "THREE": false,
+   "locomotive": false
+  },
+  "canvas": 0,
+  "video": 1,
+  "svg": 35,
+  "scripts": [
+   "https://js-eu1.hs-banner.com/v2/144411337/banner.js",
+   "https://js-eu1.hs-analytics.net/analytics/1792054500000/144411337.js",
+   "https://bzrcdn.openai.com/sdk/oaiq.min.js",
+   "https://d34r8q7sht0t9k.cloudfront.net/tag.js",
+   "https://static.ads-twitter.com/uwt.js",
+   "https://www.googletagmanager.com/gtag/js?id=G-QZ2MPXED80&cx=c&gtm=4e6ad1",
+   "https://www.framer.com/creators-assets/_next/static/immutable/chunks/2nt8iotcfglfl.js",
+   "https://www.framer.com/creators-assets/_next/static/immutable/chunks/2gtp4hk0okg56.js",
+   "https://www.framer.com/creators-assets/_next/static/immutable/chunks/29lnf5dn25tzt.js",
+   "https://www.framer.com/creators-assets/_next/static/immutable/chunks/2hy63c9uu84cc.js",
+   "https://www.framer.com/creators-assets/_next/static/immutable/chunks/3urbpwb8eaeuk.js",
+   "https://www.framer.com/creators-assets/_next/static/immutable/chunks/turbopack-2_1_w77gewqtb.js"
+  ],
+  "height": 1764
+ },
+ "atomic-csswinner": {
+  "title": "Atomic - CSS Winner",
+  "bg": "rgb(249, 247, 246)",
+  "color": "rgb(102, 102, 102)",
+  "fonts": [
+   "Arial",
+   "Roboto"
+  ],
+  "libs": {
+   "gsap": false,
+   "ScrollTrigger": false,
+   "Lenis": false,
+   "THREE": false,
+   "locomotive": false
+  },
+  "canvas": 0,
+  "video": 0,
+  "svg": 0,
+  "scripts": [
+   "https://www.googletagmanager.com/gtag/js?id=G-0V8HRNV6TN",
+   "https://csswinner.disqus.com/embed.js",
+   "https://csswinner.disqus.com/count.js",
+   "https://c.disquscdn.com/next/embed/alfie_v4.63f1ab6d6b9d5807dc0c94ef3fe0b851.js",
+   "https://d-code.liadm.com/did-0049.min.js",
+   "https://cdn.csswinner.com/js/jquerymin.js",
+   "https://cdn.csswinner.com/js/all.js"
+  ],
+  "height": 3606
+ },
+ "atomic": {
+  "title": "Atomic \u00a9 Agency",
+  "bg": "rgb(0, 0, 0)",
+  "color": "rgb(255, 255, 255)",
+  "fonts": [
+   "Inter"
+  ],
+  "libs": {
+   "gsap": false,
+   "ScrollTrigger": false,
+   "Lenis": false,
+   "THREE": false,
+   "locomotive": false
+  },
+  "canvas": 1,
+  "video": 0,
+  "svg": 7,
+  "scripts": [
+   "https://atomic.black/_next/static/chunks/f3daa7dc9a77b43e.js",
+   "https://atomic.black/_next/static/chunks/1631b90f1e52454f.js",
+   "https://atomic.black/_next/static/chunks/7c6ce841ded3075f.js",
+   "https://atomic.black/_next/static/chunks/turbopack-7ae83d735afc5bdc.js",
+   "https://atomic.black/_next/static/chunks/b8980ebc332b55bc.js",
+   "https://atomic.black/_next/static/chunks/85fc6e6160aaa9ce.js",
+   "https://atomic.black/_next/static/chunks/221e0744b683f94b.js",
+   "https://atomic.black/_next/static/chunks/d202db66e8fe62b4.js",
+   "https://atomic.black/_next/static/chunks/45161c4c279e8746.js",
+   "https://www.googletagmanager.com/gtag/js?id=G-G7PQ8MPWP3",
+   "https://atomic.black/_next/static/chunks/569c8f60d7ca0ef0.js",
+   "https://atomic.black/_next/static/chunks/a6dad97d9634a72d.js"
+  ],
+  "height": 5782
+ },
+ "orwell": {
+  "title": "What if George Orwell had a website",
+  "bg": "rgba(0, 0, 0, 0)",
+  "color": "rgb(0, 0, 0)",
+  "fonts": [
+   "\"Bebas Neue\""
+  ],
+  "libs": {
+   "gsap": true,
+   "ScrollTrigger": false,
+   "Lenis": true,
+   "THREE": false,
+   "locomotive": false
+  },
+  "canvas": 3,
+  "video": 0,
+  "svg": 2,
+  "scripts": [
+   "https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js",
+   "https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/DrawSVGPlugin.min.js",
+   "https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js",
+   "https://orwell.byholm.co/loader.js",
+   "https://unpkg.com/lenis@1.1.13/dist/lenis.min.js",
+   "https://orwell.byholm.co/index.js",
+   "https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920"
+  ],
+  "height": 10800
+ }
+}
