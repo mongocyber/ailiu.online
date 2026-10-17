@@ -32,10 +32,14 @@
   </div>
 </header>
 
+<div class="letterbox" aria-hidden="true">
+  <ol class="reel" id="reel"><li><i></i></li><li><i></i></li><li><i></i></li><li><i></i></li><li><i></i></li><li><i></i></li><li><i></i></li></ol>
+  <span class="reel-l mono" id="reelL"></span><span class="reel-r mono" id="reelR"></span>
+</div>
 <aside class="narrator" id="narrator" aria-label="Louis narration">
   <button class="nar-face" id="narFace" type="button" aria-label="Replay Louis's line"></button>
   <div class="nar-body">
-    <div class="nar-meta mono"><span>LOUIS</span><span class="nar-idx" id="narIdx">00 / 07</span><span class="nar-state" id="narState" data-en="captions only · audio placeholder" data-zh="仅字幕 · 音频占位">captions only · audio placeholder</span></div>
+    <div class="nar-meta mono"><span>LOUIS</span><span class="nar-idx" id="narIdx">00 / 07</span><span class="nar-next" id="narNext" aria-hidden="true"></span><span class="nar-state" id="narState" data-en="captions only · audio placeholder" data-zh="仅字幕 · 音频占位">captions only · audio placeholder</span></div>
     <p class="nar-sub" id="narSub"></p>
   </div>
 </aside>
@@ -215,6 +219,7 @@
     <div class="pin">
       <div class="cut" aria-hidden="true"><i></i><i></i><i></i></div>
       <div class="st-grid" aria-hidden="true"></div>
+      <div class="st-left">
       <header class="slots st-slots">
         <span class="slot-index mono" data-slot="index"></span>
         <h2 class="slot-title" data-slot="title"></h2>
@@ -222,9 +227,10 @@
         <p class="slot-blurb" data-slot="blurb"></p>
       </header>
       <div class="st-drawing">
-        <svg class="st-svg" id="stSvg" viewBox="0 0 1000 520" aria-label="One-pipe steam system schematic" role="img">
+        <svg class="st-svg" id="stSvg" viewBox="0 0 1000 520" preserveAspectRatio="xMinYMax meet" aria-label="One-pipe steam system schematic" role="img">
           <defs>
             <linearGradient id="stHot" x1="0" x2="1"><stop offset="0" stop-color="#F2A93B"/><stop offset="1" stop-color="#F6D7A0"/></linearGradient>
+            <mask id="stFront" maskUnits="userSpaceOnUse" x="0" y="0" width="1000" height="520"><path class="st-front-m" d="M115 300V120H860" pathLength="1"/></mask>
             <filter id="stGlow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
           </defs>
           <!-- boiler -->
@@ -242,6 +248,7 @@
           <path id="stReturn" class="st-pipe st-pipe-b" pathLength="1" d="M860 120v330H190"/>
           <!-- steam front (slider + scrub) -->
           <path id="stSteam" class="st-steam" d="M115 300V120H860" pathLength="1" filter="url(#stGlow)"/>
+          <path class="st-flow" d="M115 300V120H860" pathLength="1" mask="url(#stFront)"/>
           <!-- radiators -->
           <g class="st-rad" transform="translate(370 250)"><rect width="100" height="70" rx="6" class="st-line"/><path d="M14 8v54M28 8v54M42 8v54M56 8v54M70 8v54M84 8v54" class="st-thin"/></g>
           <g class="st-rad" transform="translate(650 250)"><rect width="100" height="70" rx="6" class="st-line"/><path d="M14 8v54M28 8v54M42 8v54M56 8v54M70 8v54M84 8v54" class="st-thin"/></g>
@@ -258,6 +265,7 @@
           <text x="480" y="106" class="st-lbl" text-anchor="middle" data-en="STEAM MAIN — PITCHED BACK TO BOILER" data-zh="蒸汽主管 · 坡向锅炉">STEAM MAIN — PITCHED BACK TO BOILER</text>
           <text x="520" y="466" class="st-lbl" text-anchor="middle" data-en="DRY RETURN" data-zh="回水管">DRY RETURN</text>
         </svg>
+      </div>
       </div>
       <div class="st-gauge" aria-hidden="true">
         <svg viewBox="0 0 200 200">
@@ -304,7 +312,7 @@
                 <li style="--c:#9CC3FF"><i></i><b data-en="Bath time" data-zh="洗澡">Bath time</b><span data-en="洗澡" data-zh="Bath time">洗澡</span></li>
                 <li style="--c:#C9B4FF"><i></i><b data-en="Bedtime" data-zh="睡前">Bedtime</b><span data-en="睡前" data-zh="Bedtime">睡前</span></li>
               </ul>
-              <div class="sk-today"><small data-en="Line of the day" data-zh="今天这一句">Line of the day</small><b>Can I have some milk?</b><span>我可以喝点牛奶吗？</span></div>
+              <div class="sk-today"><small data-en="Line of the day" data-zh="今天这一句">Line of the day</small><b>Can I have some milk?</b><span lang="zh-CN">我可以喝点牛奶吗？</span></div>
               <p class="sk-foot" data-en="4 scenes · a few lines each" data-zh="4 个场景 · 每个几句">4 scenes · a few lines each</p>
             </div>
             <!-- screen 2: scene card (flips) -->
@@ -313,13 +321,13 @@
               <div class="sk-card" id="skCard">
                 <div class="sk-face sk-front">
                   <div class="sk-ill" aria-hidden="true"><span class="bowl"></span><span class="cup"></span><span class="sun"></span></div>
-                  <b>At breakfast</b><span>早餐时</span>
+                  <b>At breakfast</b><span lang="zh-CN">早餐时</span>
                   <small data-en="tap to flip" data-zh="点一下翻面">tap to flip</small>
                 </div>
                 <div class="sk-face sk-back">
-                  <p><b>Can I have some milk?</b><span>我可以喝点牛奶吗？</span></p>
-                  <p><b>It's yummy!</b><span>真好吃！</span></p>
-                  <p><b>All done.</b><span>吃完啦。</span></p>
+                  <p><b>Can I have some milk?</b><span lang="zh-CN">我可以喝点牛奶吗？</span></p>
+                  <p><b>It's yummy!</b><span lang="zh-CN">真好吃！</span></p>
+                  <p><b>All done.</b><span lang="zh-CN">吃完啦。</span></p>
                 </div>
               </div>
             </div>
@@ -327,7 +335,7 @@
             <div class="sk-screen sk-s3">
               <p class="sk-eyebrow" data-en="Say it together" data-zh="一起说">Say it together</p>
               <p class="sk-big">Can I have<br>some milk?</p>
-              <p class="sk-zh">我可以喝点牛奶吗？</p>
+              <p class="sk-zh" lang="zh-CN">我可以喝点牛奶吗？</p>
               <div class="sk-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
               <ol class="sk-turns"><li class="done"><b data-en="Parent" data-zh="大人">Parent</b><span>Can I have some milk?</span></li><li class="now"><b data-en="Child" data-zh="孩子">Child</b><span>Can I have some milk?</span></li><li><b data-en="Together" data-zh="一起">Together</b><span>…</span></li></ol>
               <span class="sk-btn" data-en="Next card →" data-zh="下一张 →">Next card →</span>
@@ -365,7 +373,7 @@
         <div class="xy-book" id="xyBook">
           <div class="xy-spread" style="--s:0">
             <div class="xy-page xy-l"><span class="xy-no">01</span><b data-en="Mark" data-zh="标志">Mark</b><p data-en="The sign on the door." data-zh="门上的那个记号。">The sign on the door.</p></div>
-            <div class="xy-page xy-r"><div class="xy-ph xy-ph-mark"><span class="xy-seal">小姨家</span></div><small data-en="awaiting: logo source file" data-zh="待提供：标志源文件">awaiting: logo source file</small></div>
+            <div class="xy-page xy-r"><div class="xy-ph xy-ph-mark"><span class="xy-seal" lang="zh-CN">小姨家</span></div><small data-en="awaiting: logo source file" data-zh="待提供：标志源文件">awaiting: logo source file</small></div>
           </div>
           <div class="xy-spread" style="--s:1">
             <div class="xy-page xy-l"><span class="xy-no">02</span><b data-en="Key visual" data-zh="主视觉">Key visual</b><p data-en="The picture people remember." data-zh="让人记住的那一张。">The picture people remember.</p></div>

@@ -27,7 +27,7 @@
     $$("[data-en]").forEach((el) => { el.textContent = el.dataset[lang] || el.dataset.en; });
     $$("[data-lang-opt]").forEach((el) => el.classList.toggle("on", el.dataset.langOpt === lang));
     fillSlots(); buildNav(); renderSound(); buildTranscript(); renderWildSource(true); renderLog();
-    measureAviso();
+    measureAviso(); reelTxt = "";
     narrator.onLang();
   }
   $("#langBtn").addEventListener("click", () => {
@@ -38,7 +38,7 @@
 
   /* ------------------------------------------------------------------ manifest → nav, slots */
   function buildNav() {
-    $("#chapnav").innerHTML = order.map((p, i) =>
+    $("#chapnav").innerHTML = `<li class="nav-ind" aria-hidden="true" role="presentation"></li>` + order.map((p, i) =>
       `<li><a href="#${p.key}" data-key="${p.key}"><b>${pad(i + 1)}</b><span>${L(p.title)}</span></a></li>`).join("");
     $("#heroIndex").innerHTML = order.map((p, i) =>
       `<li><a href="#${p.key}"><b>${pad(i + 1)}</b><span>${L(p.title)}</span><em>${L(p.statusLabel)}</em></a></li>`).join("");
@@ -79,6 +79,10 @@
   const presetIO = new IntersectionObserver((ens) => {
     ens.forEach((en) => { if (en.isIntersecting) { en.target.classList.add("is-in"); presetIO.unobserve(en.target); } });
   }, { rootMargin: "0px 0px -12% 0px", threshold: 0.01 });
+  $$(".chapter .slots").forEach((sl) => {
+    let i = 0;
+    $$(":scope > .slot-tagline, :scope > .slot-blurb, :scope > .slot-row", sl).forEach((el) => { el.dataset.preset = "reveal-up"; el.style.setProperty("--i", ++i); });
+  });
   $$("[data-preset]").forEach((el, i) => presetIO.observe(el));
 
   /* ------------------------------------------------------------------ sound (muted placeholder) */
@@ -106,58 +110,116 @@
   const louises = [louisHero, louisMini, louisWild];
 
   /* ------------------------------------------------------------------ narrator (captions; §4.5 rules) */
+  // r6: the queue is keyed to where the reader *is*, not where they have been.
+  //  · a chapter only counts as "said" once its line actually starts (skipped chapters stay eligible);
+  //  · a queued line is dropped the moment its chapter stops being the current one (§4.5-3);
+  //  · a playing line whose chapter is ≥2 chapters behind fades out (200ms) and hands over at once;
+  //  · otherwise one line at a time with a ≥1.2s gap (§4.5-1).
   const narrator = (() => {
-    const sub = $("#narSub"), box = $("#narrator");
+    const sub = $("#narSub"), box = $("#narrator"), idxEl = $("#narIdx"), nextEl = $("#narNext");
+    let nextTxt = "";
     const said = new Set();
-    let cur = null, queued = null, coolUntil = 0, startT = 0, dur = 0, words = [];
+    const FADE = 200, GAP = 1200;
+    let cur = null, queued = null, coolUntil = 0, startT = 0, dur = 0, words = [], fadeUntil = 0, shown = null, here = "hero", lastN = -1;
     const estimate = (txt) => Math.max(1800, lang === "zh" ? (txt.length / 4.5) * 1000 : (txt.length / 15) * 1000);
+    const idxOf = (id) => (id === "hero" ? 0 : id ? order.indexOf(byKey[id]) + 1 : order.length + 1);
     function lineFor(id) {
       if (id === "hero") return { id, idx: 0, text: L(M.hero.narration[0].subtitle) };
-      const p = byKey[id]; return { id, idx: order.indexOf(p) + 1, text: L(p.narration[0].subtitle) };
+      const p = byKey[id]; return { id, idx: idxOf(id), text: L(p.narration[0].subtitle) };
     }
     function render(text) {
       const parts = lang === "zh" ? Array.from(text) : text.split(/(\s+)/);
       sub.innerHTML = parts.map((w) => (/^\s+$/.test(w) ? w : `<span class="w">${w.replace(/</g, "&lt;")}</span>`)).join("");
-      words = $$(".w", sub);
+      words = $$(".w", sub); lastN = -1;
     }
+    function setIdx(n) { idxEl.textContent = `${pad(n)} / 07`; }
     function play(line) {
-      cur = line; startT = performance.now(); dur = estimate(line.text);
-      render(line.text); box.classList.remove("is-idle");
-      $("#narIdx").textContent = `${pad(line.idx)} / 07`;
+      said.add(line.id);
+      cur = line; shown = line.id; startT = performance.now(); dur = estimate(line.text);
+      render(line.text);
+      box.classList.remove("is-idle", "is-stale", "is-out");
+      setIdx(line.idx);
       louises.forEach((l) => l.setState("talk"));
     }
+    function finish(now) {
+      cur = null; coolUntil = now + GAP; box.classList.add("is-idle");
+      words.forEach((w) => w.classList.add("on")); sub.querySelectorAll(".now").forEach((w) => w.classList.remove("now"));
+      louises.forEach((l) => l.setState("idle"));
+    }
+    // called by the dwell detector: ≥55% of the viewport for ≥450ms (§4.5-2)
     function request(id, force) {
       if (!force && said.has(id)) return;
-      said.add(id);
-      const line = lineFor(id);
-      if (!cur) {
-        if (performance.now() < coolUntil) { queued = line; return; }
-        return play(line);
-      }
-      // fast scrolling: keep only the newest; if we've moved 2+ chapters away, cut over now
-      if (Math.abs(line.idx - cur.idx) >= 2) { cur = null; play(line); } else queued = line;
+      if (!force && id !== here) return;
+      if (!cur && !fadeUntil && performance.now() >= coolUntil) return play(lineFor(id));
+      queued = id;
+    }
+    // where the reader is right now ("hero", a chapter key, or null below the chapters)
+    function setHere(id) {
+      if (id === here) return;
+      here = id;
+      if (queued && queued !== here) queued = null;        // stale: drop, do not mark as said
+      if (!cur) idleView();
+    }
+    // when nothing is speaking, the bar shows the current chapter: its line if already heard (dim), else a quiet placeholder
+    function idleView() {
+      const n = idxOf(here);
+      if (!here || n > order.length) return;
+      setIdx(n);
+      if (shown === here) { box.classList.remove("is-stale"); return; }
+      if (said.has(here)) { shown = here; render(lineFor(here).text); words.forEach((w) => w.classList.add("on")); box.classList.remove("is-stale"); }
+      else { box.classList.add("is-stale"); render(""); shown = null; }
     }
     function tick(now) {
       let level = 0;
-      if (cur) {
-        const t = (now - startT) / dur;
-        const n = Math.ceil(clamp(t) * words.length);
-        for (let i = 0; i < words.length; i++) words[i].classList.toggle("on", i < n);
-        // synthetic speech envelope (stand-in for AnalyserNode RMS until audio exists)
-        if (soundOn && t < 1) level = 0.28 + 0.42 * Math.abs(Math.sin(now / 90)) * (0.5 + 0.5 * Math.sin(now / 370));
-        if (t >= 1) {
-          cur = null; coolUntil = now + 1200; box.classList.add("is-idle");
-          words.forEach((w) => w.classList.add("on"));
+      if (fadeUntil) {
+        if (now >= fadeUntil) { fadeUntil = 0; box.classList.remove("is-out"); if (queued) { const q = queued; queued = null; play(lineFor(q)); } else idleView(); }
+      } else if (cur) {
+        // fast scroll: the reader is already 2+ chapters past this line → fade out 200ms, cut to the current chapter
+        if (here !== cur.id && Math.abs(idxOf(here) - cur.idx) >= 2) {
+          cur = null; fadeUntil = now + FADE; box.classList.add("is-out");
           louises.forEach((l) => l.setState("idle"));
+        } else {
+          const t = (now - startT) / dur;
+          const n = reduced ? words.length : Math.ceil(clamp(t) * words.length); // §5.4: static captions under reduced motion
+          if (n !== lastN) {
+            for (let i = 0; i < words.length; i++) { words[i].classList.toggle("on", i < n); words[i].classList.toggle("now", i === n - 1); }
+            lastN = n;
+          }
+          // synthetic speech envelope (stand-in for AnalyserNode RMS until audio exists)
+          if (soundOn && t < 1) level = 0.28 + 0.42 * Math.abs(Math.sin(now / 90)) * (0.5 + 0.5 * Math.sin(now / 370));
+          if (t >= 1) { finish(now); if (here !== shown) idleView(); }
         }
-      } else if (queued && now >= coolUntil) { const q = queued; queued = null; play(q); }
+      } else if (queued && now >= coolUntil) {
+        const q = queued; queued = null;
+        if (q === here) play(lineFor(q));
+      } else if (!queued && here !== shown && here) idleView();
+      // "→ 03": the next chapter's line is waiting for this one to finish (no overlap, §4.5-1)
+      const nx = (cur || fadeUntil) && here && (!cur || here !== cur.id) && !said.has(here) && idxOf(here) <= order.length ? `→ ${pad(idxOf(here))}` : "";
+      if (nx !== nextTxt) { nextEl.textContent = nx; nextTxt = nx; }
       louises.forEach((l) => l.setLevel(level));
+      box.style.setProperty("--nar-t", cur ? clamp((now - startT) / dur).toFixed(3) : 1);
       const r = $("#lvRead"); if (r) r.textContent = level.toFixed(2);
     }
-    function onLang() { if (cur) { const id = cur.id; cur = null; render(lineFor(id).text); words.forEach((w) => w.classList.add("on")); box.classList.add("is-idle"); } }
-    function replay() { const id = active || "hero"; said.delete(id); cur = null; request(id, true); }
-    return { request, tick, onLang, replay };
+    function onLang() {
+      // §4.5-7: stop the current line, no replay; the bar re-renders in the new language
+      if (cur) finish(performance.now());
+      queued = null;
+      if (shown) { render(lineFor(shown).text); words.forEach((w) => w.classList.add("on")); }
+    }
+    // §4.5-6: tab hidden → fade out and clear the queue
+    function stop() {
+      if (cur) { cur = null; fadeUntil = performance.now() + FADE; box.classList.add("is-out"); louises.forEach((l) => l.setState("idle")); }
+      queued = null;
+    }
+    function replay() {
+      const id = here || "hero";
+      if (cur) { cur = null; }
+      fadeUntil = 0; box.classList.remove("is-out"); coolUntil = 0;
+      play(lineFor(id));
+    }
+    return { request, tick, onLang, replay, setHere, stop };
   })();
+  document.addEventListener("visibilitychange", () => { if (document.hidden) narrator.stop(); });
   $("#narFace").addEventListener("click", () => { louisMini.setState("react"); narrator.replay(); });
 
   /* ------------------------------------------------------------------ active chapter, glitch-cut, narration cue */
@@ -166,14 +228,23 @@
   function setActive(key, silent) {
     active = key;
     $$("#chapnav a").forEach((a) => a.setAttribute("aria-current", String(a.dataset.key === key)));
+    placeNavInd();
     document.body.classList.toggle("is-wild", key === "wild-louis");
-    if (!key) $("#narIdx").textContent = "00 / 07";
     if (silent || !key || glitched.has(key) || reduced) return;
     glitched.add(key);
     const sec = document.getElementById(key);
     const cut = $(".cut", sec), title = $("header.slots .slot-title", sec);
     cut.classList.remove("go"); void cut.offsetWidth; cut.classList.add("go");
     if (title) { title.classList.add("glitching"); setTimeout(() => title.classList.remove("glitching"), 200); }
+  }
+  // one indicator pill that slides between chapters instead of a background that jumps (r6)
+  function placeNavInd() {
+    const ind = $("#chapnav .nav-ind"), a = active && $(`#chapnav a[data-key="${active}"]`);
+    if (!ind) return;
+    if (!a) { ind.style.opacity = 0; return; }
+    ind.style.opacity = 1;
+    ind.style.transform = `translateX(${a.parentElement.offsetLeft}px)`;
+    ind.style.width = a.offsetWidth + "px";
   }
   const dwell = {};
   function checkChapters() {
@@ -193,18 +264,22 @@
     const heroCov = clamp((Math.min(vh, heroR.bottom) - Math.max(0, heroR.top)) / vh);
     const k = heroCov > bestCov || bestCov < 0.3 ? null : best;
     if (k !== active) setActive(k);
+    narrator.setHere(k || (heroCov >= 0.3 ? "hero" : null));
+    if (heroCov >= 0.55) { if (!dwell.hero) dwell.hero = performance.now(); else if (performance.now() - dwell.hero > 700) narrator.request("hero"); }
+    else dwell.hero = 0;
   }
 
   /* ------------------------------------------------------------------ per-stage progress */
   function progressOf(key) {
     const st = $(`[data-stage="${key}"]`);
     const r = st.getBoundingClientRect();
-    const span = r.height - innerHeight;
+    const span = r.height - st.firstElementChild.offsetHeight; // pin is shorter than the viewport (letterbox, r6)
     return span > 0 ? clamp(-r.top / span) : (r.top < innerHeight ? 1 : 0);
   }
 
   /* ---- 01 Aviso */
   const avWin = $("#avWin"), avHl = $("#avHl");
+  let avLines = [];
   function measureAviso() {
     const mark = $("#avMark");
     const prev = avWin.style.transform;
@@ -212,8 +287,12 @@
     const wr = avWin.getBoundingClientRect();
     const rects = Array.from(mark.getClientRects());
     avWin.style.transform = prev;
-    avHl.innerHTML = rects.map((r) =>
-      `<span class="av-hl-box" style="--hl-x:${r.left - wr.left - 2}px;--hl-y:${r.top - wr.top - 1}px;--hl-w:${r.width + 4}px;--hl-h:${r.height + 2}px"></span>`).join("");
+    // multi-line selection: each line box sweeps in turn, the way a drag paints it
+    const n = rects.length;
+    avLines = rects.map((r) => [r.left - wr.left, r.right - wr.left, r.top - wr.top + r.height * 0.5]);
+    avHl.innerHTML = rects.map((r, i) =>
+      `<span class="av-hl-box" style="--hl-x:${r.left - wr.left - 2}px;--hl-y:${r.top - wr.top - 1}px;--hl-w:${r.width + 4}px;--hl-h:${r.height + 2}px;--k0:${(i / n).toFixed(3)};--kn:${n}"></span>`).join("") +
+      `<span class="av-cursor"></span>`;
     if (rects[0]) {
       avWin.style.setProperty("--hl-x", (rects[0].left - wr.left) + "px");
       avWin.style.setProperty("--hl-y", (rects[0].top - wr.top) + "px");
@@ -234,7 +313,14 @@
     s.setProperty("--zh", (60 * e).toFixed(1) + "px");
     s.setProperty("--zp", (140 * e).toFixed(1) + "px");
     s.setProperty("--tag", e.toFixed(3));
-    s.setProperty("--sel", sstep(0.06, 0.18, p).toFixed(3));
+    const sel = sstep(0.06, 0.18, p);
+    s.setProperty("--sel", sel.toFixed(3));
+    // the pointer that paints the selection, line by line, then leaves as the panel arrives
+    if (avLines.length) {
+      const n = avLines.length, f = Math.min(n - 0.0001, sel * n), i = Math.floor(f), t = f - i, [x0, x1, y] = avLines[i];
+      s.setProperty("--cx", (x0 + (x1 - x0) * t).toFixed(1) + "px");
+      s.setProperty("--cy", y.toFixed(1) + "px");
+    }
     s.setProperty("--po", sstep(0.16, 0.26, p).toFixed(3));
     const ans = sstep(0.62, 0.9, p);
     s.setProperty("--ans", ans.toFixed(3));
@@ -274,6 +360,7 @@
   /* ---- 03 Steam */
   const stPin = $("#steam .pin"), stRange = $("#stRange");
   let stTouched = false;
+  const needle = { x: 0, v: 0, t: 0 };
   stRange.addEventListener("input", () => { stTouched = true; });
   (function ticks() {
     const g = $("#gTicks"); let h = "";
@@ -290,6 +377,12 @@
     if (stTouched) front = stRange.value / 100; else stRange.value = Math.round(front * 100);
     stPin.style.setProperty("--grow", grow.toFixed(3));
     stPin.style.setProperty("--front", front.toFixed(3));
+    // gauge needle rides a lightly under-damped spring toward the front, so it has mass (r6)
+    const now = performance.now(), dt = Math.min(0.05, (now - needle.t) / 1000 || 0); needle.t = now;
+    if (isMobile() || reduced || dt === 0) { needle.x = front; needle.v = 0; }
+    else { const k = 90, c = 11; needle.v += (k * (front - needle.x) - c * needle.v) * dt; needle.x += needle.v * dt; }
+    stPin.style.setProperty("--needle", clamp(needle.x, -0.02, 1.02).toFixed(4));
+    stPin.style.setProperty("--flow", reduced ? 0 : (-(now / 9000) - p * 0.8).toFixed(4));
     const rads = $$(".st-rad", stPin);
     rads[0].style.setProperty("--heat", sstep(0.5, 0.62, front).toFixed(3));
     rads[1].style.setProperty("--heat", sstep(0.8, 0.92, front).toFixed(3));
@@ -365,6 +458,11 @@
       .filter(([, , r]) => r.bottom > 0 && r.top < innerHeight)
       .sort((a, b) => a[1] - b[1]).map(([c]) => c);
     let playing = (reduced || saveData) ? [] : ranked.slice(0, limit);
+    // desktop: the two playing cells walk the wall (snake order) as the stage scrolls, so every clip gets a turn
+    if (!isMobile() && !reduced && !saveData && ranked.length) {
+      const snake = [0, 1, 2, 5, 4, 3], k = Math.min(4, Math.floor(clamp((p - 0.22) / 0.7) * 5));
+      playing = [ttCells[snake[k]], ttCells[snake[k + 1]]];
+    }
     if (ttHover && !reduced) playing = [ttHover].concat(playing.filter((c) => c !== ttHover)).slice(0, limit);
     ttCells.forEach((c) => c.classList.toggle("is-playing", playing.includes(c)));
   }
@@ -421,7 +519,7 @@
     const ctx = c.getContext("2d");
     const glyphs = "01アイウエオカキクケコサシスセソ<>/{}[]#=+*ﾊﾐﾋｰｳｼﾅﾓﾆｻﾜﾂｵﾘｱﾎﾃﾏｹﾒｴｶｷﾑﾕﾗｾﾈｽﾀﾇﾍ".split("");
     let cols = [], w = 0, h = 0, last = 0, on = true;
-    const fs = 14;
+    const fs = 14, monoFont = 'ui-monospace, Menlo, Consolas, "JetBrains Mono", "DejaVu Sans Mono", monospace';
     function resize() {
       const dpr = Math.min(2, devicePixelRatio || 1);
       w = c.clientWidth; h = c.clientHeight; c.width = w * dpr; c.height = h * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -433,7 +531,7 @@
       tick(now) {
         if (!on || now - last < 42) return; last = now;
         ctx.fillStyle = "rgba(6,6,7,0.18)"; ctx.fillRect(0, 0, w, h);
-        ctx.font = `${fs}px "JetBrains Mono", monospace`;
+        ctx.font = `${fs}px ${monoFont}`;
         cols.forEach((col, i) => {
           const ch = glyphs[(Math.random() * glyphs.length) | 0];
           ctx.fillStyle = `rgba(150,232,255,${0.12 + col.a * 0.25})`;
@@ -505,6 +603,22 @@
     $("#transcript").innerHTML = items.join("");
   }
 
+  /* ------------------------------------------------------------------ letterbox reel (desktop): one hairline segment per chapter */
+  const reelLis = $$("#reel li"), reelL = $("#reelL"), reelR = $("#reelR");
+  let reelTxt = "", reelPct = -1;
+  function reel() {
+    if (isMobile()) return;
+    order.forEach((p, i) => {
+      const v = progressOf(p.key);
+      reelLis[i].style.setProperty("--p", v.toFixed(3));
+      reelLis[i].classList.toggle("on", p.key === active);
+    });
+    const t = active ? `<b>${pad(order.indexOf(byKey[active]) + 1)}</b>&nbsp; ${esc(L(byKey[active].title))}` : "";
+    if (t !== reelTxt) { reelL.innerHTML = t; reelTxt = t; }
+    const pct = active ? Math.round(progressOf(active) * 100) : -1;
+    if (pct !== reelPct) { reelR.innerHTML = pct < 0 ? "" : `<b>${String(pct).padStart(3, "0")}</b> / 100`; reelPct = pct; }
+  }
+
   /* ------------------------------------------------------------------ main loop + watchdog */
   const updaters = { aviso, printplay, steam, suikou, xiaoyi, taotao, "wild-louis": wild };
   let lastFrame = performance.now(), degraded = false;
@@ -518,6 +632,7 @@
         updaters[key](progressOf(key));
       }
       checkChapters();
+      reel();
       narrator.tick(now);
       rain.tick(now);
       voice.tick(now);
@@ -533,7 +648,20 @@
     }
   }, 1000);
 
-  function layout() { sizeStages(); measureAviso(); measureTT(); }
+  // r6: on phones the 1000-unit schematic shrinks to ~0.4×, so labels get a tighter crop, a larger
+  // size (CSS, ≈11px on screen) and positions that keep them clear of each other and of the pipes.
+  const stSvg = $("#stSvg"), stLbls = $$("#stSvg text");
+  const stMob = [[115, 338, "middle"], [420, 348, "middle"], [700, 348, "middle"], [838, 42, "end"], [838, 72, "end"], [480, 104, "middle"], [520, 486, "middle"]];
+  stLbls.forEach((t) => { t.dataset.d = [t.getAttribute("x"), t.getAttribute("y"), t.getAttribute("text-anchor") || "start"].join(","); });
+  function layoutSteam() {
+    const m = isMobile();
+    stSvg.setAttribute("viewBox", m ? "28 14 860 482" : "24 22 940 470");
+    stLbls.forEach((t, i) => {
+      const [x, y, a] = m ? stMob[i] : t.dataset.d.split(",");
+      t.setAttribute("x", x); t.setAttribute("y", y); t.setAttribute("text-anchor", a);
+    });
+  }
+  function layout() { sizeStages(); measureAviso(); measureTT(); layoutSteam(); placeNavInd(); }
   addEventListener("resize", layout);
   mqMobile.addEventListener("change", layout);
 
@@ -541,6 +669,5 @@
   applyLang();
   layout();
   requestAnimationFrame(frame);
-  setTimeout(() => narrator.request("hero"), 700);
-  if (document.fonts) document.fonts.ready.then(() => { measureAviso(); measureTT(); });
+  if (document.fonts) document.fonts.ready.then(() => { measureAviso(); measureTT(); placeNavInd(); });
 })();
