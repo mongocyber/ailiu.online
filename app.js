@@ -21,6 +21,9 @@
   let lang = params.get("lang") || localStorage.getItem("ailiu.lang") || ((navigator.language || "").startsWith("zh") ? "zh" : "en");
   if (lang !== "zh") lang = "en";
   const L = (o) => (o == null ? "" : typeof o === "string" ? o : o[lang] || o.en || "");
+  // r7: draft copy (CONTENT-DRAFT.md, unconfirmed) wins over the base field when present
+  const V = (p, f) => (p.draft && p.draft[f] != null ? p.draft[f] : p[f]);
+  const T = (zh, en) => (lang === "zh" ? zh : en);
 
   function applyLang() {
     document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
@@ -39,9 +42,9 @@
   /* ------------------------------------------------------------------ manifest → nav, slots */
   function buildNav() {
     $("#chapnav").innerHTML = `<li class="nav-ind" aria-hidden="true" role="presentation"></li>` + order.map((p, i) =>
-      `<li><a href="#${p.key}" data-key="${p.key}"><b>${pad(i + 1)}</b><span>${L(p.title)}</span></a></li>`).join("");
+      `<li><a href="#${p.key}" data-key="${p.key}"><b>${pad(i + 1)}</b><span>${L(V(p, "title"))}</span></a></li>`).join("");
     $("#heroIndex").innerHTML = order.map((p, i) =>
-      `<li><a href="#${p.key}"><b>${pad(i + 1)}</b><span>${L(p.title)}</span><em>${L(p.statusLabel)}</em></a></li>`).join("");
+      `<li><a href="#${p.key}"><b>${pad(i + 1)}</b><span>${L(V(p, "title"))}</span><em>${L(V(p, "statusLabel"))}</em></a></li>`).join("");
     if (active) setActive(active, true);
   }
   function fillSlots() {
@@ -52,19 +55,26 @@
       $$("[data-slot]", sec).forEach((el) => {
         const s = el.dataset.slot;
         if (s === "index") el.textContent = pad(i + 1);
-        else if (s === "title") el.textContent = L(p.title);
-        else if (s === "tagline") el.textContent = L(p.tagline);
-        else if (s === "blurb") el.textContent = L(p.blurb);
-        else if (s === "status") el.textContent = L(p.statusLabel);
-        else if (s === "cta") {
-          const ln = p.links && p.links[0];
+        else if (s === "title") el.textContent = L(V(p, "title"));
+        else if (s === "tagline") el.textContent = L(V(p, "tagline"));
+        else if (s === "blurb") el.textContent = L(V(p, "blurb"));
+        else if (s === "status") {
+          el.textContent = L(V(p, "statusLabel"));
+          const c = p.draft && p.draft.statusClass;
+          if (c && c !== "is-ai") { el.classList.remove("is-dev", "is-pending"); el.classList.add(c); }
+        } else if (s === "cta") {
+          const ln = V(p, "links").find((x) => x.href && (!x.state || x.state === "ok"));
           el.textContent = ln ? L(ln.label) : "";
           if (ln) el.href = ln.href; else el.removeAttribute("href");
         }
       });
       const h = $(".slot-title", sec);
       if (h) { h.id = "t-" + p.key; sec.setAttribute("aria-labelledby", h.id); }
+      renderDraftRow(p, sec);
     });
+    $("#heroNote").textContent = L(M.persona.line);
+    $("#footContact").innerHTML = M.contact.map((c) =>
+      `<li><span class="mono">${esc(L(c.label))}</span><a href="${c.href}"${c.id === "x" ? ' target="_blank" rel="noopener"' : ""}>${esc(c.text)}</a></li>`).join("");
     const d = byKey["wild-louis"].disclosure;
     $("#wlDisc").textContent = L(d);
   }
@@ -91,6 +101,32 @@
   // user activation per HTML spec, so most first visits will be blocked until a click/key).
   // This preview has no recorded voice, so nothing is played and no "tap for sound" chip is shown.
   let soundOn = localStorage.getItem("ailiu.sound") !== "off";
+  // Draft row: 草稿 chip, AI tag, note, then every link that isn't the CTA. Only state "ok" becomes an <a>.
+  const LINK_TAG = { confirm: ["待确认", "to confirm"], tbd: ["待补", "TBD"] };
+  function renderDraftRow(p, sec) {
+    let row = $(".draft-row", sec);
+    if (!row) {
+      row = document.createElement("div");
+      row.className = "draft-row mono";
+      const anchor = $(".slots .slot-row", sec) || $("[data-slot=blurb]", sec);
+      anchor.insertAdjacentElement("afterend", row);
+    }
+    const d = p.draft || {};
+    const links = V(p, "links") || [];
+    const cta = links.find((x) => x.href && (!x.state || x.state === "ok"));
+    const items = links.filter((x) => x !== cta).map((x) => {
+      if (x.state === "ok" && x.href) return `<a class="dr-link" href="${x.href}" target="_blank" rel="noopener">${esc(L(x.label))}</a>`;
+      if (x.state === "text") return `<span class="dr-text">${esc(L(x.label))}</span>`;
+      const t = LINK_TAG[x.state] || LINK_TAG.tbd;
+      return `<span class="dr-ph" aria-disabled="true">${esc(L(x.label))} <em>${T(t[0], t[1])}</em></span>`;
+    });
+    const ai = p.aiGenerated && p.key !== "wild-louis" ? `<span class="dr-ai">${esc(L(p.disclosure))}</span>` : "";
+    const soc = d.socials ? `<ul class="dr-soc" aria-label="${T("社交平台（待补）", "Social platforms (TBD)")}">` + d.socials.map((x) =>
+      `<li aria-disabled="true"><i aria-hidden="true">${x.glyph}</i><span>${esc(L(x.label))}</span><em>${T("待补", "TBD")}</em></li>`).join("") + "</ul>" : "";
+    row.innerHTML = (p.draft ? `<span class="dr-chip" title="${T("内容草稿，待 ailiu 确认", "Draft copy, awaiting ailiu's sign-off")}">${esc(L(d.label))}</span>` : "") + ai + items.join("") +
+      (d.note ? `<p class="dr-note">${esc(L(d.note))}</p>` : "") + soc;
+  }
+
   function renderSound() {
     const b = $("#soundBtn");
     b.setAttribute("aria-pressed", String(soundOn));
@@ -472,7 +508,7 @@
   let srcLines = [], shownLines = -1;
   function renderWildSource(force) {
     const p = byKey["wild-louis"];
-    const view = { key: p.key, order: p.order, type: p.type, status: p.status, title: p.title[lang], tagline: p.tagline[lang],
+    const view = { key: p.key, order: p.order, type: p.type, status: p.status, title: L(V(p, "title")), tagline: L(V(p, "tagline")), draft: !!p.draft,
       treatment: p.treatment.id, choreography: p.treatment.choreographyId, enter: p.transition.enter, exit: p.transition.exit,
       stageHeightVh: p.stageHeightVh, aiGenerated: p.aiGenerated, narration: p.narration[0].subtitle[lang], logEntries: p.log.length };
     srcLines = JSON.stringify(view, null, 2).split("\n");
@@ -599,7 +635,7 @@
   /* ------------------------------------------------------------------ transcript (readable alternative to audio, §5.5) */
   function buildTranscript() {
     const items = [`<li><b>Louis:</b> ${esc(L(M.hero.narration[0].subtitle))}</li>`]
-      .concat(order.map((p, i) => `<li><b>${pad(i + 1)} ${esc(L(p.title))}:</b> ${esc(L(p.narration[0].subtitle))}</li>`));
+      .concat(order.map((p, i) => `<li><b>${pad(i + 1)} ${esc(L(V(p, "title")))}:</b> ${esc(L(p.narration[0].subtitle))}</li>`));
     $("#transcript").innerHTML = items.join("");
   }
 
@@ -613,7 +649,7 @@
       reelLis[i].style.setProperty("--p", v.toFixed(3));
       reelLis[i].classList.toggle("on", p.key === active);
     });
-    const t = active ? `<b>${pad(order.indexOf(byKey[active]) + 1)}</b>&nbsp; ${esc(L(byKey[active].title))}` : "";
+    const t = active ? `<b>${pad(order.indexOf(byKey[active]) + 1)}</b>&nbsp; ${esc(L(V(byKey[active], "title")))}` : "";
     if (t !== reelTxt) { reelL.innerHTML = t; reelTxt = t; }
     const pct = active ? Math.round(progressOf(active) * 100) : -1;
     if (pct !== reelPct) { reelR.innerHTML = pct < 0 ? "" : `<b>${String(pct).padStart(3, "0")}</b> / 100`; reelPct = pct; }

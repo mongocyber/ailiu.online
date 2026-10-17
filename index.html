@@ -56,7 +56,10 @@
         <span class="indent" data-en="I'm Louis." data-zh="我是 Louis。">I'm Louis.</span>
         <span data-en="I'll walk you through seven things ailiu made." data-zh="带你看 ailiu 做的七件作品。">I'll walk you through seven things ailiu made.</span>
       </h1>
-      <p class="hero-note" data-preset="reveal-up" data-en="A fictional AI narrator. Captions run now; my voice arrives once it's recorded and approved." data-zh="一个虚构的 AI 讲解员。字幕现在就走；声音录好、审批后才上线。">A fictional AI narrator. Captions run now; my voice arrives once it's recorded and approved.</p>
+      <div class="hero-note" data-preset="reveal-up">
+        <p id="heroNote"></p>
+        <p class="hero-note-sub mono"><span class="dr-chip" data-en="Draft" data-zh="草稿">Draft</span><span data-en="Captions run now; the voice arrives once it's recorded and approved." data-zh="字幕现在就走；声音录好、审批后才上线。">Captions run now; the voice arrives once it's recorded and approved.</span></p>
+      </div>
     </div>
     <figure class="louis-hero" aria-hidden="true">
       <div class="louis-host" id="louisHero"></div>
@@ -64,7 +67,7 @@
         <span><b>NARRATOR</b> Louis</span>
         <span><b>LEVEL</b> <em id="lvRead">0.00</em> <small data-en="(simulated)" data-zh="（模拟）">(simulated)</small></span>
         <span><b>FORM</b> <em data-en="procedural outline" data-zh="程序化轮廓">procedural outline</em></span>
-        <span class="tag-ai">AI persona</span>
+        <span class="tag-ai" data-en="AI · digital double" data-zh="AI · 数字分身">AI · digital double</span>
       </figcaption>
       <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
     </figure>
@@ -408,8 +411,6 @@
         <p class="slot-blurb" data-slot="blurb"></p>
         <div class="slot-row">
           <span class="slot-status mono" data-slot="status"></span>
-          <span class="tt-plat mono" aria-disabled="true">YouTube <em data-en="link to confirm" data-zh="链接待确认">link to confirm</em></span>
-          <span class="tt-plat mono" aria-disabled="true"><span data-en="Douyin" data-zh="抖音">Douyin</span> <em data-en="link needed" data-zh="待提供">link needed</em></span>
         </div>
       </header>
       <div class="tt-wall" id="ttWall">
@@ -482,12 +483,12 @@
     <h2 class="display foot-h"><span class="indent" data-en="Want to talk" data-zh="想聊聊">Want to talk</span> <span data-en="about a project?" data-zh="一个项目？">about a project?</span></h2>
     <div class="foot-contact">
       <p class="kicker mono" data-en="Contact" data-zh="联系">Contact</p>
-      <p class="foot-mail" data-en="Address to be confirmed by ailiu" data-zh="联系方式待 ailiu 确认">Address to be confirmed by ailiu</p>
+      <ul class="foot-links" id="footContact"></ul>
     </div>
   </div>
   <div class="wrap foot-meta mono">
     <span>© 2026 ailiu.online</span>
-    <span class="foot-ai" data-en="Some images, video and Louis's voice on this site are AI-generated." data-zh="本站部分图像、视频与 Louis 的声音由 AI 生成。">Some images, video and Louis's voice on this site are AI-generated.</span>
+    <span class="foot-ai" data-en="AI-generated: Louis's image and voice, TaoTao House content, and the Wild Louis chapter." data-zh="AI 生成：Louis 的形象与声音、桃桃屋内容、「野生路易斯」一章。">AI-generated: Louis's image and voice, TaoTao House content, and the Wild Louis chapter.</span>
     <a href="#top" data-en="Back to top ↑" data-zh="回到顶部 ↑">Back to top ↑</a>
   </div>
   <details class="wrap transcript">
