@@ -245,9 +245,9 @@
   });
 
   /* ------------------------------------------------------------------ Louis instances */
-  const louisHero = new Louis({ lines: 56, samples: 160 }).mount($("#louisHero"));
-  const louisMini = new Louis({ lines: 20, samples: 60, amp: 0.36, interactive: false, glitch: false, mini: true, fps: 30, bg: "#060607" }).mount($("#narFace"));
-  const louisWild = new Louis({ lines: 60, samples: 160, bg: "#050507", colorA: [185, 166, 255], colorB: [150, 232, 255], sweater: [122, 166, 150] }).mount($("#louisWild"));
+  const louisHero = new Louis({ lines: 96, samples: 200 }).mount($("#louisHero"));
+  const louisMini = new Louis({ lines: 30, samples: 64, relief: 0.8, interactive: false, glitch: false, mini: true, fps: 30, bg: "#060607" }).mount($("#narFace"));
+  const louisWild = new Louis({ lines: 100, samples: 200, bg: "#050507", colorA: [185, 166, 255], colorB: [150, 232, 255], sweater: [122, 166, 150] }).mount($("#louisWild"));
   const louises = [louisHero, louisMini, louisWild];
 
   /* ------------------------------------------------------------------ narrator (captions; §4.5 rules) */

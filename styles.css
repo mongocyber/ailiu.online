@@ -176,6 +176,11 @@ html:lang(zh) .hero-note { line-height: 1.75; }
 .louis-hero { position: relative; margin: 0; height: min(70vh, 660px, calc(100vh - 380px)); min-height: 300px; align-self: center; }
 .louis-host { position: absolute; inset: 0; }
 .louis-host canvas { width: 100%; height: 100%; }
+/* r11 2.5D: the portrait tilts a little toward the cursor (--lx/--ly eased in louis.js) over a back halo that drifts the other way */
+.louis-hero { perspective: 1100px; }
+.louis-hero::before { content: ""; position: absolute; inset: 6% 18% 14%; border-radius: 50%; background: radial-gradient(closest-side, rgba(150, 232, 255, calc(.07 + var(--louis-level) * .08)), rgba(185, 166, 255, .03) 60%, transparent); transform: translate(calc(var(--lx, 0) * -14px), calc(var(--ly, 0) * -8px)); pointer-events: none; }
+#louisHero { transform: rotateY(calc(var(--lx, 0) * 5deg)) rotateX(calc(var(--ly, 0) * -3deg)); transform-style: preserve-3d; }
+.louis-read { z-index: 1; }
 .louis-read { position: absolute; left: 0; bottom: 0; display: flex; flex-wrap: wrap; gap: 6px 18px; color: var(--ink-3); font-size: 10px; }
 .louis-read b { color: var(--ink-2); font-weight: 500; margin-right: 4px; }
 .louis-read em { font-style: normal; color: var(--sig-a); }
