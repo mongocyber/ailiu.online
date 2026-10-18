@@ -15,12 +15,16 @@
   const byKey = Object.fromEntries(M.projects.map((p) => [p.key, p]));
   const order = M.projects.slice().sort((a, b) => a.order - b.order);
   const pad = (n) => String(n).padStart(2, "0");
+  // r12: decorative modules are built through mod(): if one throws while setting up, it is replaced by a no-op stand-in
+  const mod = (fn, stub) => { try { return fn(); } catch (e) { return stub; } };
+  // r12: storage can throw (private mode / locked-down WebViews) — treat it as empty
+  const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
   // chapter total for the "nn / 08" suffixes in CSS (slot index, steam title block)
   document.documentElement.style.setProperty("--of", `" / ${pad(order.length)}"`);
 
   /* ------------------------------------------------------------------ language */
   const params = new URLSearchParams(location.search);
-  let lang = params.get("lang") || localStorage.getItem("ailiu.lang") || ((navigator.language || "").startsWith("zh") ? "zh" : "en");
+  let lang = params.get("lang") || store.get("ailiu.lang") || ((navigator.language || "").startsWith("zh") ? "zh" : "en");
   if (lang !== "zh") lang = "en";
   const L = (o) => (o == null ? "" : typeof o === "string" ? o : o[lang] || o.en || "");
   // r7: draft copy (CONTENT-DRAFT.md, unconfirmed) wins over the base field when present
@@ -37,7 +41,7 @@
   }
   $("#langBtn").addEventListener("click", () => {
     lang = lang === "en" ? "zh" : "en";
-    localStorage.setItem("ailiu.lang", lang);
+    store.set("ailiu.lang", lang);
     applyLang();
   });
 
@@ -217,7 +221,7 @@
   // one-shot unlock listeners on keydown/pointerdown/touchend/click (scroll/mousemove are NOT
   // user activation per HTML spec, so most first visits will be blocked until a click/key).
   // This preview has no recorded voice, so nothing is played and no "tap for sound" chip is shown.
-  let soundOn = localStorage.getItem("ailiu.sound") !== "off";
+  let soundOn = store.get("ailiu.sound") !== "off";
   // Draft row: 草稿 chip, AI tag, note, then every link that isn't the CTA. Only state "ok" becomes an <a>.
   const LINK_TAG = { confirm: ["待确认", "to confirm"], tbd: ["待补", "TBD"] };
   function renderDraftRow(p, sec) {
@@ -252,14 +256,19 @@
   }
   $("#soundBtn").addEventListener("click", () => {
     soundOn = !soundOn;
-    localStorage.setItem("ailiu.sound", soundOn ? "on" : "off");
+    store.set("ailiu.sound", soundOn ? "on" : "off");
     renderSound();
   });
 
   /* ------------------------------------------------------------------ Louis instances */
-  const louisHero = new Louis({ lines: 96, samples: 200 }).mount($("#louisHero"));
-  const louisMini = new Louis({ lines: 30, samples: 64, relief: 0.8, interactive: false, glitch: false, mini: true, fps: 30, bg: "#060607" }).mount($("#narFace"));
-  const louisWild = new Louis({ lines: 100, samples: 200, bg: "#050507", colorA: [185, 166, 255], colorB: [150, 232, 255], sweater: [122, 166, 150] }).mount($("#louisWild"));
+  // r12: a portrait that can't start leaves its static fallback (CSS) and a no-op stand-in; the page carries on
+  const mountLouis = (opts, el) => {
+    try { return new Louis(opts).mount(el); }
+    catch (e) { el.classList.add("is-fallback"); return { lvl: 0, setState() {}, setLevel() {}, dock() {}, destroy() {} }; }
+  };
+  const louisHero = mountLouis({ lines: 96, samples: 200 }, $("#louisHero"));
+  const louisMini = mountLouis({ lines: 30, samples: 64, relief: 0.8, interactive: false, glitch: false, mini: true, fps: 30, bg: "#060607" }, $("#narFace"));
+  const louisWild = mountLouis({ lines: 100, samples: 200, bg: "#050507", colorA: [185, 166, 255], colorB: [150, 232, 255], sweater: [122, 166, 150] }, $("#louisWild"));
   const louises = [louisHero, louisMini, louisWild];
 
   /* ------------------------------------------------------------------ narrator (captions; §4.5 rules) */
@@ -535,7 +544,7 @@
   let stTouched = false;
   const needle = { x: 0, v: 0, t: 0 };
   stRange.addEventListener("input", () => { stTouched = true; });
-  (function ticks() {
+  mod(function ticks() {
     const g = $("#gTicks"); let h = "";
     for (let i = 0; i <= 40; i++) {
       const a = (-135 + (270 * i) / 40) * Math.PI / 180, maj = i % 5 === 0;
@@ -543,7 +552,7 @@
       h += `<line class="${maj ? "maj" : ""}" x1="${100 + r1 * Math.sin(a)}" y1="${100 - r1 * Math.cos(a)}" x2="${100 + r2 * Math.sin(a)}" y2="${100 - r2 * Math.cos(a)}"/>`;
     }
     g.innerHTML = h;
-  })();
+  });
   function steam(p) {
     const grow = isMobile() || reduced ? 1 : sstep(0, 0.3, p);
     let front = isMobile() || reduced ? 1 : sstep(0.32, 0.8, p);
@@ -687,9 +696,9 @@
   }
 
   /* ------------------------------------------------------------------ hero glyph rain (hero only, §4.7) */
-  const rain = (() => {
+  const rain = mod(() => {
     const c = $("#rain"); if (!c || reduced) return { tick() {} };
-    const ctx = c.getContext("2d");
+    const ctx = c.getContext("2d"); if (!ctx) return { tick() {} };
     const glyphs = "01アイウエオカキクケコサシスセソ<>/{}[]#=+*ﾊﾐﾋｰｳｼﾅﾓﾆｻﾜﾂｵﾘｱﾎﾃﾏｹﾒｴｶｷﾑﾕﾗｾﾈｽﾀﾇﾍ".split("");
     let cols = [], w = 0, h = 0, last = 0, on = true;
     const fs = 14, monoFont = 'ui-monospace, Menlo, Consolas, "JetBrains Mono", "DejaVu Sans Mono", monospace';
@@ -713,15 +722,15 @@
         });
       }
     };
-  })();
+  }, { tick() {} });
 
   /* ------------------------------------------------------------------ footer voiceprint (Louis's signal, Atomic nod) */
-  const voice = (() => {
-    const c = $("#voiceprint"), ctx = c.getContext("2d");
+  const voice = mod(() => {
+    const c = $("#voiceprint"), ctx = c && c.getContext("2d");
+    if (!ctx) return { tick() {} };
     let w = 0, h = 0, on = false;
     function resize() { const dpr = Math.min(2, devicePixelRatio || 1); w = c.clientWidth; h = c.clientHeight; c.width = w * dpr; c.height = h * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); draw(0); }
     new IntersectionObserver(([e]) => { on = e.isIntersecting; }).observe(c);
-    addEventListener("resize", resize);
     function draw(now) {
       const t = now / 1000, lvl = louisHero.lvl || 0;
       ctx.clearRect(0, 0, w, h);
@@ -741,12 +750,12 @@
         ctx.stroke();
       }
     }
-    resize();
+    resize(); addEventListener("resize", resize);   // r12: listen only once a first draw has worked
     return { tick(now) { if (on && !reduced) draw(now); } };
-  })();
+  }, { tick() {} });
 
   /* ------------------------------------------------------------------ maze (deterministic) */
-  (function maze() {
+  mod(function maze() {
     const N = 7, cell = 84 / N, o = 8; const seen = new Set(); const walls = new Set();
     for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { walls.add(`h${x},${y}`); walls.add(`v${x},${y}`); }
     let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
@@ -767,7 +776,7 @@
       if (k[0] === "v" && x > 0) d += `M${o + x * cell} ${o + y * cell}v${cell}`;
     });
     $("#maze").innerHTML = `<path d="${d}"/><circle class="m-s" cx="${o - 3}" cy="${o + cell / 2}" r="2.4"/><circle class="m-e" cx="${o + N * cell + 3}" cy="${o + N * cell - cell / 2}" r="2.4"/>`;
-  })();
+  });
 
   /* ------------------------------------------------------------------ transcript (readable alternative to audio, §5.5) */
   function buildTranscript() {
@@ -798,22 +807,26 @@
   /* ------------------------------------------------------------------ main loop + watchdog */
   const updaters = { aviso, printplay, work: workStage, steam, suikou, xiaoyi, taotao, "wild-louis": wild };
   let lastFrame = performance.now(), degraded = false;
+  // r12: one failing module must not stop the loop; it is switched off (end state) and the rest keep running
+  const broken = {};
+  const run = (name, fn) => { if (broken[name]) return; try { fn(); } catch (e) { broken[name] = true; if (updaters[name]) { try { updaters[name](1); } catch (_) {} } } };
   function frame(now) {
     lastFrame = now;
+    requestAnimationFrame(frame);
     if (!document.hidden) {
       for (const key in updaters) {
         const sec = document.getElementById(key);
+        if (!sec) continue;
         const r = sec.getBoundingClientRect();
         if (r.bottom < -innerHeight * 0.5 || r.top > innerHeight * 1.5) continue; // off-screen: skip
-        updaters[key](progressOf(key));
+        run(key, () => updaters[key](progressOf(key)));
       }
-      checkChapters();
-      reel();
-      narrator.tick(now);
-      rain.tick(now);
-      voice.tick(now);
+      run("chapters", checkChapters);
+      run("reel", reel);
+      run("narrator", () => narrator.tick(now));
+      run("rain", () => rain.tick(now));
+      run("voice", () => voice.tick(now));
     }
-    requestAnimationFrame(frame);
   }
   // rAF watchdog: if frames stop for >2s while visible, snap every stage to its end state
   setInterval(() => {
@@ -839,11 +852,12 @@
   }
   function layout() { sizeStages(); measureAviso(); measureTT(); layoutSteam(); placeNavInd(); }
   addEventListener("resize", layout);
-  mqMobile.addEventListener("change", layout);
+  if (mqMobile.addEventListener) mqMobile.addEventListener("change", layout); else if (mqMobile.addListener) mqMobile.addListener(layout); // iOS < 14
 
-  renderWildSource(true);
-  applyLang();
-  layout();
+  run("wild-source", () => renderWildSource(true));
+  run("lang", applyLang);
+  run("layout", layout);
   requestAnimationFrame(frame);
+  document.documentElement.classList.add("app-ready");
   if (document.fonts) document.fonts.ready.then(() => { measureAviso(); measureTT(); placeNavInd(); });
 })();

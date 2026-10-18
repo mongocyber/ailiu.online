@@ -3,7 +3,10 @@
    2D canvas only: each scanline is a ribbon whose thickness carries the light (engraving style), lifted
    slightly by a soft relief and occluding the rows behind it. No WebGL, no 3D models, no photo pixels.
    The mouth carries a voice bar driven by --louis-level (setLevel).
-   Fixed interface: mount / setState / setLevel / dock / destroy. */
+   Fixed interface: mount / setState / setLevel / dock / destroy.
+   r12: hardened for real phones — the backing store is capped (DPR ≤ 2 and a total pixel budget, well under
+   iOS's canvas memory limits), every draw is guarded, and the host only drops its static fallback portrait
+   (CSS, louis-fallback.png) once a frame has really drawn pixels (.is-live). Any failure → .is-fallback. */
 (function () {
   const smooth = (a, b, x) => {
     const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
@@ -65,18 +68,23 @@
       this.mouse = { x: 0, y: 0, k: 0, px: 0, py: 0 };
       this.glitchUntil = 0; this.nextGlitch = performance.now() + 2600;
       this.slice = null; this.running = false; this.last = 0;
-      this.reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      this.reduced = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+      this.failed = false; this.live = false;
     }
     mount(el) {
       this.el = el;
-      this.fd = field();
-      this.c = document.createElement("canvas");
-      this.c.setAttribute("aria-hidden", "true");
-      el.appendChild(this.c);
-      this.ctx = this.c.getContext("2d");
       this.resize = this.resize.bind(this);
       this.frame = this.frame.bind(this);
-      this.ro = new ResizeObserver(this.resize); this.ro.observe(el);
+      try {
+        this.fd = field();
+        this.c = document.createElement("canvas");
+        this.c.setAttribute("aria-hidden", "true");
+        el.appendChild(this.c);
+        this.ctx = this.c.getContext("2d");
+        if (!this.ctx) throw new Error("no 2d context");
+      } catch (e) { this.fail(); return this; }
+      if (window.ResizeObserver) { this.ro = new ResizeObserver(this.resize); this.ro.observe(el); }
+      else window.addEventListener("resize", this.resize);
       if (this.o.interactive) {
         this.onMove = (e) => {
           const r = this.c.getBoundingClientRect();
@@ -85,32 +93,65 @@
         };
         window.addEventListener("pointermove", this.onMove, { passive: true });
       }
-      this.io = new IntersectionObserver(([en]) => { en.isIntersecting ? this.start() : this.stop(); });
-      this.io.observe(el);
+      if (window.IntersectionObserver) {
+        this.io = new IntersectionObserver((ens) => { ens[0].isIntersecting ? this.start() : this.stop(); });
+        this.io.observe(el);
+      } else this.start();
       this.resize();
       return this;
     }
     resize() {
-      const r = this.el.getBoundingClientRect();
-      const dpr = Math.min(2, window.devicePixelRatio || 1);
-      this.w = Math.max(1, r.width); this.h = Math.max(1, r.height);
-      this.c.width = Math.round(this.w * dpr); this.c.height = Math.round(this.h * dpr);
-      this.c.style.width = this.w + "px"; this.c.style.height = this.h + "px";
-      this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      if (this.reduced || !this.running) this.draw(performance.now());
+      if (this.failed) return;
+      try {
+        const r = this.el.getBoundingClientRect();
+        this.w = Math.max(1, r.width); this.h = Math.max(1, r.height);
+        // backing store: DPR ≤ 2, and ≤ ~2.4M device pixels per canvas (phones at DPR 3 used to ask for far more)
+        let dpr = Math.min(2, window.devicePixelRatio || 1);
+        const budget = this.o.mini ? 0.2e6 : 2.4e6;
+        if (this.w * this.h * dpr * dpr > budget) dpr = Math.max(1, Math.sqrt(budget / (this.w * this.h)));
+        this.c.width = Math.round(this.w * dpr); this.c.height = Math.round(this.h * dpr);
+        this.c.style.width = this.w + "px"; this.c.style.height = this.h + "px";
+        this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        this.dpr = dpr; this.live = false;          // re-verify after a resize (the store was reallocated)
+      } catch (e) { this.fail(); return; }
+      if (this.reduced || !this.running) this.paint(performance.now());
+    }
+    // guarded draw: an exception, or a frame that leaves the canvas empty, switches to the static portrait
+    paint(now) {
+      if (this.failed) return;
+      try {
+        this.draw(now);
+        if (!this.live && this.w > 8 && this.h > 8) this.verify();
+      } catch (e) { this.fail(); }
+    }
+    verify() {
+      // read back a small patch over the face; an all-transparent patch means the store was refused or cleared
+      const d = this.dpr || 1, ph = Math.min(this.h * this.o.fill, this.w / this.fd.aspect);
+      const x = Math.max(0, Math.round((this.w / 2 - ph * 0.15) * d)), y = Math.max(0, Math.round((this.h - ph * 0.62) * d));
+      const sw = Math.max(1, Math.round(ph * 0.3 * d)), sh = Math.max(1, Math.round(ph * 0.3 * d));
+      const px = this.ctx.getImageData(x, y, Math.min(sw, this.c.width - x), Math.min(sh, this.c.height - y)).data;
+      let hit = 0;
+      for (let k = 3; k < px.length; k += 16) if (px[k] > 8 && ++hit > 4) break;
+      if (hit > 4) { this.live = true; this.el.classList.add("is-live"); this.el.classList.remove("is-fallback"); }
+      else this.fail();
+    }
+    fail() {
+      this.failed = true; this.running = false;
+      if (this.el) { this.el.classList.remove("is-live"); this.el.classList.add("is-fallback"); }
+      if (this.c) { this.c.width = this.c.height = 0; }  // hand the memory back
     }
     setState(s) { this.state = s; if (s === "react") this.glitchUntil = performance.now() + 140; }
     setLevel(x) { this.level = Math.max(0, Math.min(1, x)); }
     dock(on) { this.el.classList.toggle("is-docked", !!on); }
-    start() { if (this.running || this.reduced) { this.draw(performance.now()); return; } this.running = true; requestAnimationFrame(this.frame); }
+    start() { if (this.failed) return; if (this.running || this.reduced) { this.paint(performance.now()); return; } this.running = true; requestAnimationFrame(this.frame); }
     stop() { this.running = false; }
-    destroy() { this.stop(); this.ro && this.ro.disconnect(); this.io && this.io.disconnect(); window.removeEventListener("pointermove", this.onMove); this.c.remove(); }
+    destroy() { this.stop(); this.ro && this.ro.disconnect(); this.io && this.io.disconnect(); window.removeEventListener("pointermove", this.onMove); window.removeEventListener("resize", this.resize); this.c && this.c.remove(); }
     frame(now) {
       if (!this.running) return;
       if (document.hidden) { requestAnimationFrame(this.frame); return; }
       const minDt = 1000 / this.o.fps;
-      if (now - this.last >= minDt - 1) { this.last = now; this.draw(now); }
-      requestAnimationFrame(this.frame);
+      if (now - this.last >= minDt - 1) { this.last = now; this.paint(now); }
+      if (this.running) requestAnimationFrame(this.frame);
     }
     draw(now) {
       const { ctx, w, h, o, fd } = this;

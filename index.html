@@ -8,6 +8,22 @@
      This static preview loads nothing from third-party origins. -->
 <title>ailiu.online — preview v2</title>
 <link rel="stylesheet" href="styles.css">
+<script>
+/* r12: page-level safety net. If any script fails (or the app never finishes booting), every reveal-on-scroll
+   block is shown in its end state so the page never stays blank. Silent: no UI, nothing sent anywhere. */
+(function () {
+  var d = document.documentElement, done = false;
+  function reveal() {
+    if (done) return; done = true; d.className += " js-rescue";
+    var els = document.querySelectorAll("[data-preset]");
+    for (var i = 0; i < els.length; i++) els[i].className += " is-in";
+  }
+  function soon() { if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", reveal); else reveal(); }
+  window.onerror = function () { soon(); };
+  window.addEventListener("unhandledrejection", function () { soon(); });
+  window.addEventListener("load", function () { setTimeout(function () { if (!/\bapp-ready\b/.test(d.className)) reveal(); }, 1500); });
+})();
+</script>
 </head>
 <body>
 <a class="skip" href="#aviso" data-en="Skip to chapters" data-zh="跳到章节">Skip to chapters</a>
