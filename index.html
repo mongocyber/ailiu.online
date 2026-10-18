@@ -223,24 +223,26 @@
   <div class="stage" data-stage="work">
     <div class="pin">
       <div class="cut" aria-hidden="true"><i></i><i></i><i></i></div>
-      <header class="slots wk-slots">
-        <span class="slot-index mono" data-slot="index"></span>
-        <h2 class="slot-title" data-slot="title"></h2>
-        <p class="slot-tagline" data-slot="tagline"></p>
-        <p class="slot-blurb" data-slot="blurb"></p>
-        <div class="slot-row"><span class="slot-status mono" data-slot="status"></span></div>
-      </header>
-      <div class="wk-iso" id="wkIso" aria-hidden="true"></div>
-      <p class="mock-note mono wk-note" data-en="Structure first, pages second" data-zh="先搭结构，再画页面">Structure first, pages second</p>
-    </div>
-  </div>
-  <div class="work-body">
-    <div class="wrap">
-      <h3 class="work-sec mono" data-en="Core capabilities" data-zh="核心能力">Core capabilities</h3>
-      <ol class="work-caps" id="workCaps"></ol>
-      <h3 class="work-sec mono" data-en="Case studies" data-zh="案例">Case studies</h3>
-      <div class="work-cases" id="workCases"></div>
-      <div class="work-bg" id="workBg"></div>
+      <!-- r11: one pinned console. Left: title slots, capabilities, method. Right: five cases, switched by scroll (or the tabs). -->
+      <div class="wk-left">
+        <header class="slots wk-slots">
+          <span class="slot-index mono" data-slot="index"></span>
+          <h2 class="slot-title" data-slot="title"></h2>
+          <p class="slot-tagline" data-slot="tagline"></p>
+          <p class="slot-blurb" data-slot="blurb"></p>
+          <div class="slot-row"><span class="slot-status mono" data-slot="status"></span></div>
+        </header>
+        <div class="wk-caps-box">
+          <h3 class="wk-sec mono" data-en="Core capabilities" data-zh="核心能力">Core capabilities</h3>
+          <ol class="wk-caps" id="workCaps"></ol>
+        </div>
+        <div class="wk-method-box" id="workMethod"></div>
+      </div>
+      <div class="wk-console" id="workConsole">
+        <div class="wk-tabs" role="tablist" id="workTabs"></div>
+        <div class="wk-panels" id="workCases"></div>
+      </div>
+      <p class="mock-note mono wk-note" data-en="Diagrams drawn in HTML/SVG, not screenshots · scroll or pick a case" data-zh="示意图用 HTML/SVG 绘制，不是产品截图 · 滚动或点选案例">Diagrams drawn in HTML/SVG, not screenshots · scroll or pick a case</p>
     </div>
   </div>
 </section>

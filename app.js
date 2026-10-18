@@ -31,7 +31,7 @@
     document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
     $$("[data-en]").forEach((el) => { el.textContent = el.dataset[lang] || el.dataset.en; });
     $$("[data-lang-opt]").forEach((el) => el.classList.toggle("on", el.dataset.langOpt === lang));
-    fillSlots(); renderWork(); renderWorkStage(); buildNav(); renderSound(); buildTranscript(); renderWildSource(true); renderLog();
+    fillSlots(); renderWork(); buildNav(); renderSound(); buildTranscript(); renderWildSource(true); renderLog();
     measureAviso(); reelTxt = "";
     narrator.onLang();
   }
@@ -147,41 +147,53 @@
         `<g class="v-step" style="--i:7" transform="translate(362 182)"><rect width="186" height="34" rx="17" class="v-chip c-wait"/><text x="93" y="21" text-anchor="middle" class="v-t">${T("没解决？带上下文转人工 →", "Still stuck? Hand off →")}</text></g></svg>`;
     }
   };
-  const workSeen = new Set();
+  // r11: the chapter is one console — case tabs + one panel at a time, switched by scroll on desktop or by the tabs
+  let wkActive = 0;
   function renderWork() {
     const W = M.work;
     $("#workCaps").innerHTML = W.capabilities.map((c, i) =>
-      `<li class="cap cap-${c.id}"><b class="mono">${pad(i + 1)}</b><h4>${esc(L(c.title))}</h4><p>${esc(L(c.text))}</p><ul class="mono">${L(c.tags).map((t) => `<li>${esc(t)}</li>`).join("")}</ul></li>`).join("");
-    const box = $("#workCases");
-    const open = new Set($$("details[open]", box).map((d) => d.dataset.id));
-    box.innerHTML = W.cases.map((c, i) =>
-      `<article class="case case-${c.id}${workSeen.has(c.id) ? " is-in" : ""}" data-id="${c.id}" data-preset="reveal-up" aria-labelledby="case-${c.id}">
-        <div class="case-vis" aria-hidden="true">${WV[c.id]()}</div>
+      `<li class="cap cap-${c.id}" style="--i:${i}"><b class="mono">${pad(i + 1)}</b><span><strong>${esc(L(c.title))}</strong><em class="mono">${L(c.tags).map(esc).join(" · ")}</em></span></li>`).join("");
+    $("#workMethod").innerHTML =
+      `<p class="wk-sec mono">${esc(L(W.methodNote))}</p><ol class="wk-method mono">${L(W.method).map((m, i) => `<li style="--i:${i}"><b>${pad(i + 1)}</b>${esc(m)}</li>`).join("")}</ol>`;
+    $("#workTabs").innerHTML = W.cases.map((c, i) =>
+      `<button type="button" role="tab" class="wk-tab case-${c.id}" id="wkTab-${c.id}" aria-controls="wkPanel-${c.id}" data-i="${i}"><b class="mono">${pad(i + 1)}</b><span>${esc(c.title)}</span><i aria-hidden="true"></i></button>`).join("");
+    $("#workCases").innerHTML = W.cases.map((c, i) =>
+      `<article class="case case-${c.id}" role="tabpanel" id="wkPanel-${c.id}" aria-labelledby="wkTab-${c.id}" data-i="${i}">
+        <div class="case-vis" aria-hidden="true">${WV[c.id]()}<span class="wk-scan"></span></div>
         <div class="case-body">
-          <p class="case-tag mono"><span>${pad(i + 1)}</span>${esc(L(c.domain))}</p>
-          <h4 id="case-${c.id}">${esc(c.title)}</h4>
-          <p class="case-sub">${esc(L(c.sub))}</p>
+          <p class="case-tag mono"><span>${pad(i + 1)} / ${pad(W.cases.length)}</span>${esc(L(c.domain))}</p>
+          <h4>${esc(c.title)}</h4>
           <p class="case-sum">${esc(L(c.summary))}</p>
-          <details data-id="${c.id}"${open.has(c.id) ? " open" : ""}>
-            <summary class="mono"><span class="cs-open">${T("展开案例", "Read the case")}</span><span class="cs-close">${T("收起", "Close")}</span></summary>
-            <dl>
-              <dt class="mono">${T("问题", "Problem")}</dt><dd>${esc(L(c.problem))}</dd>
-              <dt class="mono">${T("关键决策", "Key moves")}</dt><dd><ul>${L(c.moves).map((m) => `<li>${esc(m)}</li>`).join("")}</ul></dd>
-              <dt class="mono">${T("结果", "Outcome")}</dt><dd>${esc(L(c.result))}</dd>
-            </dl>
-          </details>
+          <dl class="case-pmr">
+            <dt class="mono">${T("问题", "Problem")}</dt><dd>${esc(L(c.problem))}</dd>
+            <dt class="mono">${T("关键决策", "Key move")}</dt><dd>${esc(L(c.move))}</dd>
+            <dt class="mono">${T("结果", "Outcome")}</dt><dd>${esc(L(c.result))}</dd>
+          </dl>
         </div>
       </article>`).join("");
-    $$(".case", box).forEach((el) => { if (!el.classList.contains("is-in")) workIO.observe(el); });
-    $("#workBg").innerHTML =
-      `<h3 class="work-sec mono">${T("经历与做法", "Background & method")}</h3>
-      <div class="bg-grid"><p class="bg-p">${esc(L(W.background))}</p>
-        <div><ol class="bg-method mono">${L(W.method).map((m, i) => `<li><b>${pad(i + 1)}</b>${esc(m)}</li>`).join("")}</ol>
-        <p class="bg-del">${esc(L(W.deliverables))}</p></div></div>`;
+    $$("#workCases .case-vis svg").forEach((sv) => sv.style.setProperty("--vbw", sv.viewBox.baseVal.width + "px"));
+    $$(".wk-tab").forEach((b) => b.addEventListener("click", () => pickCase(+b.dataset.i)));
+    setCase(wkActive, true);
   }
-  const workIO = new IntersectionObserver((ens) => {
-    ens.forEach((en) => { if (en.isIntersecting) { en.target.classList.add("is-in"); workSeen.add(en.target.dataset.id); workIO.unobserve(en.target); } });
-  }, { rootMargin: "0px 0px -12% 0px", threshold: 0.01 });
+  function setCase(i, force) {
+    if (i === wkActive && !force) return;
+    wkActive = i;
+    $$(".wk-tab").forEach((b, k) => { b.classList.toggle("is-on", k === i); b.classList.toggle("is-done", k < i); b.setAttribute("aria-selected", k === i ? "true" : "false"); b.tabIndex = k === i ? 0 : -1; });
+    $$("#workCases .case").forEach((el, k) => { el.classList.toggle("is-on", k === i); el.classList.toggle("is-in", k === i); el.hidden = k !== i; });
+  }
+  // tabs: on the pinned desktop stage, scroll to that case's slice (so scroll and tabs never disagree); otherwise switch in place
+  function pickCase(i) {
+    const st = $('[data-stage="work"]');
+    if (isMobile() || !st.offsetHeight || st.offsetHeight <= st.firstElementChild.offsetHeight + 4) { setCase(i); return; }
+    const span = st.offsetHeight - st.firstElementChild.offsetHeight, n = M.work.cases.length;
+    const top = st.getBoundingClientRect().top + scrollY + span * (0.12 + 0.86 * (i + 0.5) / n);
+    window.scrollTo({ top, behavior: reduced ? "auto" : "smooth" });
+  }
+  $("#workTabs").addEventListener("keydown", (e) => {
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    const n = M.work.cases.length, i = (wkActive + (e.key === "ArrowRight" ? 1 : n - 1)) % n;
+    pickCase(i); setCase(i); $(`#workTabs .wk-tab[data-i="${i}"]`).focus(); e.preventDefault();
+  });
 
   function sizeStages() {
     order.forEach((p) => {
@@ -505,36 +517,19 @@
     desk.style.setProperty("--printing", printing);
   }
 
-  /* ---- 03 Design Work: six plates (objects → roles → flows → states → rules → pages) stack into one page */
-  // Each plate is a square drawn flat, then projected isometric with a 2D transform (scaleY · rotate), so the
-  // label beside it never leaves the screen plane. Plates drop in bottom-up as the stage scrolls, then close up.
-  const WK_ART = [
-    '<rect x="14" y="14" width="26" height="26" rx="3"/><rect x="58" y="20" width="28" height="20" rx="3"/><rect x="30" y="58" width="36" height="28" rx="3"/>',
-    '<circle cx="26" cy="30" r="11"/><circle cx="70" cy="28" r="11"/><circle cx="48" cy="70" r="11"/>',
-    '<path d="M18 22H78V50H22V80H82" class="wk-flow"/><circle cx="18" cy="22" r="4"/><circle cx="82" cy="80" r="4"/>',
-    '<circle cx="20" cy="50" r="7" class="s-ok"/><circle cx="40" cy="50" r="7" class="s-ok"/><circle cx="60" cy="50" r="7" class="s-run"/><circle cx="80" cy="50" r="7" class="s-wait"/><path d="M27 50h6M47 50h6M67 50h6"/>',
-    '<path d="M12 30H88M12 50H88M12 70H88M30 12V88M70 12V88" class="wk-rule"/>',
-    '<rect x="10" y="10" width="80" height="12" rx="2"/><rect x="10" y="28" width="20" height="62" rx="2"/><rect x="36" y="28" width="54" height="26" rx="2" class="wk-hot"/><rect x="36" y="60" width="25" height="30" rx="2"/><rect x="65" y="60" width="25" height="30" rx="2"/>'
-  ];
-  const wkIso = $("#wkIso");
-  function renderWorkStage() {
-    const m = L(M.work.method);
-    wkIso.innerHTML = m.map((t, i) =>
-      `<div class="wk-plate${i === m.length - 1 ? " is-top" : ""}" style="--k:${i}"><svg viewBox="0 0 100 100">${WK_ART[i]}</svg></div>` +
-      `<span class="wk-lab mono" style="--k:${i}"><b>${pad(i + 1)}</b>${esc(t)}</span>`).join("");
-  }
+  /* ---- 03 Design Work: case console. Stage progress → which case is on (5 equal slices after a short intro);
+     inside a slice, the tab's progress line fills and a scanline sweeps down the diagram. */
+  const wkPin = $("#work .pin");
   function workStage(p) {
     const still = isMobile() || reduced;
-    const close = still ? 1 : sstep(0.5, 0.8, p);
-    wkIso.style.setProperty("--gap", (1 - close).toFixed(3));
-    $$(".wk-plate, .wk-lab", wkIso).forEach((el) => {
-      const k = +el.style.getPropertyValue("--k");
-      const a = still ? 1 : sstep(0.02 + k * 0.07, 0.13 + k * 0.07, p);
-      el.style.setProperty("--in", a.toFixed(3));
-    });
-    wkIso.classList.toggle("is-done", close > 0.98);
+    const n = M.work.cases.length;
+    const intro = still ? 1 : sstep(0, 0.1, p);
+    wkPin.style.setProperty("--in", intro.toFixed(3));
+    if (isMobile()) { wkPin.style.setProperty("--sub", "1"); return; }
+    const q = clamp((p - 0.12) / 0.86) * n, i = Math.min(n - 1, Math.floor(q));
+    setCase(i);
+    wkPin.style.setProperty("--sub", (p >= 0.98 ? 1 : clamp(q - i)).toFixed(3));
   }
-
   /* ---- 04 Steam */
   const stPin = $("#steam .pin"), stRange = $("#stRange");
   let stTouched = false;

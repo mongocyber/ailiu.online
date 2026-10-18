@@ -17,24 +17,24 @@ def run(pw, name, vp, mobile):
     pg.on("console", lambda m: errs.append(m.text) if m.type == "error" else None)
     pg.on("pageerror", lambda e: errs.append(str(e)))
     pg.goto(BASE); pg.wait_for_timeout(1500)
+    pg.add_style_tag(content="html{scroll-behavior:auto!important}")  # r11: instant scroll for stable frames
     pg.screenshot(path=f"{OUT}/{TAG}-{name}-{LANG}-00-hero.png")
     for i, k in enumerate(KEYS, 1):
         info = pg.evaluate("""k => { const s = document.getElementById(k); const r = s.getBoundingClientRect();
             return {top: r.top + scrollY, h: r.height, vh: innerHeight}; }""", k)
-        if k == "work":
-            # r10: pinned title stage (3 frames), then step through the body and open one case
-            st = pg.evaluate("() => document.querySelector('[data-stage=work]').offsetHeight")
-            for j, f in enumerate([0.1, 0.5, 0.95] if not mobile else [0]):
-                pg.evaluate(f"window.scrollTo(0,{info['top'] + f * max(0, st - info['vh'])})"); pg.wait_for_timeout(900)
-                pg.screenshot(path=f"{OUT}/{TAG}-{name}-{LANG}-{i:02d}-{k}-s{j}.png")
-            top = info["top"] + st
-            n = max(1, int(-(-(info["h"] - st) // (info["vh"] * 0.85))))
-            for j in range(n):
-                pg.evaluate(f"window.scrollTo(0,{top + j * info['vh'] * 0.85})"); pg.wait_for_timeout(900)
+        if k == "work" and not mobile:
+            # r11: one pinned console — intro + one frame per case slice
+            for j, f in enumerate([0.04, 0.2, 0.37, 0.55, 0.72, 0.9]):
+                pg.evaluate(f"window.scrollTo(0,{info['top'] + f * (info['h'] - info['vh'])})"); pg.wait_for_timeout(1200)
                 pg.screenshot(path=f"{OUT}/{TAG}-{name}-{LANG}-{i:02d}-{k}-{j}.png")
-            pg.evaluate("document.querySelector('#workCases details').open = true; document.querySelector('.case-agent').scrollIntoView()"); pg.wait_for_timeout(900)
-            pg.screenshot(path=f"{OUT}/{TAG}-{name}-{LANG}-{i:02d}-{k}-open.png")
-            pg.evaluate("document.querySelector('#workCases details').open = false")
+        elif k == "work":
+            # r11 mobile: scroll the stack, then pick the last case from the tabs
+            n = max(1, int(-(-info["h"] // (info["vh"] * 0.85))))
+            for j in range(n):
+                pg.evaluate(f"window.scrollTo(0,{info['top'] + j * info['vh'] * 0.85})"); pg.wait_for_timeout(900)
+                pg.screenshot(path=f"{OUT}/{TAG}-{name}-{LANG}-{i:02d}-{k}-{j}.png")
+            pg.evaluate("document.querySelector('#workTabs .wk-tab[data-i=\"4\"]').click(); document.getElementById('workConsole').scrollIntoView()"); pg.wait_for_timeout(900)
+            pg.screenshot(path=f"{OUT}/{TAG}-{name}-{LANG}-{i:02d}-{k}-pick.png")
         elif mobile:
             n = max(1, int(-(-info["h"] // (info["vh"] * 0.85))))
             for j in range(n):
