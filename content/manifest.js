@@ -5,17 +5,24 @@
    the page renders `draft` over the base fields and tags it 草稿 / Draft.
    r8: order is Aviso, PrintPlay, Steam, Suikou, TaoTao, Wild Louis, Xiaoyi (07); copy tightened; `work` = ailiu's professional design work.
    r10: Design Work is chapter 03 (key "work", order 30): Aviso, PrintPlay, Design Work, Steam, Suikou, TaoTao, Wild Louis, Xiaoyi (08).
+   r12: all copy is ailiu speaking in the first person; no chapter counts, one self-introduction (the hero title).
    Its slots come from the project entry; the capabilities / cases / background below stay in `work`.
    Link states: ok = real link · confirm = known but awaiting the owner's OK (not linked) · tbd = does not exist yet · text = shown as text. */
 window.MANIFEST = {
   version: 1,
   narrationScope: "home-all-sections",
+  // r12: page title + meta description (index.html carries the English pair for crawlers; app.js swaps on language)
+  meta: {
+    zh: { title: "ailiu.online · 做软件和 AI 工具的体验设计", description: "软件 UX 体验设计，眼下主要做 AI 工具：我工作里的设计案例，和业余做的东西。" },
+    en: { title: "ailiu.online · UX designer for software and AI tools", description: "UX design for software, these days mostly AI tools: my design work, and the things I build on the side." }
+  },
   persona: {
     draft: true,
-    // r7 decision: Louis = ailiu's digital double AND the site's virtual character. Not in conflict.
+    // r12: every line on the site is ailiu speaking (first person); Louis is just the face on the page.
+    // The one self-introduction is the hero title; nothing else re-introduces.
     line: {
-      zh: "Louis 是 ailiu 的数字分身，也是这个站里的虚拟角色。这里的作品都出自 ailiu；第 07 章「野生路易斯」是 Louis 自己做的，就是这个网站。Louis 的形象和声音由 AI 生成。",
-      en: "Louis is ailiu's digital double and the character who lives on this site. Everything here is ailiu's work; chapter 07, Wild Louis, is Louis's own: this website. Louis's image and voice are AI-generated."
+      zh: "下面是我做过的东西：工作里的设计案例，也有业余做的小产品、儿歌频道和品牌。页面上的 Louis 是我的形象，由 AI 生成。",
+      en: "Below is what I’ve made: design work from my day job, and things I build on the side, from small products to a kids’ song channel and a brand. Louis, the face on this page, is me, drawn by AI."
     }
   },
   contact: [
@@ -28,8 +35,8 @@ window.MANIFEST = {
       {
         id: "hero-1",
         subtitle: {
-          zh: "你好，我是 Louis，ailiu 的数字分身。往下滚，我带你把这八章看一遍。",
-          en: "Hi, I'm Louis, ailiu's digital double. Scroll down and I'll walk you through all eight chapters."
+          zh: "往下滚，我一件件讲：做了什么，结果怎样。",
+          en: "Scroll down and I’ll go through them one by one: what I made, and how it went."
         }
       }
     ]
@@ -89,10 +96,10 @@ window.MANIFEST = {
     {
       key: "aviso", order: 10, type: "product", status: "in-development",
       title: { zh: "Aviso", en: "Aviso" },
-      tagline: { zh: "在网页里划词，直接问 AI", en: "Select text on any page, ask AI right there" },
+      tagline: { zh: "在任意网页划词，原地问 AI", en: "Select text on any page, ask AI in place" },
       blurb: {
-        zh: "一个 Chrome 扩展：在任意网页上划选文字，原地提问，不用离开当前页面。",
-        en: "A Chrome extension: highlight a passage on any page and ask about it without leaving the tab."
+        zh: "Chrome 扩展：在任意网页划选文字，原地提问，不用离开当前页面。",
+        en: "A Chrome extension: highlight text on any page and ask about it without leaving the tab."
       },
       statusLabel: { zh: "开发中", en: "In development" },
       treatment: { id: "aviso-browser-depth", choreographyId: "aviso.browser-depth.v1" },
@@ -100,14 +107,14 @@ window.MANIFEST = {
       stageHeightVh: 200,
       accent: "#8FB573",
       narration: [{ id: "aviso-1", subtitle: {
-        zh: "Aviso 住在浏览器里：划一段字，答案就出现在旁边。",
-        en: "Aviso lives in your browser: highlight a passage and the answer shows up right beside it." } }],
+        zh: "Aviso 是我做的浏览器扩展：划一段字，答案就出现在旁边。",
+        en: "Aviso is my browser extension: highlight a passage and the answer appears beside it." } }],
       links: [{ label: { zh: "打开 Aviso", en: "Open Aviso" }, href: "https://aviso-nine.vercel.app" }],
       draft: {
         label: { zh: "草稿", en: "Draft" },
         blurb: {
-          zh: "Chrome 扩展。在任意网页划词或右键，用你自己的模型 API Key 让 AI 解释、翻译、润色、总结，也能说明图片。",
-          en: "A Chrome extension. Select text or right-click on any page, and AI explains, translates, polishes or summarizes it, or describes an image, using your own model API key."
+          zh: "我做的 Chrome 扩展。划词或右键，AI 就在原页面里解释、翻译、润色、总结，也能说明图片；用的是你自己的模型 API Key。",
+          en: "A Chrome extension I built. Select text or right-click, and AI explains, translates, polishes or summarizes it right on the page, or describes an image, using your own model API key."
         },
         statusLabel: { zh: "开发中 · 精简版待发布", en: "In development · lite build coming" },
         statusClass: "is-dev",
@@ -122,10 +129,10 @@ window.MANIFEST = {
     {
       key: "printplay", order: 20, type: "product", status: "live",
       title: { zh: "PrintPlay", en: "PrintPlay" },
-      tagline: { zh: "能打印出来玩的英文词卡", en: "English word cards you print and play" },
+      tagline: { zh: "打印出来就能玩的英文词卡", en: "English word cards you print and play" },
       blurb: {
-        zh: "选一个主题，打印出来，在桌上玩——给小朋友的词卡和练习页。",
-        en: "Pick a theme, print it, play at the table: cards and worksheets for small kids."
+        zh: "选个主题，打印出来，在桌上玩：给小朋友的英文词卡和练习页。",
+        en: "Pick a theme, print it, play at the table: English cards and worksheets for small kids."
       },
       statusLabel: { zh: "上线", en: "LIVE" },
       treatment: { id: "printplay-paper-stack", choreographyId: "printplay.paper-stack.v1" },
@@ -133,14 +140,14 @@ window.MANIFEST = {
       stageHeightVh: 180,
       accent: "#E0573B",
       narration: [{ id: "printplay-1", subtitle: {
-        zh: "PrintPlay 的终点是纸：这里的一切，都是为了从打印机里出来。",
-        en: "PrintPlay ends on paper. Everything here is made to come out of a printer." } }],
+        zh: "PrintPlay 的终点是纸：每一页都是为了从打印机里出来。",
+        en: "PrintPlay ends on paper: every page is made to come out of a printer." } }],
       links: [{ label: { zh: "访问 printplay.asia", en: "Visit printplay.asia" }, href: "https://printplay.asia" }],
       draft: {
         label: { zh: "草稿", en: "Draft" },
         blurb: {
-          zh: "可打印的英文词卡，用在课堂比划猜词和家里的游戏。选主题和年龄段，预览一下，直接打印或下载 PDF，不用注册。",
-          en: "Printable English word cards for classroom charades and family guessing games. Pick a theme and an age range, preview, then print or download a PDF. No sign-up."
+          zh: "我做的可打印英文词卡网站，用在课堂比划猜词和家庭游戏。选主题和年龄段，预览后直接打印或下载 PDF，不用注册。",
+          en: "My site for printable English word cards, used for classroom charades and family guessing games. Pick a theme and an age range, preview, then print or download a PDF. No sign-up."
         },
         statusLabel: { zh: "已上线", en: "Live" },
         links: [{ label: { zh: "访问 printplay.asia", en: "Visit printplay.asia" }, href: "https://printplay.asia", state: "ok" }]
@@ -153,8 +160,8 @@ window.MANIFEST = {
       title: { zh: "设计作品", en: "Design Work" },
       tagline: { zh: "把复杂系统做得好懂、好用", en: "Making complex systems easy to read and use" },
       blurb: {
-        zh: "ailiu 的本行：B 端与 AI 产品体验设计。五个案例来自某云平台的内部产品，名称与数据已隐去。",
-        en: "ailiu’s trade: B2B and AI product design. Five cases from a cloud platform’s internal products, names and figures left out."
+        zh: "我的本职：B 端与 AI 产品的体验设计。案例来自某云平台的内部产品，名称和数据已隐去。",
+        en: "My day job: UX for B2B and AI products. The cases come from a cloud platform’s internal tools, with names and figures left out."
       },
       statusLabel: { zh: "本行 · 案例已脱敏", en: "Day job · anonymized" },
       treatment: { id: "work-case-console", choreographyId: "work.case-console.v1" },
@@ -162,8 +169,8 @@ window.MANIFEST = {
       stageHeightVh: 230,
       accent: "#96E8FF",
       narration: [{ id: "work-1", subtitle: {
-        zh: "第 03 章换个方向：ailiu 的本行，B 端和 AI 产品设计。",
-        en: "Chapter 03 shifts gear: ailiu’s day job, B2B and AI product design." } }],
+        zh: "这一章是我的本职：B 端和 AI 产品设计，每个案例讲问题、做法和结果。",
+        en: "My day job: B2B and AI product design. Each case: the problem, the move, the result." } }],
       links: [],
       draft: {
         label: { zh: "草稿", en: "Draft" },
@@ -192,8 +199,8 @@ window.MANIFEST = {
       draft: {
         label: { zh: "草稿", en: "Draft" },
         blurb: {
-          zh: "单管蒸汽采暖的在线计算器：排气阀选型、散热器排气、室外温度补偿曲线、注入混水，公式都注明公开来源。结果只是估算，不能代替专业设计。",
-          en: "Online calculators for one-pipe steam heat: main and radiator vent sizing, outdoor reset curves, injection mixing, each formula citing a public source. Results are estimates, not a substitute for professional design."
+          zh: "我做的单管蒸汽采暖在线计算器：排气阀选型、散热器排气、室外温度补偿曲线、注入混水。每条公式都注明公开来源；结果只是估算，不能代替专业设计。",
+          en: "My online calculators for one-pipe steam heat: main and radiator vent sizing, outdoor reset curves, injection mixing. Every formula cites a public source; results are estimates, not a substitute for professional design."
         },
         statusLabel: { zh: "已上线 · 限量维护", en: "Live · light upkeep" },
         links: [
@@ -223,8 +230,8 @@ window.MANIFEST = {
       draft: {
         label: { zh: "草稿", en: "Draft" },
         blurb: {
-          zh: "微信小程序。把刷牙、吃饭、出门这些日常场景做成卡片，家长随口就能带孩子说英语。首版面向 3–5 岁。",
-          en: "A WeChat mini program that turns everyday moments, like brushing teeth or heading out, into cards a parent can use to slip into English. The first version is for ages 3–5."
+          zh: "我在做的微信小程序。把刷牙、吃饭、出门这些日常场景做成卡片，家长随口就能带孩子说英语。首版面向 3–5 岁，还没上线。",
+          en: "A WeChat mini program I’m building. Everyday moments like brushing teeth or heading out become cards a parent can use to slip into English. The first version is for ages 3–5 and isn’t out yet."
         },
         statusLabel: { zh: "开发中", en: "In development" },
         statusClass: "is-dev",
@@ -235,7 +242,7 @@ window.MANIFEST = {
     {
       key: "taotao", order: 60, type: "channel", status: "live",
       title: { zh: "桃桃屋", en: "TaoTao House" },
-      tagline: { zh: "中英双语原创儿歌", en: "Original bilingual songs for little kids" },
+      tagline: { zh: "给小朋友的中英双语原创儿歌", en: "Original bilingual songs for little kids" },
       blurb: {
         zh: "在 YouTube 与抖音更新的儿歌和短视频。",
         en: "Songs and short videos on YouTube and Douyin."
@@ -252,8 +259,8 @@ window.MANIFEST = {
       draft: {
         label: { zh: "草稿", en: "Draft" },
         blurb: {
-          zh: "给 2–4 岁孩子的中英双语原创儿歌频道。刷牙、洗手、吃饭、睡觉，都编成能跟着唱的歌，每首教三个英文词。",
-          en: "A Chinese–English song channel for ages 2–4. Brushing teeth, washing hands, mealtime and bedtime each become a song to sing along with, and each song teaches three English words."
+          zh: "我做的中英双语儿歌频道，给 2–4 岁的孩子。刷牙、洗手、吃饭、睡觉都编成能跟着唱的歌，每首教三个英文词。在 YouTube 和抖音更新。",
+          en: "My Chinese–English song channel for ages 2–4. Brushing teeth, washing hands, mealtime and bedtime each become a sing-along, and each song teaches three English words. On YouTube and Douyin."
         },
         statusLabel: { zh: "运营中", en: "Running" },
         links: [
@@ -271,8 +278,8 @@ window.MANIFEST = {
       title: { zh: "野生路易斯", en: "Wild Louis" },
       tagline: { zh: "这个站，是我做的", en: "I made this site" },
       blurb: {
-        zh: "我是 ailiu 的数字分身，也是站里的虚拟角色。这一章是本站的源码层，也是我的制作日志。",
-        en: "I'm ailiu's digital double and this site's virtual character. This chapter is the site's source layer, and my build log."
+        zh: "这一章是本站的源码层和制作日志。",
+        en: "This chapter is the site’s source layer and build log."
       },
       statusLabel: { zh: "AI 生成", en: "AI-generated" },
       treatment: { id: "wild-louis-meta-layer", choreographyId: "wildlouis.meta-layer.v1" },
@@ -280,28 +287,29 @@ window.MANIFEST = {
       stageHeightVh: 160,
       accent: "#B9A6FF",
       narration: [{ id: "wild-louis-1", subtitle: {
-        zh: "这是我，也是这个站的骨架。我每做一件新东西，日志就多一行。",
-        en: "This is me, and the scaffolding of this site. Every new thing I make adds a line to the log." } }],
+        zh: "这是这个站的骨架。每做一件新东西，日志就多一行。",
+        en: "This is the scaffolding of this site. Every new thing adds a line to the log." } }],
       log: [
         { date: "2026-10-15", zh: "写下这份说明书", en: "Wrote the build spec", model: null, costUsd: 0 },
         { date: "2026-10-17", zh: "做出第二版静态样片（无 AI 素材）", en: "Built preview v2, a static sample with no AI assets", model: null, costUsd: 0 },
         { date: "2026-10-18", zh: "写清 Louis 的身份，接入内容草稿和联系方式", en: "Spelled out who Louis is; wired in draft copy and contacts", model: null, costUsd: 0 },
         { date: "2026-10-18", zh: "统一左对齐，调整章节顺序，加入「设计作品」", en: "Aligned every left edge, reordered chapters, added Design Work", model: null, costUsd: 0 },
-        { date: "2026-10-18", zh: "「设计作品」成为第 03 章，全站改为八章", en: "Made Design Work chapter 03; the site now has eight chapters", model: null, costUsd: 0 }
+        { date: "2026-10-18", zh: "「设计作品」成为第 03 章", en: "Made Design Work chapter 03", model: null, costUsd: 0 },
+        { date: "2026-10-18", zh: "修好手机上不显示的头像，重写首页文案", en: "Fixed the portrait on phones; rewrote the home page copy", model: null, costUsd: 0 }
       ],
       links: [],
       draft: {
         label: { zh: "草稿", en: "Draft" },
-        tagline: { zh: "这个站，就是我的作品", en: "This site is my own work" },
+        tagline: { zh: "这个网站本身，和它的制作日志", en: "This site itself, and how it gets built" },
         blurb: {
-          zh: "野生路易斯就是 ailiu.online 这个网站，是 Louis 自己的作品，会慢慢长出新内容。",
-          en: "Wild Louis is this website: Louis’s own work, growing a little at a time."
+          zh: "野生路易斯就是 ailiu.online 这个网站。我和 AI 一起搭它，Louis 的形象和这一章都由 AI 生成；这里能看到它实时的源码和制作日志。",
+          en: "Wild Louis is ailiu.online itself. I build it together with AI; Louis’s image and this chapter are AI-generated. Here you can read its live source and build log."
         },
         statusLabel: { zh: "进行中 · 持续生长", en: "Ongoing · still growing" },
         statusClass: "is-ai",
         note: {
-          zh: "Louis 是 ailiu 的数字分身，也是站里的虚拟角色，两者并不矛盾。其余七章都出自 ailiu，这一章是 Louis 亲手做的。",
-          en: "Louis is ailiu’s digital double and this site’s character; the two don’t clash. The other seven chapters are ailiu’s. This one, Louis made."
+          zh: "其他章节是我的设计和项目，这一章讲网站自己是怎么做出来的。",
+          en: "The other chapters are my design work and projects; this one is about how the site itself gets made."
         },
         socials: [
           { id: "channels", label: { zh: "视频号", en: "WeChat Channels" }, glyph: "视" },
@@ -330,14 +338,14 @@ window.MANIFEST = {
       stageHeightVh: 160,
       accent: "#C98A5B",
       narration: [{ id: "xiaoyi-1", subtitle: {
-        zh: "最后一章，小姨家：一本还没印完的品牌册，我还在收集它的每一页。",
+        zh: "最后一章，小姨家：一本还没印完的品牌册，我还在补它的每一页。",
         en: "Last chapter: Aunt’s Home, a brand book still at the printer. I’m still collecting its pages." } }],
       links: [],
       draft: {
         label: { zh: "草稿", en: "Draft" },
         title: { zh: "小姨家", en: "Aunt’s Home" },
         blurb: {
-          zh: "从零做起的餐饮品牌，围绕「像回家吃饭」的感觉，做了一整套：命名、标志、色彩与字体、菜单、包装和空间导视。",
+          zh: "一个从零做起的餐饮品牌，围绕「像回家吃饭」的感觉做成一整套：命名、标志、色彩与字体、菜单、包装和空间导视。",
           en: "A restaurant brand built from scratch around the feeling of eating at home: naming, bilingual marks, color and type, menus, packaging and wayfinding, as one system."
         },
         statusLabel: { zh: "已结束 · 2024", en: "Ended · 2024" },

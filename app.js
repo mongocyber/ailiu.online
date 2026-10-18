@@ -1,4 +1,4 @@
-/* ailiu.online preview v2 — shell + eight chapter choreographies.
+/* ailiu.online preview v2 — shell + per-chapter choreographies.
    Implementation route per §6.4: IntersectionObserver + rAF (with watchdog).
    No CSS scroll-timeline, no libraries, nothing loaded from other origins. */
 (function () {
@@ -33,6 +33,12 @@
 
   function applyLang() {
     document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+    // r12: title / description / og follow the language (same words as the hero, no chapter counts)
+    const meta = M.meta[lang];
+    document.title = meta.title;
+    [["name", "description"], ["property", "og:description"]].forEach(([k, v]) => { const m = $(`meta[${k}="${v}"]`); if (m) m.content = meta.description; });
+    const ogt = $('meta[property="og:title"]'); if (ogt) ogt.content = meta.title;
+    const ogl = $('meta[property="og:locale"]'); if (ogl) ogl.content = lang === "zh" ? "zh_CN" : "en_US";
     $$("[data-en]").forEach((el) => { el.textContent = el.dataset[lang] || el.dataset.en; });
     $$("[data-lang-opt]").forEach((el) => el.classList.toggle("on", el.dataset.langOpt === lang));
     fillSlots(); renderWork(); buildNav(); renderSound(); buildTranscript(); renderWildSource(true); renderLog();
@@ -244,7 +250,7 @@
     const ai = p.aiGenerated && p.key !== "wild-louis" ? `<span class="dr-ai">${esc(L(p.disclosure))}</span>` : "";
     const soc = d.socials ? `<ul class="dr-soc" aria-label="${T("社交平台（待补）", "Social platforms (TBD)")}">` + d.socials.map((x) =>
       `<li aria-disabled="true"><i aria-hidden="true">${x.glyph}</i><span>${esc(L(x.label))}</span><em>${T("待补", "TBD")}</em></li>`).join("") + "</ul>" : "";
-    row.innerHTML = (p.draft ? `<span class="dr-chip" title="${T("内容草稿，待 ailiu 确认", "Draft copy, awaiting ailiu's sign-off")}">${esc(L(d.label))}</span>` : "") + ai + items.join("") +
+    row.innerHTML = (p.draft ? `<span class="dr-chip" title="${T("内容草稿，尚未定稿", "Draft copy, not final yet")}">${esc(L(d.label))}</span>` : "") + ai + items.join("") +
       (d.note ? `<p class="dr-note">${esc(L(d.note))}</p>` : "") + soc;
   }
 
@@ -690,7 +696,7 @@
       ["--dur-base", cssTok.getPropertyValue("--dur-base").trim()],
       ["--ease-out", cssTok.getPropertyValue("--ease-out").trim()],
       ["reduced-motion", String(reduced)],
-      ["chapters", String(order.length)],
+      ["portrait", louisHero.live ? "canvas" : "static fallback"],   // r12: which render path the hero portrait is on
     ];
     $("#wlRuntime").innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("");
   }

@@ -6,7 +6,14 @@
 <meta name="color-scheme" content="dark">
 <!-- Real deploy: CSP + Permissions-Policy: microphone=(), camera=() go in response headers (vercel.json).
      This static preview loads nothing from third-party origins. -->
-<title>ailiu.online — preview v2</title>
+<title>ailiu.online · UX designer for software and AI tools</title>
+<meta name="description" content="UX design for software, these days mostly AI tools: my design work, and the things I build on the side.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ailiu.online">
+<meta property="og:title" content="ailiu.online · UX designer for software and AI tools">
+<meta property="og:description" content="UX design for software, these days mostly AI tools: my design work, and the things I build on the side.">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="zh_CN">
 <link rel="stylesheet" href="styles.css">
 <script>
 /* r12: page-level safety net. If any script fails (or the app never finishes booting), every reveal-on-scroll
@@ -69,8 +76,8 @@
     <div class="hero-copy">
       <p class="kicker mono" data-preset="reveal-up"><span class="live-dot" aria-hidden="true"></span><span data-en="ailiu.online · a portfolio, narrated" data-zh="ailiu.online · 有人讲解的作品集">ailiu.online · a portfolio, narrated</span></p>
       <h1 class="display hero-h" id="hero-h" data-preset="reveal-up">
-        <span data-en="I'm Louis." data-zh="我是 Louis。">I'm Louis.</span>
-        <span data-en="Eight chapters of ailiu's work." data-zh="ailiu 的作品集，一共八章。">Eight chapters of ailiu's work.</span>
+        <span data-en="I'm a UX designer." data-zh="我是 UX 设计师，">I'm a UX designer.</span>
+        <span data-en="Software, mostly AI tools these days." data-zh="做软件，眼下主要做 AI 工具。">Software, mostly AI tools these days.</span>
       </h1>
       <div class="hero-note" data-preset="reveal-up">
         <p id="heroNote"></p>
@@ -83,12 +90,12 @@
         <span><b>NARRATOR</b> Louis</span>
         <span><b>LEVEL</b> <em id="lvRead">0.00</em> <small data-en="(simulated)" data-zh="（模拟）">(simulated)</small></span>
         <span><b>FORM</b> <em data-en="scanline portrait" data-zh="扫描线肖像">scanline portrait</em></span>
-        <span class="tag-ai" data-en="AI · digital double" data-zh="AI · 数字分身">AI · digital double</span>
+        <span class="tag-ai" data-en="AI-generated" data-zh="AI 生成">AI-generated</span>
       </figcaption>
       <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
     </figure>
   </div>
-  <ol class="hero-index" id="heroIndex" aria-label="Eight chapters"></ol>
+  <ol class="hero-index" id="heroIndex" aria-label="Chapters"></ol>
 </section>
 
 <!-- ========================= 01 AVISO — browser depth ========================= -->
@@ -234,12 +241,12 @@
 
 <!-- ========================= 03 DESIGN WORK — structure stack ========================= -->
 <!-- r10: a chapter like the others. A short pinned title stage (objects → … → pages stack up into a page),
-     then the body scrolls on: capabilities, five cases, background (rendered from MANIFEST.work). -->
+     then the body scrolls on: capabilities, the cases, background (rendered from MANIFEST.work). -->
 <section class="chapter ch-work" id="work" data-key="work">
   <div class="stage" data-stage="work">
     <div class="pin">
       <div class="cut" aria-hidden="true"><i></i><i></i><i></i></div>
-      <!-- r11: one pinned console. Left: title slots, capabilities, method. Right: five cases, switched by scroll (or the tabs). -->
+      <!-- r11: one pinned console. Left: title slots, capabilities, method. Right: the cases, switched by scroll (or the tabs). -->
       <div class="wk-left">
         <header class="slots wk-slots">
           <span class="slot-index mono" data-slot="index"></span>
@@ -510,7 +517,7 @@
   <div class="wrap">
     <p class="kicker mono" id="also-h" data-en="Also on the bench" data-zh="手头还有">Also on the bench</p>
     <ul class="also-list">
-      <li data-preset="reveal-up"><b data-en="Agent engineering system" data-zh="Agent 工程体系">Agent engineering system</b><span data-en="How ailiu gets AI agents to work in real repos: rules, reviews, gates." data-zh="ailiu 怎么让 AI agent 在真实仓库里干活：规则、评审、闸门。">How ailiu gets AI agents to work in real repos: rules, reviews, gates.</span><em class="mono" data-en="notes · no repo link" data-zh="笔记 · 不放仓库链接">notes · no repo link</em></li>
+      <li data-preset="reveal-up"><b data-en="Agent engineering system" data-zh="Agent 工程体系">Agent engineering system</b><span data-en="How I get AI agents to work in real repos: rules, reviews, gates." data-zh="我怎么让 AI agent 在真实仓库里干活：规则、评审、闸门。">How I get AI agents to work in real repos: rules, reviews, gates.</span><em class="mono" data-en="notes · no repo link" data-zh="笔记 · 不放仓库链接">notes · no repo link</em></li>
       <li data-preset="reveal-up"><b>supplier-link-analysis</b><span data-en="A small analysis tool, shown only with anonymized sample data." data-zh="一个小分析工具，只用脱敏示例数据展示。">A small analysis tool, shown only with anonymized sample data.</span><em class="mono" data-en="tool · sample data" data-zh="工具 · 示例数据">tool · sample data</em></li>
     </ul>
   </div>
@@ -518,10 +525,10 @@
 
 <section class="about" id="about" aria-labelledby="about-h">
   <div class="wrap about-grid">
-    <h2 class="display about-h" id="about-h" data-preset="reveal-up"><span data-en="One person," data-zh="一个人，">One person,</span> <span data-en="many kinds of things: code, paper, songs, pictures." data-zh="做很多种东西：代码、纸、歌、画面。">many kinds of things: code, paper, songs, pictures.</span></h2>
+    <h2 class="display about-h" id="about-h" data-preset="reveal-up"><span data-en="Design by day," data-zh="本职做设计，">Design by day,</span> <span data-en="and on the side I make things: code, paper, songs, pictures." data-zh="业余自己动手做：代码、纸、歌、画面。">and on the side I make things: code, paper, songs, pictures.</span></h2>
     <div class="about-p" data-preset="reveal-up">
-      <p data-en="ailiu's trade is B2B and AI product design: that's chapter 03, Design Work. The other chapters are things ailiu made on the side: an extension, a print site, calculators, a mini program, a song channel, a brand, and this site." data-zh="ailiu 的本行是 B 端与 AI 产品设计，也就是第 03 章「设计作品」。其余几章是业余自己做的：插件、打印网站、计算器、小程序、儿歌频道、一个品牌，还有这个站。">ailiu's trade is B2B and AI product design: that's chapter 03, Design Work. The other chapters are things ailiu made on the side: an extension, a print site, calculators, a mini program, a song channel, a brand, and this site.</p>
-      <p class="about-sub mono"><span class="dr-chip" data-en="Draft" data-zh="草稿">Draft</span><span data-en="Byline and wording await ailiu's sign-off." data-zh="署名与措辞待 ailiu 确认。">Byline and wording await ailiu's sign-off.</span></p>
+      <p data-en="Chapter 03, Design Work, is my day job: B2B and AI product design. The rest I made on my own time: a browser extension, a print site, calculators, a mini program, a kids' song channel, a brand, and this site." data-zh="第 03 章「设计作品」是我的本职：B 端与 AI 产品设计。其余是我业余做的：浏览器插件、打印网站、计算器、小程序、儿歌频道、一个品牌，还有这个网站。">Chapter 03, Design Work, is my day job: B2B and AI product design. The rest I made on my own time: a browser extension, a print site, calculators, a mini program, a kids' song channel, a brand, and this site.</p>
+      <p class="about-sub mono"><span class="dr-chip" data-en="Draft" data-zh="草稿">Draft</span><span data-en="Wording not final yet." data-zh="措辞尚未定稿。">Wording not final yet.</span></p>
     </div>
   </div>
 </section>

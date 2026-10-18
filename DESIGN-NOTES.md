@@ -310,3 +310,86 @@ CONTENT-DRAFT.md 的 9 个待确认项都还在，页面上对应位置已经标
 - 设计作品手机端的宽示意图（Agent Builder、Self-Service Analytics、Support）需要横向滑动才能看全，这是保证 ≥11px 字号的代价；手机小注写的是「滚动或点选」，但手机上只能点选。
 - 设计作品删掉了经历 / 交付物段落和每案例的完整关键决策列表；如需保留可加一个折叠的「完整案例」，但会重新拉长章节。
 - 帧时间比 r9 略高（headless 软件渲染下），真机 GPU 上预计无感，未在真机验证。
+
+## 12. r12（手机真机头像修复 · 首页与逐章文案重写，2026-10-18）
+
+没有新依赖、没有 3D / WebGL、没有调用外部生成服务；没有 push、没有部署。分两次提交：r12-1（头像）、r12-2（文案）。
+
+### 12.1 手机真机看不到首页头像
+**复现**：Playwright webkit（iPhone 13 / 15 Pro Max，DPR 3）和 chromium（Pixel 7）模拟下头像都正常、0 报错，桌面无头也正常——问题只出在真机，模拟器复现不了。所以按真机常见原因逐项加固，并用「强制失败」验证回退路径。
+
+**判断的根因（按可能性）**
+1. `inset` 简写：iOS Safari 14.5 以前不支持。`.louis-host { position:absolute; inset:0 }` 在旧 iOS 上宽高变成 0，画布尺寸 0 → 头像完全不显示，也不报错。
+2. r11 的 2.5D：`#louisHero` 用了 `rotateX/rotateY + transform-style: preserve-3d`，外面还有 `perspective` 和光晕伪元素。iOS Safari 上 3D 变换的 canvas 合成层会掉帧或整层消失。
+3. 画布内存：原来已限制 DPR ≤ 2，但没有总像素预算；内存紧张时 iOS 会拒绝分配或清空大画布，`getContext` 可能返回 null。
+4. 没有任何回退：只要画布失败、尺寸为 0 或抛异常，就只剩一块黑框。另外 app.js 里一个模块初始化出错，会让后面的整个初始化停掉（章节标题空白）；主循环里一个 updater 报错，rAF 循环也会停。
+
+**修复**
+- CSS：所有 `inset` 前面补 top/right/bottom/left 写法（18 处 `inset:0` 和其余几处）。触屏设备（`hover:none` 或 `pointer:coarse`）上取消头像倾斜、透视和光晕；`preserve-3d` 整个删掉。桌面仍然随光标倾斜。
+- louis.js：画布 DPR ≤ 2，再加总像素预算（主画像约 2.4M、迷你头像 0.2M 设备像素），超出就降 DPR。`getContext` 为 null 时进入回退。每帧绘制都包在 try/catch 里。第一次绘制后读回脸部一小块像素：有像素才加 `.is-live`，整块透明就进入回退。ResizeObserver / IntersectionObserver 不存在时退回 `resize` 事件，或直接开始绘制。
+- **静态回退头像** `louis-fallback.png`（28.9KB，600×680，48 色）：由一次性脚本 `scripts/louis_fallback.py` 生成。脚本用现有的 louis-data.js 和 louis.js 在无头浏览器里渲染一帧静帧，再量化。成品是扫描线风格化图，不是原图。CSS 规则是：宿主元素在拿到 `.is-live` 之前一直显示这张图，所以 JS 没加载、画布失败、绘制抛异常、画面空白这几种情况下都能看到头像。迷你头像（`.nar-face`）和野生路易斯章（加色相偏移）用同一张图。
+- **页面级兜底**：`<head>` 里有一段内联脚本，用 `window.onerror` / `unhandledrejection` 做静默兜底。任何脚本出错，或者页面加载完 1.5 秒后 app 还没有标记 `app-ready`，就把所有滚动渐显块直接显示到终态。不弹提示，不上报任何地方。app.js 里也做了几层隔离：
+  - 头像实例通过 `mountLouis` 创建，失败时换成空替身对象；
+  - 装饰模块（字符雨、页脚声纹、刻度、迷宫）通过 `mod()` 构建，出错就换成空对象；
+  - 主循环用 `run()` 逐个模块执行，某个出错就停用它并定在终态，其余照常；
+  - rAF 在每帧开头先排下一帧；
+  - `localStorage` 包在 try 里；
+  - `matchMedia.addEventListener` 不存在时退回 `addListener`（iOS < 14）。
+- **手机字幕条**改为实色背景，并在手机上关掉 backdrop-filter。原因：webkit 里半透明的字幕条会透出下面的正文。r12 首屏的简介正好落在字幕条后面，这个问题才暴露出来。顺带也省掉了手机上的模糊开销。
+- 野生路易斯运行时面板的「chapters 8」一行换成「portrait canvas / static fallback」，显示头像实际走的是画布还是回退图（真实信息，也不再出现数量）。
+
+**验证**：`/tmp` 下的测试脚本，webkit iPhone 13（DPR 3）和 chromium Pixel 7，中英各跑 4 种情况：
+- 正常：三处头像都 `is-live`；
+- `getContext` 返回 null：三处都走回退图，章节内容完整；
+- 绘图 API 抛异常：同上，页面正常，没有 pageerror；
+- `window.Louis` 缺失：同上。
+
+16 组全部 0 报错，章节标题都已填充。截图：
+- `r12-mobile-hero.png` / `-en.png`：webkit iPhone DPR 3 首屏，头像可见；
+- `r12-mobile-hero-fallback.png` / `-en.png`：强制 `getContext` 返回 null 时的回退。
+
+### 12.2 文案重写（第一人称 = ailiu 本人；不出现「分身」，不讲数量）
+规则：全站所有文案都是 ailiu 本人在说话。Louis 只是页面上的形象，字幕条里仍标 LOUIS。自我介绍只在 Hero 标题出现一次，其他地方都不再重复。全站检索过 八 / 七 / eight / seven / five / 五个 / 分身 / digital double / twin / avatar / 我是 / I'm Louis：只剩 Hero 标题里那一处「我是」。保留的数字只有章节编号（nn / 08、第 03 章）和随口英语原型界面里的「4 个场景」（那是模拟界面里的内容）。文风参考 Riddle 等作品集：tagline 一句话说清是什么，blurb 讲具体做了什么，不喊口号。事实全部来自 CONTENT-DRAFT.md，没有新增数字或履历。
+
+| 位置 | 中文 | English |
+|---|---|---|
+| `<title>` / og:title | ailiu.online · 做软件和 AI 工具的体验设计 | ailiu.online · UX designer for software and AI tools |
+| meta / og description | 软件 UX 体验设计，眼下主要做 AI 工具：我工作里的设计案例，和业余做的东西。 | UX design for software, these days mostly AI tools: my design work, and the things I build on the side. |
+| Hero 标题 | 我是 UX 设计师，／做软件，眼下主要做 AI 工具。 | I'm a UX designer.／Software, mostly AI tools these days. |
+| Hero 简介 | 下面是我做过的东西：工作里的设计案例，也有业余做的小产品、儿歌频道和品牌。页面上的 Louis 是我的形象，由 AI 生成。 | Below is what I've made: design work from my day job, and things I build on the side, from small products to a kids' song channel and a brand. Louis, the face on this page, is me, drawn by AI. |
+| 第一条旁白 / 字幕 | 往下滚，我一件件讲：做了什么，结果怎样。 | Scroll down and I'll go through them one by one: what I made, and how it went. |
+| Hero 读数标签 | AI 生成（原「AI · 数字分身」） | AI-generated |
+| 关于·标题 | 本职做设计，／业余自己动手做：代码、纸、歌、画面。 | Design by day,／and on the side I make things: code, paper, songs, pictures. |
+| 关于·正文 | 第 03 章「设计作品」是我的本职：B 端与 AI 产品设计。其余是我业余做的：浏览器插件、打印网站、计算器、小程序、儿歌频道、一个品牌，还有这个网站。 | Chapter 03, Design Work, is my day job: B2B and AI product design. The rest I made on my own time: a browser extension, a print site, calculators, a mini program, a kids' song channel, a brand, and this site. |
+| 手头还有·Agent | 我怎么让 AI agent 在真实仓库里干活：规则、评审、闸门。 | How I get AI agents to work in real repos: rules, reviews, gates. |
+
+逐章（显示的是 draft 字段；base 字段同步改过）：
+
+| 章 | tagline | blurb（中） | 旁白（中 / EN） |
+|---|---|---|---|
+| Aviso | 在任意网页划词，原地问 AI / Select text on any page, ask AI in place | 我做的 Chrome 扩展。划词或右键，AI 就在原页面里解释、翻译、润色、总结，也能说明图片；用的是你自己的模型 API Key。 | Aviso 是我做的浏览器扩展：划一段字，答案就出现在旁边。/ Aviso is my browser extension: highlight a passage and the answer appears beside it. |
+| PrintPlay | 打印出来就能玩的英文词卡 / English word cards you print and play | 我做的可打印英文词卡网站，用在课堂比划猜词和家庭游戏。选主题和年龄段，预览后直接打印或下载 PDF，不用注册。 | PrintPlay 的终点是纸：每一页都是为了从打印机里出来。/ PrintPlay ends on paper: every page is made to come out of a printer. |
+| 设计作品 | （不变）把复杂系统做得好懂、好用 | 我的本职：B 端与 AI 产品的体验设计。案例来自某云平台的内部产品，名称和数据已隐去。 | 这一章是我的本职：B 端和 AI 产品设计，每个案例讲问题、做法和结果。/ My day job: B2B and AI product design. Each case: the problem, the move, the result. |
+| 蒸汽站 | （不变） | 我做的单管蒸汽采暖在线计算器：排气阀选型、散热器排气、室外温度补偿曲线、注入混水。每条公式都注明公开来源；结果只是估算，不能代替专业设计。 | （不变）在蒸汽站，没有出处的公式不上线。 |
+| 随口英语 | （不变） | 我在做的微信小程序。把刷牙、吃饭、出门这些日常场景做成卡片，家长随口就能带孩子说英语。首版面向 3–5 岁，还没上线。 | （不变） |
+| 桃桃屋 | 给小朋友的中英双语原创儿歌 / Original bilingual songs for little kids | 我做的中英双语儿歌频道，给 2–4 岁的孩子。刷牙、洗手、吃饭、睡觉都编成能跟着唱的歌，每首教三个英文词。在 YouTube 和抖音更新。 | （不变） |
+| 野生路易斯 | 这个网站本身，和它的制作日志 / This site itself, and how it gets built | 野生路易斯就是 ailiu.online 这个网站。我和 AI 一起搭它，Louis 的形象和这一章都由 AI 生成；这里能看到它实时的源码和制作日志。注：其他章节是我的设计和项目，这一章讲网站自己是怎么做出来的。 | 这是这个站的骨架。每做一件新东西，日志就多一行。/ This is the scaffolding of this site. Every new thing adds a line to the log. |
+| 小姨家 | （不变） | 一个从零做起的餐饮品牌，围绕「像回家吃饭」的感觉做成一整套：命名、标志、色彩与字体、菜单、包装和空间导视。 | 最后一章，小姨家：一本还没印完的品牌册，我还在补它的每一页。 |
+
+英文 blurb 与中文逐句对应，见 `content/manifest.js`。制作日志：「全站改为八章」改为「『设计作品』成为第 03 章」，并新增一行「修好手机上不显示的头像，重写首页文案」。草稿提示中的「待 ailiu 确认」改为「尚未定稿」。
+
+### 12.3 自检
+- `align.py` r12 / r12b / r12c（最后一处 CSS 改动之后）：chromium / webkit / firefox × 1440 / 390 × en / zh，15 组全部 0 处不齐、0 溢出、0 错误。
+- `shoot.py` 共三轮：r12（中英）→ r12b（中英）→ r12c（中文）。控制台错误 0，横向溢出 0；做成拼版逐张看过。
+  - 第 1 轮发现 Hero 标题在桌面折成 4 行 → 缩成 3 行（和 r11 一样）；运行时面板里还有「chapters 8」→ 已换掉。
+  - 第 2 轮发现手机首屏的简介从半透明字幕条里透出来 → 字幕条改为实色。
+  - 关于区另外截了图检查。
+- 字幕长度：中英各 9 条旁白，在 1440 / 390、chromium / webkit 下都放得进两行，没有被截断；blurb 也没有被截断。
+- 截图在 `/workspace/deliverables/ailiu-preview-v2-shots/`：`r12-mobile-hero*.png`，以及 `shots/` 下 r12 / r12b / r12c 前缀的全套。
+
+### 12.4 遗留
+- **没有真机**：根因是按真机常见问题推断的，模拟器里复现不出来。修复覆盖了这些原因，回退路径也验证过。如果真机仍然只看到回退图（静态扫描线头像），说明画布在那台设备上失败了，页面本身不受影响。部署后建议在 iPhone 上看一眼：首屏头像应该在动；野生路易斯章运行时面板的「portrait」一行会显示 canvas 还是 static fallback。
+- 回退图是静帧，没有说话时的声音条和 glitch 效果。迷你头像用的是同一张图裁切出来的。
+- 「页面上的 Louis 是我的形象，由 AI 生成」是 Hero 简介里唯一解释 Louis 的一句话，请确认这个说法可以。
+- Hero 标题为了保持 3 行，把「做软件的 UX 设计师」拆成了「我是 UX 设计师，／做软件，眼下主要做 AI 工具」。
+- 文案仍然是草稿（OPEN-3），音频没有生成。

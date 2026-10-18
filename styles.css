@@ -1,6 +1,6 @@
 /* ailiu.online — preview v2
-   Global shell (base colour, type, nav, narrator, sound/lang) is identical across all
-   eight chapters (D10). Chapter-specific colour and form live only inside each .pin stage. */
+   Global shell (base colour, type, nav, narrator, sound/lang) is identical across every
+   chapter (D10). Chapter-specific colour and form live only inside each .pin stage. */
 
 /* ---------- 1. Motion tokens (INSTRUCTIONS §6.1) ---------- */
 :root {
@@ -78,7 +78,7 @@ html:lang(zh) .display { letter-spacing: -.01em; line-height: 1.18; }
 [data-preset="fade-through"] { opacity: 0; transition: opacity var(--dur-fast) linear; }
 [data-preset].is-in { opacity: 1; transform: none; clip-path: inset(0 0 0 0); }
 
-/* glitch-cut: the single chapter-boundary transition, shared by all eight (§6.3) */
+/* glitch-cut: the single chapter-boundary transition, shared by every chapter (§6.3) */
 .cut { position: absolute; top: 0; right: 0; bottom: 0; left: 0; inset: 0; z-index: 30; pointer-events: none; }
 .cut i { position: absolute; left: 0; right: 0; height: 7%; opacity: 0; background: linear-gradient(90deg, transparent, rgba(150, 232, 255, .5) 20%, rgba(255, 70, 110, .45) 55%, transparent); mix-blend-mode: screen; }
 .cut i:nth-child(1) { top: 18%; } .cut i:nth-child(2) { top: 46%; height: 3%; } .cut i:nth-child(3) { top: 71%; height: 5%; }
@@ -657,7 +657,7 @@ html:lang(zh) .foot-h span, html:lang(zh) .about-h span { word-break: keep-all; 
 
 /* =========================================================================
    03 DESIGN WORK — case console (r11). One pinned stage: title slots, capabilities and method on
-   the left; on the right five case tabs and one panel at a time. Scroll walks the five cases
+   the left; on the right the case tabs and one panel at a time. Scroll walks the cases
    (the tab's progress line fills, a scanline sweeps the diagram); the tabs jump to a case.
    ========================================================================= */
 .ch-work .pin { --in: 1; --sub: 0; background:
@@ -800,7 +800,7 @@ html:lang(en) .v-mod + text, html:lang(en) .v-core-t { font-size: 9px; }
   .ctl { height: 32px; padding: 0 11px; font-size: 12px; }
   .sound-label { display: none; }
   .ph-tag { display: inline-block; }
-  .narrator { bottom: calc(10px + env(safe-area-inset-bottom, 0px)); padding: 8px 12px 8px 8px; gap: 10px; border-radius: 16px; background: rgba(13, 13, 15, .86); box-shadow: 0 16px 40px rgba(0, 0, 0, .55); }
+  .narrator { bottom: calc(10px + env(safe-area-inset-bottom, 0px)); padding: 8px 12px 8px 8px; gap: 10px; border-radius: 16px; background: #0d0d0f; -webkit-backdrop-filter: none; backdrop-filter: none; /* r12: solid — WebKit let text bleed through the translucent bar; no blur cost on phones */ box-shadow: 0 16px 40px rgba(0, 0, 0, .55); }
   .narrator::before { left: 62px; }
   .letterbox { display: none; }
   .nar-face { width: 46px; height: 46px; border-radius: 11px; }
