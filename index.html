@@ -33,13 +33,13 @@
 </header>
 
 <div class="letterbox" aria-hidden="true">
-  <ol class="reel" id="reel"><li><i></i></li><li><i></i></li><li><i></i></li><li><i></i></li><li><i></i></li><li><i></i></li><li><i></i></li></ol>
+  <ol class="reel" id="reel"></ol>
   <span class="reel-l mono" id="reelL"></span><span class="reel-r mono" id="reelR"></span>
 </div>
 <aside class="narrator" id="narrator" aria-label="Louis narration">
   <button class="nar-face" id="narFace" type="button" aria-label="Replay Louis's line"></button>
   <div class="nar-body">
-    <div class="nar-meta mono"><span>LOUIS</span><span class="nar-idx" id="narIdx">00 / 07</span><span class="nar-next" id="narNext" aria-hidden="true"></span><span class="nar-state" id="narState" data-en="captions only · audio placeholder" data-zh="仅字幕 · 音频占位">captions only · audio placeholder</span></div>
+    <div class="nar-meta mono"><span>LOUIS</span><span class="nar-idx" id="narIdx">00 / 08</span><span class="nar-next" id="narNext" aria-hidden="true"></span><span class="nar-state" id="narState" data-en="captions only · audio placeholder" data-zh="仅字幕 · 音频占位">captions only · audio placeholder</span></div>
     <p class="nar-sub" id="narSub"></p>
   </div>
 </aside>
@@ -54,7 +54,7 @@
       <p class="kicker mono" data-preset="reveal-up"><span class="live-dot" aria-hidden="true"></span><span data-en="ailiu.online · a portfolio, narrated" data-zh="ailiu.online · 有人讲解的作品集">ailiu.online · a portfolio, narrated</span></p>
       <h1 class="display hero-h" id="hero-h" data-preset="reveal-up">
         <span data-en="I'm Louis." data-zh="我是 Louis。">I'm Louis.</span>
-        <span data-en="Here are seven things ailiu made." data-zh="带你看 ailiu 做的七件作品。">Here are seven things ailiu made.</span>
+        <span data-en="Eight chapters of ailiu's work." data-zh="ailiu 的作品集，一共八章。">Eight chapters of ailiu's work.</span>
       </h1>
       <div class="hero-note" data-preset="reveal-up">
         <p id="heroNote"></p>
@@ -72,7 +72,7 @@
       <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
     </figure>
   </div>
-  <ol class="hero-index" id="heroIndex" aria-label="Seven chapters"></ol>
+  <ol class="hero-index" id="heroIndex" aria-label="Eight chapters"></ol>
 </section>
 
 <!-- ========================= 01 AVISO — browser depth ========================= -->
@@ -216,7 +216,36 @@
   </div>
 </section>
 
-<!-- ========================= 03 STEAM — gauge & pipes ========================= -->
+<!-- ========================= 03 DESIGN WORK — structure stack ========================= -->
+<!-- r10: a chapter like the others. A short pinned title stage (objects → … → pages stack up into a page),
+     then the body scrolls on: capabilities, five cases, background (rendered from MANIFEST.work). -->
+<section class="chapter ch-work" id="work" data-key="work">
+  <div class="stage" data-stage="work">
+    <div class="pin">
+      <div class="cut" aria-hidden="true"><i></i><i></i><i></i></div>
+      <header class="slots wk-slots">
+        <span class="slot-index mono" data-slot="index"></span>
+        <h2 class="slot-title" data-slot="title"></h2>
+        <p class="slot-tagline" data-slot="tagline"></p>
+        <p class="slot-blurb" data-slot="blurb"></p>
+        <div class="slot-row"><span class="slot-status mono" data-slot="status"></span></div>
+      </header>
+      <div class="wk-iso" id="wkIso" aria-hidden="true"></div>
+      <p class="mock-note mono wk-note" data-en="Structure first, pages second" data-zh="先搭结构，再画页面">Structure first, pages second</p>
+    </div>
+  </div>
+  <div class="work-body">
+    <div class="wrap">
+      <h3 class="work-sec mono" data-en="Core capabilities" data-zh="核心能力">Core capabilities</h3>
+      <ol class="work-caps" id="workCaps"></ol>
+      <h3 class="work-sec mono" data-en="Case studies" data-zh="案例">Case studies</h3>
+      <div class="work-cases" id="workCases"></div>
+      <div class="work-bg" id="workBg"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= 04 STEAM — gauge & pipes ========================= -->
 <section class="chapter ch-steam" id="steam" data-key="steam">
   <div class="stage" data-stage="steam">
     <div class="pin">
@@ -294,7 +323,7 @@
   </div>
 </section>
 
-<!-- ========================= 04 SUIKOU — phone flow ========================= -->
+<!-- ========================= 05 SUIKOU — phone flow ========================= -->
 <section class="chapter ch-suikou" id="suikou" data-key="suikou">
   <div class="stage" data-stage="suikou">
     <div class="pin">
@@ -359,7 +388,7 @@
   </div>
 </section>
 
-<!-- ========================= 05 TAOTAO — video wall ========================= -->
+<!-- ========================= 06 TAOTAO — video wall ========================= -->
 <section class="chapter ch-taotao" id="taotao" data-key="taotao">
   <div class="stage" data-stage="taotao">
     <div class="pin">
@@ -386,7 +415,7 @@
   </div>
 </section>
 
-<!-- ========================= 06 WILD LOUIS — meta layer ========================= -->
+<!-- ========================= 07 WILD LOUIS — meta layer ========================= -->
 <section class="chapter ch-wild" id="wild-louis" data-key="wild-louis">
   <div class="stage" data-stage="wild-louis">
     <div class="pin">
@@ -418,7 +447,7 @@
   </div>
 </section>
 
-<!-- ========================= 07 XIAOYI — brand book ========================= -->
+<!-- ========================= 08 XIAOYI — brand book ========================= -->
 <section class="chapter ch-xiaoyi" id="xiaoyi" data-key="xiaoyi">
   <div class="stage" data-stage="xiaoyi">
     <div class="pin">
@@ -458,26 +487,6 @@
   </div>
 </section>
 
-<!-- ============ DESIGN WORK — ailiu's trade (not chapter 08; rendered from MANIFEST.work) ============ -->
-<section class="work" id="work" aria-labelledby="work-h">
-  <div class="wrap">
-    <header class="work-head">
-      <p class="kicker mono" data-preset="reveal-up"><span class="work-dot" aria-hidden="true"></span><span data-en="Beyond the seven · Design work" data-zh="七章之外 · 设计作品">Beyond the seven · Design work</span></p>
-      <h2 class="display work-h" id="work-h" data-preset="reveal-up">
-        <span data-en="ailiu's trade:" data-zh="ailiu 的本行：">ailiu's trade:</span>
-        <span data-en="making complex systems easy to read and use." data-zh="把复杂系统做得好懂、好用。">making complex systems easy to read and use.</span>
-      </h2>
-      <p class="work-lead" id="workLead" data-preset="reveal-up"></p>
-      <p class="work-note mono" data-preset="reveal-up"><span class="dr-chip" data-en="Draft" data-zh="草稿">Draft</span><span data-en="Diagrams are drawn in HTML/SVG, not product screenshots." data-zh="示意图用 HTML/SVG 绘制，不是产品截图。">Diagrams are drawn in HTML/SVG, not product screenshots.</span></p>
-    </header>
-    <h3 class="work-sec mono" data-en="Core capabilities" data-zh="核心能力">Core capabilities</h3>
-    <ol class="work-caps" id="workCaps"></ol>
-    <h3 class="work-sec mono" data-en="Case studies" data-zh="案例">Case studies</h3>
-    <div class="work-cases" id="workCases"></div>
-    <div class="work-bg" id="workBg"></div>
-  </div>
-</section>
-
 <!-- ======================= SECONDARY / ABOUT / CONTACT ======================= -->
 <section class="secondary" id="also" aria-labelledby="also-h">
   <div class="wrap">
@@ -493,7 +502,7 @@
   <div class="wrap about-grid">
     <h2 class="display about-h" id="about-h" data-preset="reveal-up"><span data-en="One person," data-zh="一个人，">One person,</span> <span data-en="many kinds of things: code, paper, songs, pictures." data-zh="做很多种东西：代码、纸、歌、画面。">many kinds of things: code, paper, songs, pictures.</span></h2>
     <div class="about-p" data-preset="reveal-up">
-      <p data-en="ailiu's trade is B2B and AI product design (see Design Work above). The seven chapters are things ailiu made independently: an extension, a print site, calculators, a mini program, a song channel, a brand, and this site." data-zh="ailiu 的本行是 B 端与 AI 产品设计，见上面的「设计作品」。七章里是自己动手做的东西：插件、打印网站、计算器、小程序、儿歌频道、一个品牌，还有这个站。">ailiu's trade is B2B and AI product design (see Design Work above). The seven chapters are things ailiu made independently: an extension, a print site, calculators, a mini program, a song channel, a brand, and this site.</p>
+      <p data-en="ailiu's trade is B2B and AI product design: that's chapter 03, Design Work. The other chapters are things ailiu made on the side: an extension, a print site, calculators, a mini program, a song channel, a brand, and this site." data-zh="ailiu 的本行是 B 端与 AI 产品设计，也就是第 03 章「设计作品」。其余几章是业余自己做的：插件、打印网站、计算器、小程序、儿歌频道、一个品牌，还有这个站。">ailiu's trade is B2B and AI product design: that's chapter 03, Design Work. The other chapters are things ailiu made on the side: an extension, a print site, calculators, a mini program, a song channel, a brand, and this site.</p>
       <p class="about-sub mono"><span class="dr-chip" data-en="Draft" data-zh="草稿">Draft</span><span data-en="Byline and wording await ailiu's sign-off." data-zh="署名与措辞待 ailiu 确认。">Byline and wording await ailiu's sign-off.</span></p>
     </div>
   </div>

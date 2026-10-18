@@ -1,4 +1,4 @@
-"""r8 alignment check: every heading / subtitle / paragraph / status row inside one text block must share a left edge (±1px).
+"""r8 alignment check (r10: Design Work is chapter 03, its slots join the chapter groups): every heading / subtitle / paragraph / status row inside one text block must share a left edge (±1px).
 Usage: python3 scripts/align.py [tag]   (server: python3 -m http.server 8801). Runs chromium, webkit, firefox × desktop/mobile × en/zh."""
 import sys, json
 from playwright.sync_api import sync_playwright
@@ -17,14 +17,15 @@ JS = r"""() => {
   const groups = {};
   // text blocks: first rendered glyph; containers (grids / boxes holding SVG): content-box edge
   const C = (el) => { const b = el.getBoundingClientRect(), cs = getComputedStyle(el); return b.left + parseFloat(cs.paddingLeft) + parseFloat(cs.borderLeftWidth); };
-  const BOX = /work-caps|work-cases|bg-grid|also-list|foot-meta|slot-row|draft-row|work-note|hero-note-sub/;
+  const BOX = /work-caps|work-cases|bg-grid|also-list|foot-meta|slot-row|draft-row|hero-note-sub/;
   const add = (g, sel, root = document) => root.querySelectorAll(sel).forEach((el) => { if (vis(el)) (groups[g] = groups[g] || []).push([sel + (el.id ? "#" + el.id : ""), BOX.test(sel) ? C(el) : L(el)]); });
   add("hero", ".hero-copy .kicker"); add("hero", ".hero-h > span"); add("hero", "#heroNote"); add("hero", ".hero-note-sub");
   document.querySelectorAll(".chapter").forEach((sec) => {
     const g = sec.id, h = sec.querySelector("header.slots");
     ["slot-index", "slot-title", "slot-tagline", "slot-blurb", "slot-row", "draft-row"].forEach((c) => add(g, ":scope > ." + c, h));
   });
-  add("work", ".work-head > .kicker"); add("work", ".work-h > span"); add("work", ".work-lead"); add("work", ".work-note"); add("work", ".work-sec"); add("work", ".work-caps"); add("work", ".work-cases"); add("work", ".bg-grid");
+  // r10: Design Work is a chapter (its header.slots is checked above as group "work"); its body is a separate block
+  add("work-body", ".work-sec"); add("work-body", ".work-caps"); add("work-body", ".work-cases"); add("work-body", ".bg-grid");
   add("also", "#also .kicker"); add("also", ".also-list");
   add("about", ".about-h > span:first-child");
   add("about-col", ".about-p > p");

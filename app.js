@@ -1,4 +1,4 @@
-/* ailiu.online preview v2 — shell + seven treatment choreographies.
+/* ailiu.online preview v2 — shell + eight chapter choreographies.
    Implementation route per §6.4: IntersectionObserver + rAF (with watchdog).
    No CSS scroll-timeline, no libraries, nothing loaded from other origins. */
 (function () {
@@ -15,6 +15,8 @@
   const byKey = Object.fromEntries(M.projects.map((p) => [p.key, p]));
   const order = M.projects.slice().sort((a, b) => a.order - b.order);
   const pad = (n) => String(n).padStart(2, "0");
+  // chapter total for the "nn / 08" suffixes in CSS (slot index, steam title block)
+  document.documentElement.style.setProperty("--of", `" / ${pad(order.length)}"`);
 
   /* ------------------------------------------------------------------ language */
   const params = new URLSearchParams(location.search);
@@ -29,7 +31,7 @@
     document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
     $$("[data-en]").forEach((el) => { el.textContent = el.dataset[lang] || el.dataset.en; });
     $$("[data-lang-opt]").forEach((el) => el.classList.toggle("on", el.dataset.langOpt === lang));
-    fillSlots(); renderWork(); buildNav(); renderSound(); buildTranscript(); renderWildSource(true); renderLog();
+    fillSlots(); renderWork(); renderWorkStage(); buildNav(); renderSound(); buildTranscript(); renderWildSource(true); renderLog();
     measureAviso(); reelTxt = "";
     narrator.onLang();
   }
@@ -42,9 +44,7 @@
   /* ------------------------------------------------------------------ manifest → nav, slots */
   function buildNav() {
     $("#chapnav").innerHTML = `<li class="nav-ind" aria-hidden="true" role="presentation"></li>` + order.map((p, i) =>
-      `<li><a href="#${p.key}" data-key="${p.key}"><b>${pad(i + 1)}</b><span>${L(V(p, "title"))}</span></a></li>`).join("") +
-      // r8: Design Work is not chapter 08: it sits after a divider, marked with a dot instead of a number
-      `<li class="nav-work"><a href="#work" data-key="work" title="${T("设计作品", "Design work")}"><b aria-hidden="true">●</b><span>${T("设计作品", "Design work")}</span></a></li>`;
+      `<li><a href="#${p.key}" data-key="${p.key}"><b>${pad(i + 1)}</b><span>${L(V(p, "title"))}</span></a></li>`).join("");
     $("#heroIndex").innerHTML = order.map((p, i) =>
       `<li><a href="#${p.key}"><b>${pad(i + 1)}</b><span>${L(V(p, "title"))}</span><em>${L(V(p, "statusLabel"))}</em></a></li>`).join("");
     if (active) setActive(active, true);
@@ -80,7 +80,7 @@
     const d = byKey["wild-louis"].disclosure;
     $("#wlDisc").textContent = L(d);
   }
-  /* ------------------------------------------------------------------ Design Work (r8): ailiu's trade, from MANIFEST.work */
+  /* ------------------------------------------------------------------ 03 Design Work: body from MANIFEST.work (r8; chapter since r10) */
   // Each case gets its own small schematic (SVG, drawn here, no images). Parts marked .v-step light up in order once the
   // card is in view (reveal timing tokens only). Labels are mock UI text, not data.
   const WV = {
@@ -150,7 +150,6 @@
   const workSeen = new Set();
   function renderWork() {
     const W = M.work;
-    $("#workLead").textContent = L(W.lead);
     $("#workCaps").innerHTML = W.capabilities.map((c, i) =>
       `<li class="cap cap-${c.id}"><b class="mono">${pad(i + 1)}</b><h4>${esc(L(c.title))}</h4><p>${esc(L(c.text))}</p><ul class="mono">${L(c.tags).map((t) => `<li>${esc(t)}</li>`).join("")}</ul></li>`).join("");
     const box = $("#workCases");
@@ -264,11 +263,9 @@
     const FADE = 200, GAP = 1200;
     let cur = null, queued = null, coolUntil = 0, startT = 0, dur = 0, words = [], fadeUntil = 0, shown = null, here = "hero", lastN = -1;
     const estimate = (txt) => Math.max(1800, lang === "zh" ? (txt.length / 4.5) * 1000 : (txt.length / 15) * 1000);
-    // "work" (Design Work, r8) sits right after the last chapter, so the fast-scroll distance rule still holds
-    const idxOf = (id) => (id === "hero" ? 0 : id === "work" ? order.length + 1 : id ? order.indexOf(byKey[id]) + 1 : order.length + 2);
+    const idxOf = (id) => (id === "hero" ? 0 : id ? order.indexOf(byKey[id]) + 1 : order.length + 1);
     function lineFor(id) {
       if (id === "hero") return { id, idx: 0, text: L(M.hero.narration[0].subtitle) };
-      if (id === "work") return { id, idx: idxOf(id), text: L(M.work.narration[0].subtitle) };
       const p = byKey[id]; return { id, idx: idxOf(id), text: L(p.narration[0].subtitle) };
     }
     function render(text) {
@@ -276,7 +273,7 @@
       sub.innerHTML = parts.map((w) => (/^\s+$/.test(w) ? w : `<span class="w">${w.replace(/</g, "&lt;")}</span>`)).join("");
       words = $$(".w", sub); lastN = -1;
     }
-    function setIdx(n) { idxEl.textContent = n > order.length ? T("设计作品", "DESIGN WORK") : `${pad(n)} / ${pad(order.length)}`; }
+    function setIdx(n) { idxEl.textContent = `${pad(n)} / ${pad(order.length)}`; }
     function play(line) {
       said.add(line.id);
       cur = line; shown = line.id; startT = performance.now(); dur = estimate(line.text);
@@ -307,7 +304,7 @@
     // when nothing is speaking, the bar shows the current chapter: its line if already heard (dim), else a quiet placeholder
     function idleView() {
       const n = idxOf(here);
-      if (!here || n > order.length + 1) return;
+      if (!here || n > order.length) return;
       setIdx(n);
       if (shown === here) { box.classList.remove("is-stale"); return; }
       if (said.has(here)) { shown = here; render(lineFor(here).text); words.forEach((w) => w.classList.add("on")); box.classList.remove("is-stale"); }
@@ -338,7 +335,7 @@
         if (q === here) play(lineFor(q));
       } else if (!queued && here !== shown && here) idleView();
       // "→ 03": the next chapter's line is waiting for this one to finish (no overlap, §4.5-1)
-      const nx = (cur || fadeUntil) && here && (!cur || here !== cur.id) && !said.has(here) && idxOf(here) <= order.length + 1 ? `→ ${here === "work" ? T("设计作品", "WORK") : pad(idxOf(here))}` : "";
+      const nx = (cur || fadeUntil) && here && (!cur || here !== cur.id) && !said.has(here) && idxOf(here) <= order.length ? `→ ${pad(idxOf(here))}` : "";
       if (nx !== nextTxt) { nextEl.textContent = nx; nextTxt = nx; }
       louises.forEach((l) => l.setLevel(level));
       box.style.setProperty("--nar-t", cur ? clamp((now - startT) / dur).toFixed(3) : 1);
@@ -378,7 +375,7 @@
     glitched.add(key);
     const sec = document.getElementById(key);
     const cut = $(".cut", sec), title = $("header.slots .slot-title", sec);
-    if (!cut) return; // Design Work has no stage, so no glitch-cut
+    if (!cut) return;
     cut.classList.remove("go"); void cut.offsetWidth; cut.classList.add("go");
     if (title) { title.classList.add("glitching"); setTimeout(() => title.classList.remove("glitching"), 200); }
   }
@@ -405,12 +402,6 @@
         else if (performance.now() - dwell[p.key] > 450) narrator.request(p.key);
       } else dwell[p.key] = 0;
     });
-    // r8: Design Work takes part in nav / narration like a chapter, but is not one
-    const wr = $("#work").getBoundingClientRect();
-    const workCov = clamp((Math.min(vh, wr.bottom) - Math.max(0, wr.top)) / vh);
-    if (workCov > bestCov) { bestCov = workCov; best = "work"; }
-    if (workCov >= 0.55) { if (!dwell.work) dwell.work = performance.now(); else if (performance.now() - dwell.work > 450) narrator.request("work"); }
-    else dwell.work = 0;
     const heroR = $("#top").getBoundingClientRect();
     const heroCov = clamp((Math.min(vh, heroR.bottom) - Math.max(0, heroR.top)) / vh);
     const k = heroCov > bestCov || bestCov < 0.3 ? null : best;
@@ -425,6 +416,12 @@
     const st = $(`[data-stage="${key}"]`);
     const r = st.getBoundingClientRect();
     const span = r.height - st.firstElementChild.offsetHeight; // pin is shorter than the viewport (letterbox, r6)
+    return span > 0 ? clamp(-r.top / span) : (r.top < innerHeight ? 1 : 0);
+  }
+  // reel / caption progress spans the whole chapter (Design Work's body scrolls on past its pinned stage)
+  function chapterProgress(key) {
+    const st = $(`[data-stage="${key}"]`), r = document.getElementById(key).getBoundingClientRect();
+    const span = r.height - st.firstElementChild.offsetHeight;
     return span > 0 ? clamp(-r.top / span) : (r.top < innerHeight ? 1 : 0);
   }
 
@@ -508,7 +505,37 @@
     desk.style.setProperty("--printing", printing);
   }
 
-  /* ---- 03 Steam */
+  /* ---- 03 Design Work: six plates (objects → roles → flows → states → rules → pages) stack into one page */
+  // Each plate is a square drawn flat, then projected isometric with a 2D transform (scaleY · rotate), so the
+  // label beside it never leaves the screen plane. Plates drop in bottom-up as the stage scrolls, then close up.
+  const WK_ART = [
+    '<rect x="14" y="14" width="26" height="26" rx="3"/><rect x="58" y="20" width="28" height="20" rx="3"/><rect x="30" y="58" width="36" height="28" rx="3"/>',
+    '<circle cx="26" cy="30" r="11"/><circle cx="70" cy="28" r="11"/><circle cx="48" cy="70" r="11"/>',
+    '<path d="M18 22H78V50H22V80H82" class="wk-flow"/><circle cx="18" cy="22" r="4"/><circle cx="82" cy="80" r="4"/>',
+    '<circle cx="20" cy="50" r="7" class="s-ok"/><circle cx="40" cy="50" r="7" class="s-ok"/><circle cx="60" cy="50" r="7" class="s-run"/><circle cx="80" cy="50" r="7" class="s-wait"/><path d="M27 50h6M47 50h6M67 50h6"/>',
+    '<path d="M12 30H88M12 50H88M12 70H88M30 12V88M70 12V88" class="wk-rule"/>',
+    '<rect x="10" y="10" width="80" height="12" rx="2"/><rect x="10" y="28" width="20" height="62" rx="2"/><rect x="36" y="28" width="54" height="26" rx="2" class="wk-hot"/><rect x="36" y="60" width="25" height="30" rx="2"/><rect x="65" y="60" width="25" height="30" rx="2"/>'
+  ];
+  const wkIso = $("#wkIso");
+  function renderWorkStage() {
+    const m = L(M.work.method);
+    wkIso.innerHTML = m.map((t, i) =>
+      `<div class="wk-plate${i === m.length - 1 ? " is-top" : ""}" style="--k:${i}"><svg viewBox="0 0 100 100">${WK_ART[i]}</svg></div>` +
+      `<span class="wk-lab mono" style="--k:${i}"><b>${pad(i + 1)}</b>${esc(t)}</span>`).join("");
+  }
+  function workStage(p) {
+    const still = isMobile() || reduced;
+    const close = still ? 1 : sstep(0.5, 0.8, p);
+    wkIso.style.setProperty("--gap", (1 - close).toFixed(3));
+    $$(".wk-plate, .wk-lab", wkIso).forEach((el) => {
+      const k = +el.style.getPropertyValue("--k");
+      const a = still ? 1 : sstep(0.02 + k * 0.07, 0.13 + k * 0.07, p);
+      el.style.setProperty("--in", a.toFixed(3));
+    });
+    wkIso.classList.toggle("is-done", close > 0.98);
+  }
+
+  /* ---- 04 Steam */
   const stPin = $("#steam .pin"), stRange = $("#stRange");
   let stTouched = false;
   const needle = { x: 0, v: 0, t: 0 };
@@ -543,7 +570,7 @@
     vs.textContent = closed ? (lang === "zh" ? "蒸汽到达 · 关闭" : "STEAM HERE · CLOSED") : (lang === "zh" ? "排空气中" : "AIR OUT");
   }
 
-  /* ---- 04 Suikou */
+  /* ---- 05 Suikou */
   const skTrack = $("#skTrack"), skCard = $("#skCard"), skDots = $$(".sk-dots i"), skPhone = $("#skPhone");
   function suikou(p) {
     const pin = $("#suikou .pin");
@@ -566,7 +593,7 @@
   }
   skCard.addEventListener("click", () => { if (isMobile() || reduced) skCard.style.setProperty("--back", skCard.style.getPropertyValue("--back") === "1" ? 0 : 1); });
 
-  /* ---- 07 Xiaoyi */
+  /* ---- 08 Xiaoyi */
   const xySpreads = $$(".xy-spread"), xyLeaf = $("#xyLeaf"), xyTabs = $$("#xyTabs li");
   function xiaoyi(p) {
     if (isMobile() || reduced) { xySpreads.forEach((s) => s.style.setProperty("--rv", 1)); return; }
@@ -580,7 +607,7 @@
     xyTabs.forEach((li, j) => li.classList.toggle("on", j === cur));
   }
 
-  /* ---- 05 TaoTao */
+  /* ---- 06 TaoTao */
   const ttCells = $$("#ttWall .tt-cell");
   let ttHover = null, ttHome = [];
   ttCells.forEach((c) => {
@@ -618,7 +645,7 @@
     ttCells.forEach((c) => c.classList.toggle("is-playing", playing.includes(c)));
   }
 
-  /* ---- 06 Wild Louis */
+  /* ---- 07 Wild Louis */
   const wlSrc = $("#wlSrc"), wlPin = $("#wild-louis .pin");
   let srcLines = [], shownLines = -1;
   function renderWildSource(force) {
@@ -750,30 +777,31 @@
   /* ------------------------------------------------------------------ transcript (readable alternative to audio, §5.5) */
   function buildTranscript() {
     const items = [`<li><b>Louis:</b> ${esc(L(M.hero.narration[0].subtitle))}</li>`]
-      .concat(order.map((p, i) => `<li><b>${pad(i + 1)} ${esc(L(V(p, "title")))}:</b> ${esc(L(p.narration[0].subtitle))}</li>`))
-      .concat(`<li><b>${T("设计作品", "Design work")}:</b> ${esc(L(M.work.narration[0].subtitle))}</li>`);
+      .concat(order.map((p, i) => `<li><b>${pad(i + 1)} ${esc(L(V(p, "title")))}:</b> ${esc(L(p.narration[0].subtitle))}</li>`));
     $("#transcript").innerHTML = items.join("");
   }
 
   /* ------------------------------------------------------------------ letterbox reel (desktop): one hairline segment per chapter */
+  $("#reel").innerHTML = order.map(() => "<li><i></i></li>").join("");
+  $("#reel").style.setProperty("--n", order.length);
   const reelLis = $$("#reel li"), reelL = $("#reelL"), reelR = $("#reelR");
   let reelTxt = "", reelPct = -1;
   function reel() {
     if (isMobile()) return;
     order.forEach((p, i) => {
-      const v = progressOf(p.key);
+      const v = chapterProgress(p.key);
       reelLis[i].style.setProperty("--p", v.toFixed(3));
       reelLis[i].classList.toggle("on", p.key === active);
     });
     const ap = active && byKey[active];
-    const t = ap ? `<b>${pad(order.indexOf(ap) + 1)}</b>&nbsp; ${esc(L(V(ap, "title")))}` : active === "work" ? `<b>●</b>&nbsp; ${T("设计作品", "Design work")}` : "";
+    const t = ap ? `<b>${pad(order.indexOf(ap) + 1)}</b>&nbsp; ${esc(L(V(ap, "title")))}` : "";
     if (t !== reelTxt) { reelL.innerHTML = t; reelTxt = t; }
-    const pct = ap ? Math.round(progressOf(active) * 100) : -1;
+    const pct = ap ? Math.round(chapterProgress(active) * 100) : -1;
     if (pct !== reelPct) { reelR.innerHTML = pct < 0 ? "" : `<b>${String(pct).padStart(3, "0")}</b> / 100`; reelPct = pct; }
   }
 
   /* ------------------------------------------------------------------ main loop + watchdog */
-  const updaters = { aviso, printplay, steam, suikou, xiaoyi, taotao, "wild-louis": wild };
+  const updaters = { aviso, printplay, work: workStage, steam, suikou, xiaoyi, taotao, "wild-louis": wild };
   let lastFrame = performance.now(), degraded = false;
   function frame(now) {
     lastFrame = now;

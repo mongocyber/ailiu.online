@@ -4,6 +4,8 @@
    r7: each project carries a `draft` block (copy, status, links from CONTENT-DRAFT.md, unconfirmed);
    the page renders `draft` over the base fields and tags it 草稿 / Draft.
    r8: order is Aviso, PrintPlay, Steam, Suikou, TaoTao, Wild Louis, Xiaoyi (07); copy tightened; `work` = ailiu's professional design work.
+   r10: Design Work is chapter 03 (key "work", order 30): Aviso, PrintPlay, Design Work, Steam, Suikou, TaoTao, Wild Louis, Xiaoyi (08).
+   Its slots come from the project entry; the capabilities / cases / background below stay in `work`.
    Link states: ok = real link · confirm = known but awaiting the owner's OK (not linked) · tbd = does not exist yet · text = shown as text. */
 window.MANIFEST = {
   version: 1,
@@ -12,8 +14,8 @@ window.MANIFEST = {
     draft: true,
     // r7 decision: Louis = ailiu's digital double AND the site's virtual character. Not in conflict.
     line: {
-      zh: "Louis 是 ailiu 的数字分身，也是这个站里的虚拟角色。这里的作品都出自 ailiu；第 06 章「野生路易斯」是 Louis 自己做的，就是这个网站。Louis 的形象和声音由 AI 生成。",
-      en: "Louis is ailiu's digital double and the character who lives on this site. Everything here is ailiu's work; chapter 06, Wild Louis, is Louis's own: this website. Louis's image and voice are AI-generated."
+      zh: "Louis 是 ailiu 的数字分身，也是这个站里的虚拟角色。这里的作品都出自 ailiu；第 07 章「野生路易斯」是 Louis 自己做的，就是这个网站。Louis 的形象和声音由 AI 生成。",
+      en: "Louis is ailiu's digital double and the character who lives on this site. Everything here is ailiu's work; chapter 07, Wild Louis, is Louis's own: this website. Louis's image and voice are AI-generated."
     }
   },
   contact: [
@@ -26,8 +28,8 @@ window.MANIFEST = {
       {
         id: "hero-1",
         subtitle: {
-          zh: "你好，我是 Louis，ailiu 的数字分身。往下滚，我带你看七件作品。",
-          en: "Hi, I'm Louis, ailiu's digital double. Scroll down and I'll show you seven projects."
+          zh: "你好，我是 Louis，ailiu 的数字分身。往下滚，我带你把这八章看一遍。",
+          en: "Hi, I'm Louis, ailiu's digital double. Scroll down and I'll walk you through all eight chapters."
         }
       }
     ]
@@ -36,13 +38,6 @@ window.MANIFEST = {
      Generalised: no employer / cloud product / client names, no internal figures, no testimonials,
      no years or "projects shipped" counts. Hardware cases on the old site had titles only → omitted. */
   work: {
-    narration: [{ id: "work-1", subtitle: {
-      zh: "七章讲完了。接下来是 ailiu 的本行：B 端和 AI 产品设计。",
-      en: "That’s the seven. Next is ailiu’s trade: B2B and AI product design." } }],
-    lead: {
-      zh: "ailiu 的本行是 B 端与 AI 产品体验设计：Agent、数据平台、复杂工作流。下面是四项核心能力和五个案例，都来自某云平台的内部产品；产品名、客户和内部数据都已隐去。",
-      en: "ailiu’s trade is B2B and AI product experience design: agents, data platforms, complex workflows. Below are four core capabilities and five case studies, all from internal products at a cloud platform, with product names, clients and internal figures left out."
-    },
     capabilities: [
       { id: "ai", title: { zh: "AI 产品与 Agent 体验设计", en: "AI product & agent experience" },
         text: { zh: "把模型、工具、知识源和任务节点，做成能配置、能调试、能迭代的 Agent 流程。让人看得见 AI 在做什么、为什么这么做、哪一步需要人来确认。",
@@ -216,7 +211,33 @@ window.MANIFEST = {
       aiGenerated: false, disclosure: null, mobileFallback: "vertical-stack"
     },
     {
-      key: "steam", order: 30, type: "product", status: "live",
+      // r10: chapter 03. Not a product: ailiu's professional design work. Body = MANIFEST.work (capabilities, cases, background).
+      key: "work", order: 30, type: "portfolio", status: "professional",
+      title: { zh: "设计作品", en: "Design Work" },
+      tagline: { zh: "把复杂系统做得好懂、好用", en: "Making complex systems easy to read and use" },
+      blurb: {
+        zh: "ailiu 的本行：B 端与 AI 产品体验设计，做 Agent、数据平台和复杂工作流。五个案例都来自某云平台的内部产品，产品名、客户和内部数据已隐去。",
+        en: "ailiu’s trade: B2B and AI product design for agents, data platforms and complex workflows. Five cases from a cloud platform’s internal products, with names, clients and internal figures left out."
+      },
+      statusLabel: { zh: "本行 · 案例已脱敏", en: "Day job · anonymized" },
+      treatment: { id: "work-structure-stack", choreographyId: "work.structure-stack.v1" },
+      transition: { enter: "reveal-up", exit: "fade-through" },
+      stageHeightVh: 150,
+      accent: "#96E8FF",
+      narration: [{ id: "work-1", subtitle: {
+        zh: "第 03 章换个方向：ailiu 的本行，B 端和 AI 产品设计。",
+        en: "Chapter 03 shifts gear: ailiu’s day job, B2B and AI product design." } }],
+      links: [],
+      draft: {
+        label: { zh: "草稿", en: "Draft" },
+        statusClass: "is-work",
+        note: { zh: "示意图用 HTML/SVG 绘制，不是产品截图。", en: "Diagrams are drawn in HTML/SVG, not product screenshots." },
+        links: []
+      },
+      aiGenerated: false, disclosure: null, mobileFallback: "static-stack"
+    },
+    {
+      key: "steam", order: 40, type: "product", status: "live",
       title: { zh: "蒸汽站", en: "Steam Vent Calc" },
       tagline: { zh: "蒸汽采暖计算器，每条公式都有出处", en: "Steam-heat calculators, every formula cited" },
       blurb: {
@@ -247,7 +268,7 @@ window.MANIFEST = {
       aiGenerated: false, disclosure: null, mobileFallback: "static-diagram"
     },
     {
-      key: "suikou", order: 40, type: "product", status: "in-development",
+      key: "suikou", order: 50, type: "product", status: "in-development",
       title: { zh: "随口英语", en: "Suikou English" },
       tagline: { zh: "随口就能说的亲子英语", en: "Family English you can say on the spot" },
       blurb: {
@@ -276,7 +297,7 @@ window.MANIFEST = {
       aiGenerated: false, disclosure: null, mobileFallback: "swipe-screens"
     },
     {
-      key: "taotao", order: 50, type: "channel", status: "live",
+      key: "taotao", order: 60, type: "channel", status: "live",
       title: { zh: "桃桃屋", en: "TaoTao House" },
       tagline: { zh: "中英双语原创儿歌", en: "Original bilingual songs for little kids" },
       blurb: {
@@ -310,7 +331,7 @@ window.MANIFEST = {
       mobileFallback: "grid-2x2"
     },
     {
-      key: "wild-louis", order: 60, type: "virtual", status: "self",
+      key: "wild-louis", order: 70, type: "virtual", status: "self",
       title: { zh: "野生路易斯", en: "Wild Louis" },
       tagline: { zh: "这个站，是我做的", en: "I made this site" },
       blurb: {
@@ -329,7 +350,8 @@ window.MANIFEST = {
         { date: "2026-10-15", zh: "写下这份说明书", en: "Wrote the build spec", model: null, costUsd: 0 },
         { date: "2026-10-17", zh: "做出第二版静态样片（无 AI 素材）", en: "Built preview v2, a static sample with no AI assets", model: null, costUsd: 0 },
         { date: "2026-10-18", zh: "写清 Louis 的身份，接入内容草稿和联系方式", en: "Spelled out who Louis is; wired in draft copy and contacts", model: null, costUsd: 0 },
-        { date: "2026-10-18", zh: "统一左对齐，调整章节顺序，加入「设计作品」", en: "Aligned every left edge, reordered chapters, added Design Work", model: null, costUsd: 0 }
+        { date: "2026-10-18", zh: "统一左对齐，调整章节顺序，加入「设计作品」", en: "Aligned every left edge, reordered chapters, added Design Work", model: null, costUsd: 0 },
+        { date: "2026-10-18", zh: "「设计作品」成为第 03 章，全站改为八章", en: "Made Design Work chapter 03; the site now has eight chapters", model: null, costUsd: 0 }
       ],
       links: [],
       draft: {
@@ -342,8 +364,8 @@ window.MANIFEST = {
         statusLabel: { zh: "进行中 · 持续生长", en: "Ongoing · still growing" },
         statusClass: "is-ai",
         note: {
-          zh: "Louis 是 ailiu 的数字分身，也是站里的虚拟角色，两者并不矛盾。其余六章是 ailiu 的作品，这一章是 Louis 亲手做的。",
-          en: "Louis is ailiu’s digital double and this site’s character; the two don’t clash. The other six chapters are ailiu’s work. This one, Louis made."
+          zh: "Louis 是 ailiu 的数字分身，也是站里的虚拟角色，两者并不矛盾。其余七章都出自 ailiu，这一章是 Louis 亲手做的。",
+          en: "Louis is ailiu’s digital double and this site’s character; the two don’t clash. The other seven chapters are ailiu’s. This one, Louis made."
         },
         socials: [
           { id: "channels", label: { zh: "视频号", en: "WeChat Channels" }, glyph: "视" },
@@ -359,7 +381,7 @@ window.MANIFEST = {
       mobileFallback: "static-source-snippet"
     },
     {
-      key: "xiaoyi", order: 70, type: "design", status: "pending",
+      key: "xiaoyi", order: 80, type: "design", status: "pending",
       title: { zh: "小姨家", en: "Xiaoyi's Home" },
       tagline: { zh: "一个餐饮品牌，从名字到店里的指示牌", en: "A restaurant brand, from its name to its signage" },
       blurb: {
