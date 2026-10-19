@@ -239,34 +239,34 @@
   </div>
 </section>
 
-<!-- ========================= 03 DESIGN WORK — structure stack ========================= -->
-<!-- r10: a chapter like the others. A short pinned title stage (objects → … → pages stack up into a page),
-     then the body scrolls on: capabilities, the cases, background (rendered from MANIFEST.work). -->
+<!-- ========================= 03 DESIGN WORK — case studies ========================= -->
+<!-- r13: an ordered case-study chapter. Head: title slots + capabilities + method. Then a sticky case index (01–05)
+     and five cases in one grid template — text left (sticky on tall screens), a lead screen and two smaller ones right.
+     Cases, copy and images come from MANIFEST.work (app.js renderWork). -->
 <section class="chapter ch-work" id="work" data-key="work">
   <div class="stage" data-stage="work">
-    <div class="pin">
+    <div class="pin wk-head">
       <div class="cut" aria-hidden="true"><i></i><i></i><i></i></div>
-      <!-- r11: one pinned console. Left: title slots, capabilities, method. Right: the cases, switched by scroll (or the tabs). -->
-      <div class="wk-left">
-        <header class="slots wk-slots">
-          <span class="slot-index mono" data-slot="index"></span>
-          <h2 class="slot-title" data-slot="title"></h2>
-          <p class="slot-tagline" data-slot="tagline"></p>
-          <p class="slot-blurb" data-slot="blurb"></p>
-          <div class="slot-row"><span class="slot-status mono" data-slot="status"></span></div>
-        </header>
+      <header class="slots wk-slots">
+        <span class="slot-index mono" data-slot="index"></span>
+        <h2 class="slot-title" data-slot="title"></h2>
+        <p class="slot-tagline" data-slot="tagline"></p>
+        <p class="slot-blurb" data-slot="blurb"></p>
+        <div class="slot-row"><span class="slot-status mono" data-slot="status"></span></div>
+      </header>
+      <div class="wk-side">
         <div class="wk-caps-box">
           <h3 class="wk-sec mono" data-en="Core capabilities" data-zh="核心能力">Core capabilities</h3>
           <ol class="wk-caps" id="workCaps"></ol>
         </div>
         <div class="wk-method-box" id="workMethod"></div>
+        <p class="mock-note mono wk-note" data-en="Screens are anonymized mockups" data-zh="界面图为脱敏示意">Screens are anonymized mockups</p>
       </div>
-      <div class="wk-console" id="workConsole">
-        <div class="wk-tabs" role="tablist" id="workTabs"></div>
-        <div class="wk-panels" id="workCases"></div>
-      </div>
-      <p class="mock-note mono wk-note" data-en="Diagrams drawn in HTML/SVG, not screenshots · scroll or pick a case" data-zh="示意图用 HTML/SVG 绘制，不是产品截图 · 滚动或点选案例">Diagrams drawn in HTML/SVG, not screenshots · scroll or pick a case</p>
     </div>
+  </div>
+  <div class="wk-body">
+    <nav class="wk-index mono" id="workIndex" aria-label="Cases"></nav>
+    <div class="wk-cases" id="workCases"></div>
   </div>
 </section>
 
@@ -512,17 +512,7 @@
   </div>
 </section>
 
-<!-- ======================= SECONDARY / ABOUT / CONTACT ======================= -->
-<section class="secondary" id="also" aria-labelledby="also-h">
-  <div class="wrap">
-    <p class="kicker mono" id="also-h" data-en="Also on the bench" data-zh="手头还有">Also on the bench</p>
-    <ul class="also-list">
-      <li data-preset="reveal-up"><b data-en="Agent engineering system" data-zh="Agent 工程体系">Agent engineering system</b><span data-en="How I get AI agents to work in real repos: rules, reviews, gates." data-zh="我怎么让 AI agent 在真实仓库里干活：规则、评审、闸门。">How I get AI agents to work in real repos: rules, reviews, gates.</span><em class="mono" data-en="notes · no repo link" data-zh="笔记 · 不放仓库链接">notes · no repo link</em></li>
-      <li data-preset="reveal-up"><b>supplier-link-analysis</b><span data-en="A small analysis tool, shown only with anonymized sample data." data-zh="一个小分析工具，只用脱敏示例数据展示。">A small analysis tool, shown only with anonymized sample data.</span><em class="mono" data-en="tool · sample data" data-zh="工具 · 示例数据">tool · sample data</em></li>
-    </ul>
-  </div>
-</section>
-
+<!-- ======================= ABOUT / CONTACT ======================= -->
 <section class="about" id="about" aria-labelledby="about-h">
   <div class="wrap about-grid">
     <h2 class="display about-h" id="about-h" data-preset="reveal-up"><span data-en="Design by day," data-zh="本职做设计，">Design by day,</span> <span data-en="and on the side I make things: code, paper, songs, pictures." data-zh="业余自己动手做：代码、纸、歌、画面。">and on the side I make things: code, paper, songs, pictures.</span></h2>

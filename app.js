@@ -90,125 +90,65 @@
     const d = byKey["wild-louis"].disclosure;
     $("#wlDisc").textContent = L(d);
   }
-  /* ------------------------------------------------------------------ 03 Design Work: body from MANIFEST.work (r8; chapter since r10) */
-  // Each case gets its own small schematic (SVG, drawn here, no images). Parts marked .v-step light up in order once the
-  // card is in view (reveal timing tokens only). Labels are mock UI text, not data.
-  const WV = {
-    agent() {
-      const n = [["输入", "Input", 8, 92, "ok"], ["模型", "Model", 110, 92, "ok"], ["知识源", "Knowledge", 214, 34, "ok"], ["工具", "Tool", 214, 150, "ok"], ["卡片", "Card", 318, 92, "run"], ["待确认", "Confirm", 424, 92, "wait"]];
-      const st = { ok: T("成功", "done"), run: T("运行中", "running"), wait: T("待确认", "needs OK") };
-      const e = [[0, 1], [1, 2], [1, 3], [2, 4], [3, 4], [4, 5]];
-      const c = (i) => [n[i][2] + 44, n[i][3] + 20];
-      return `<svg viewBox="0 0 520 210"><g class="v-grid"><path d="M0 10H520M0 60H520M0 110H520M0 160H520M0 200H520"/></g>` +
-        e.map(([a, b], i) => { const [x1, y1] = c(a), [x2, y2] = c(b); const mx = (x1 + x2) / 2;
-          return `<path class="v-edge v-step" style="--i:${i + 1}" d="M${x1 + 44} ${y1}C${mx + 22} ${y1} ${mx - 22} ${y2} ${x2 - 44} ${y2}"/>`; }).join("") +
-        n.map(([zh, en, x, y, s], i) => `<g class="v-node v-${s} v-step" style="--i:${i}" transform="translate(${x} ${y})"><rect width="88" height="40" rx="7"/><circle cx="12" cy="13" r="3.5"/><text x="21" y="17" class="v-t">${T(zh, en)}</text><text x="12" y="31" class="v-s">${st[s]}</text></g>`).join("") +
-        `</svg>`;
-    },
-    annotation() {
-      const steps = [["模板", "Template"], ["分发", "Assign"], ["执行", "Label"], ["进度", "Progress"], ["验收", "Review"]];
-      return `<svg viewBox="0 0 400 250"><rect x="12" y="12" width="236" height="168" rx="8" class="v-frame"/>` +
-        `<path class="v-hill" d="M12 160l58-62 40 38 50-56 88 90v-2H12z"/><circle class="v-sun" cx="200" cy="48" r="13"/>` +
-        `<g class="v-step" style="--i:1"><rect x="56" y="88" width="66" height="62" class="v-box b1"/><text x="56" y="83" class="v-s v-lb1">${T("对象 A", "object A")}</text></g>` +
-        `<g class="v-step" style="--i:2"><rect x="166" y="34" width="56" height="44" class="v-box b2"/><text x="166" y="29" class="v-s v-lb2">${T("对象 B", "object B")}</text></g>` +
-        `<g class="v-list"><text x="262" y="28" class="v-s">${T("标签", "LABELS")}</text>` +
-        [[T("对象 A", "object A"), "b1"], [T("对象 B", "object B"), "b2"], [T("跳过 / 异常", "skip / flag"), "b3"]].map(([t, k], i) =>
-          `<g class="v-step" style="--i:${i + 2}" transform="translate(262 ${40 + i * 34})"><rect width="126" height="26" rx="5" class="v-row"/><rect x="8" y="8" width="10" height="10" rx="2" class="v-sw ${k}"/><text x="26" y="17" class="v-t">${t}</text></g>`).join("") +
-        `<g class="v-step" style="--i:5" transform="translate(262 146)"><rect width="126" height="30" rx="15" class="v-btn"/><text x="63" y="19" text-anchor="middle" class="v-t v-btn-t">${T("提交，下一条 →", "Submit, next →")}</text></g></g>` +
-        `<g transform="translate(12 206)"><path d="M0 10H376" class="v-track"/>` + steps.map(([zh, en], i) =>
-          `<g class="v-step" style="--i:${i + 3}" transform="translate(${i * 94} 0)"><circle cx="0" cy="10" r="5" class="v-dot"/><text x="${i === 4 ? -2 : 0}" y="32" text-anchor="${i === 0 ? "start" : i === 4 ? "end" : "middle"}" class="v-s">${T(zh, en)}</text></g>`).join("") + `</g></svg>`;
-    },
-    platform() {
-      const m = [["资产", "Assets"], ["市场", "Market"], ["服务", "Services"], ["使用", "Use"], ["权限", "Access"], ["管理", "Admin"]];
-      const chips = [["已发布", "published", "c-ok"], ["审批中", "pending", "c-wait"], ["可使用", "ready", "c-ok"], ["未授权", "no access", "c-no"]];
-      const cx = 120, cy = 124, r = 82;
-      return `<svg viewBox="0 0 400 250"><circle cx="${cx}" cy="${cy}" r="${r}" class="v-ring"/><circle cx="${cx}" cy="${cy}" r="${r - 34}" class="v-ring v-ring2"/>` +
-        m.map(([zh, en], i) => { const a = (i / 6) * Math.PI * 2 - Math.PI / 2, x = cx + r * Math.cos(a), y = cy + r * Math.sin(a);
-          return `<g class="v-step" style="--i:${i}"><path class="v-spoke" d="M${cx} ${cy}L${x.toFixed(1)} ${y.toFixed(1)}"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="23" class="v-mod"/><text x="${x.toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="middle" class="v-t">${T(zh, en)}</text></g>`; }).join("") +
-        `<circle cx="${cx}" cy="${cy}" r="30" class="v-core"/><text x="${cx}" y="${cy + 4}" text-anchor="middle" class="v-t v-core-t">${T("数据对象", "data object")}</text>` +
-        `<text x="258" y="40" class="v-s">${T("状态 → 下一步", "STATE → NEXT")}</text>` +
-        chips.map(([zh, en, k], i) => `<g class="v-step" style="--i:${i + 3}" transform="translate(258 ${54 + i * 40})"><rect width="128" height="30" rx="6" class="v-chip ${k}"/><circle cx="13" cy="15" r="3.5" class="v-cd ${k}"/><text x="24" y="19" class="v-t">${T(zh, en)}</text><text x="118" y="19" text-anchor="end" class="v-s">${["→", "…", "↗", "＋"][i]}</text></g>`).join("") +
-        `</svg>`;
-    },
-    analytics() {
-      const bars = [40, 62, 50, 84, 70, 92];
-      return `<svg viewBox="0 0 520 210">` +
-        `<text x="14" y="24" class="v-s">${T("字段", "FIELDS")}</text>` +
-        [[T("地区", "Region"), "dim"], [T("月份", "Month"), "dim"], [T("订单量", "Orders"), "met"], [T("客单价", "Basket"), "met"]].map(([t, k], i) =>
-          `<g class="v-step" style="--i:${i}" transform="translate(14 ${36 + i * 32})"><rect width="104" height="24" rx="12" class="v-pill ${k}"/><text x="14" y="16" class="v-t">${t}</text><text x="92" y="16" text-anchor="end" class="v-s">${k === "dim" ? "Abc" : "#"}</text></g>`).join("") +
-        `<text x="14" y="184" class="v-s">${T("? 字段说明 · 口径 · 示例值", "? definition · sample values")}</text>` +
-        `<g transform="translate(144 20)"><rect width="362" height="176" rx="8" class="v-frame"/>` +
-        `<g class="v-step" style="--i:2"><text x="14" y="22" class="v-s">${T("维度", "DIMENSION")}</text><rect x="70" y="9" width="70" height="20" rx="10" class="v-pill dim"/><text x="84" y="23" class="v-t">${T("月份", "Month")}</text></g>` +
-        `<g class="v-step" style="--i:3"><text x="160" y="22" class="v-s">${T("指标", "METRIC")}</text><rect x="210" y="9" width="76" height="20" rx="10" class="v-pill met"/><text x="224" y="23" class="v-t">${T("订单量", "Orders")}</text></g>` +
-        `<path d="M24 158H344" class="v-track"/>` +
-        bars.map((h, i) => `<rect x="${34 + i * 50}" y="${158 - h}" width="30" height="${h}" rx="3" class="v-bar v-step" style="--i:${i + 3}"/>`).join("") +
-        `<g class="v-step" style="--i:9"><rect x="214" y="36" width="136" height="22" rx="5" class="v-chip c-wait"/><text x="224" y="51" class="v-s">${T("筛选 · 作用范围可见", "filter · scope shown")}</text></g></g></svg>`;
-    },
-    support() {
-      return `<svg viewBox="0 0 560 230"><rect x="12" y="12" width="330" height="206" rx="10" class="v-frame"/>` +
-        `<text x="28" y="36" class="v-s">${T("描述问题", "DESCRIBE THE PROBLEM")}</text>` +
-        `<rect x="28" y="44" width="298" height="54" rx="6" class="v-row"/><text x="40" y="66" class="v-t">${T("上传文件失败，提示权限不足……", "Upload fails with “access denied”…")}</text><rect x="40" y="76" width="1.5" height="12" class="v-caret"/>` +
-        `<g class="v-step" style="--i:1"><rect x="236" y="104" width="90" height="24" rx="12" class="v-btn"/><text x="281" y="120" text-anchor="middle" class="v-t v-btn-t">${T("✦ AI 解答", "✦ AI answer")}</text></g>` +
-        [[T("产品分类", "Product"), T("对象存储", "Object storage")], [T("问题类型", "Issue type"), T("权限与访问", "Access & permissions")]].map(([k, v], i) =>
-          `<g class="v-step" style="--i:${i + 2}" transform="translate(28 ${140 + i * 36})"><text x="0" y="15" class="v-s">${k}</text><rect x="76" y="0" width="222" height="24" rx="5" class="v-row v-filled"/><text x="88" y="16" class="v-t">${v}</text><rect x="252" y="5" width="38" height="14" rx="3" class="v-ai"/><text x="271" y="15" text-anchor="middle" class="v-s v-ai-t">AI</text></g>`).join("") +
-        `<text x="362" y="36" class="v-s">${T("相关推荐", "SUGGESTED")}</text>` +
-        [[T("工具", "Tool"), T("权限诊断", "Access check")], [T("案例", "Case"), T("上传报错排查", "Upload error fix")], [T("文档", "Doc"), T("访问策略说明", "Access policy")]].map(([k, v], i) =>
-          `<g class="v-step" style="--i:${i + 3}" transform="translate(362 ${46 + i * 42})"><rect width="186" height="34" rx="6" class="v-row"/><text x="12" y="21" class="v-s">${k}</text><text x="54" y="21" class="v-t">${v}</text></g>`).join("") +
-        `<g class="v-step" style="--i:7" transform="translate(362 182)"><rect width="186" height="34" rx="17" class="v-chip c-wait"/><text x="93" y="21" text-anchor="middle" class="v-t">${T("没解决？带上下文转人工 →", "Still stuck? Hand off →")}</text></g></svg>`;
-    }
-  };
-  // r11: the chapter is one console — case tabs + one panel at a time, switched by scroll on desktop or by the tabs
-  let wkActive = 0;
+  /* ------------------------------------------------------------------ 03 Design Work: case studies from MANIFEST.work (r13) */
+  // Head: capabilities + method. Body: a sticky index (01–05) and one article per case in a single grid template —
+  // text (summary, problem, decisions, result) beside a lead screen and smaller screens with captions.
+  // Images are plain <img> files (desktop + "-sm" phone size), lazy and async, with width / height set against layout shift.
+  const smOf = (src) => src.replace(/\.webp$/, "-sm.webp");
+  function figure(c, im, k, lead) {
+    const smW = Math.round(Math.min(im.w, k === 0 || im.h <= im.w ? 720 : 560));
+    return `<figure class="wfig${lead ? " wfig-lead" : ""}">
+        <div class="wfig-frame"><img src="${im.src}" srcset="${smOf(im.src)} ${smW}w, ${im.src} ${im.w}w"
+          sizes="${lead ? "(max-width: 760px) 100vw, 56vw" : "(max-width: 760px) 80vw, 28vw"}"
+          width="${im.w}" height="${im.h}" loading="lazy" decoding="async" alt="${esc(L(im.alt))}"></div>
+        <figcaption class="mono"><b>${pad(c)}.${k + 1}</b>${esc(L(im.caption))}</figcaption>
+      </figure>`;
+  }
   function renderWork() {
-    const W = M.work;
+    const W = M.work, n = W.cases.length;
     $("#workCaps").innerHTML = W.capabilities.map((c, i) =>
       `<li class="cap cap-${c.id}" style="--i:${i}"><b class="mono">${pad(i + 1)}</b><span><strong>${esc(L(c.title))}</strong><em class="mono">${L(c.tags).map(esc).join(" · ")}</em></span></li>`).join("");
     $("#workMethod").innerHTML =
       `<p class="wk-sec mono">${esc(L(W.methodNote))}</p><ol class="wk-method mono">${L(W.method).map((m, i) => `<li style="--i:${i}"><b>${pad(i + 1)}</b>${esc(m)}</li>`).join("")}</ol>`;
-    $("#workTabs").innerHTML = W.cases.map((c, i) =>
-      `<button type="button" role="tab" class="wk-tab case-${c.id}" id="wkTab-${c.id}" aria-controls="wkPanel-${c.id}" data-i="${i}"><b class="mono">${pad(i + 1)}</b><span>${esc(c.title)}</span><i aria-hidden="true"></i></button>`).join("");
-    $("#workCases").innerHTML = W.cases.map((c, i) =>
-      `<article class="case case-${c.id}" role="tabpanel" id="wkPanel-${c.id}" aria-labelledby="wkTab-${c.id}" data-i="${i}">
-        <div class="case-vis" aria-hidden="true">${WV[c.id]()}<span class="wk-scan"></span></div>
-        <div class="case-body">
-          <p class="case-tag mono"><span>${pad(i + 1)} / ${pad(W.cases.length)}</span>${esc(L(c.domain))}</p>
-          <h4>${esc(c.title)}</h4>
+    $("#workIndex").setAttribute("aria-label", T("案例索引", "Cases"));
+    $("#workIndex").innerHTML = `<ol>${W.cases.map((c, i) =>
+      `<li><a href="#case-${c.id}" class="case-${c.id}" data-i="${i}"><b>${pad(i + 1)}</b><span>${esc(c.title)}</span></a></li>`).join("")}</ol>`;
+    $("#workCases").innerHTML = W.cases.map((c, i) => {
+      const [lead, ...rest] = c.images;
+      return `<article class="wcase case-${c.id}" id="case-${c.id}" data-i="${i}" aria-labelledby="case-h-${c.id}">
+        <div class="wcase-text" data-preset="reveal-up">
+          <p class="case-tag mono"><span>${pad(i + 1)} / ${pad(n)}</span>${esc(L(c.domain))}</p>
+          <h3 class="case-h" id="case-h-${c.id}">${esc(c.title)}</h3>
           <p class="case-sum">${esc(L(c.summary))}</p>
           <dl class="case-pmr">
-            <dt class="mono">${T("问题", "Problem")}</dt><dd>${esc(L(c.problem))}</dd>
-            <dt class="mono">${T("关键决策", "Key move")}</dt><dd>${esc(L(c.move))}</dd>
+            <dt class="mono">${T("问题", "The problem")}</dt><dd>${esc(L(c.problem))}</dd>
+            <dt class="mono">${T("我的做法", "What I did")}</dt><dd><ol class="case-dec">${c.decisions.map((d) => `<li>${esc(L(d))}</li>`).join("")}</ol></dd>
             <dt class="mono">${T("结果", "Outcome")}</dt><dd>${esc(L(c.result))}</dd>
           </dl>
         </div>
-      </article>`).join("");
-    $$("#workCases .case-vis svg").forEach((sv) => sv.style.setProperty("--vbw", sv.viewBox.baseVal.width + "px"));
-    $$(".wk-tab").forEach((b) => b.addEventListener("click", () => pickCase(+b.dataset.i)));
-    setCase(wkActive, true);
+        <div class="wcase-media" data-preset="reveal-up">
+          ${figure(i + 1, lead, 0, true)}
+          <div class="wfig-row${rest.length === 1 ? " is-one" : ""}">${rest.map((im, k) => figure(i + 1, im, k + 1, false)).join("")}</div>
+        </div>
+      </article>`;
+    }).join("");
+    // re-rendered on every language switch: the new blocks join the reveal observer (the ones in view reveal at once)
+    $$("#workCases [data-preset]").forEach((el) => presetIO.observe(el));
+    wkActive = -1;
   }
-  function setCase(i, force) {
-    if (i === wkActive && !force) return;
-    wkActive = i;
-    $$(".wk-tab").forEach((b, k) => { b.classList.toggle("is-on", k === i); b.classList.toggle("is-done", k < i); b.setAttribute("aria-selected", k === i ? "true" : "false"); b.tabIndex = k === i ? 0 : -1; });
-    $$("#workCases .case").forEach((el, k) => { el.classList.toggle("is-on", k === i); el.classList.toggle("is-in", k === i); el.hidden = k !== i; });
-  }
-  // tabs: on the pinned desktop stage, scroll to that case's slice (so scroll and tabs never disagree); otherwise switch in place
-  function pickCase(i) {
-    const st = $('[data-stage="work"]');
-    if (isMobile() || !st.offsetHeight || st.offsetHeight <= st.firstElementChild.offsetHeight + 4) { setCase(i); return; }
-    const span = st.offsetHeight - st.firstElementChild.offsetHeight, n = M.work.cases.length;
-    const top = st.getBoundingClientRect().top + scrollY + span * (0.12 + 0.86 * (i + 0.5) / n);
+  let wkActive = -1;
+  $("#workIndex").addEventListener("click", (e) => {
+    const a = e.target.closest("a[data-i]"); if (!a) return;
+    e.preventDefault();
+    const el = document.getElementById(a.getAttribute("href").slice(1));
+    const top = el.getBoundingClientRect().top + scrollY - ($(".topbar").offsetHeight + $("#workIndex").offsetHeight) + 1;
     window.scrollTo({ top, behavior: reduced ? "auto" : "smooth" });
-  }
-  $("#workTabs").addEventListener("keydown", (e) => {
-    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
-    const n = M.work.cases.length, i = (wkActive + (e.key === "ArrowRight" ? 1 : n - 1)) % n;
-    pickCase(i); setCase(i); $(`#workTabs .wk-tab[data-i="${i}"]`).focus(); e.preventDefault();
   });
 
   function sizeStages() {
     order.forEach((p) => {
       const st = $(`[data-stage="${p.key}"]`);
-      if (st) st.style.height = isMobile() ? "" : p.stageHeightVh + "vh";
+      if (st) st.style.height = isMobile() || p.stageHeightVh == null ? "" : p.stageHeightVh + "vh";
     });
   }
 
@@ -532,18 +472,26 @@
     desk.style.setProperty("--printing", printing);
   }
 
-  /* ---- 03 Design Work: case console. Stage progress → which case is on (5 equal slices after a short intro);
-     inside a slice, the tab's progress line fills and a scanline sweeps down the diagram. */
-  const wkPin = $("#work .pin");
-  function workStage(p) {
-    const still = isMobile() || reduced;
-    const n = M.work.cases.length;
-    const intro = still ? 1 : sstep(0, 0.1, p);
-    wkPin.style.setProperty("--in", intro.toFixed(3));
-    if (isMobile()) { wkPin.style.setProperty("--sub", "1"); return; }
-    const q = clamp((p - 0.12) / 0.86) * n, i = Math.min(n - 1, Math.floor(q));
-    setCase(i);
-    wkPin.style.setProperty("--sub", (p >= 0.98 ? 1 : clamp(q - i)).toFixed(3));
+  /* ---- 03 Design Work (r13): the sticky index follows the case in view; lead screens drift a few px (parallax) */
+  const wkIdx = $("#workIndex");
+  function workStage() {
+    const cases = $$("#workCases .wcase"), mid = innerHeight * 0.42;
+    let on = 0;
+    cases.forEach((el, i) => {
+      const r = el.getBoundingClientRect();
+      if (r.top < mid) on = i;
+      if (!reduced && !isMobile()) {
+        const img = el.querySelector(".wfig-lead img");
+        if (img && r.bottom > 0 && r.top < innerHeight) img.style.setProperty("--py", (clamp((innerHeight / 2 - (r.top + r.height / 2)) / innerHeight, -1, 1) * 14).toFixed(1) + "px");
+      }
+    });
+    if (on !== wkActive) {
+      wkActive = on;
+      $$("a", wkIdx).forEach((a, k) => { a.classList.toggle("is-on", k === on); a.classList.toggle("is-done", k < on); if (k === on) a.setAttribute("aria-current", "true"); else a.removeAttribute("aria-current"); });
+      // phones: keep the active entry in view inside the horizontally scrolling index
+      const a = $$("a", wkIdx)[on], ol = $("ol", wkIdx);
+      if (a && ol.scrollWidth > ol.clientWidth) ol.scrollTo({ left: a.offsetLeft - 20, behavior: reduced ? "auto" : "smooth" });
+    }
   }
   /* ---- 04 Steam */
   const stPin = $("#steam .pin"), stRange = $("#stRange");

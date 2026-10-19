@@ -1,4 +1,4 @@
-"""r8 alignment check (r10: Design Work is chapter 03, its slots join the chapter groups; r11: console groups work-left / case): every heading / subtitle / paragraph / status row inside one text block must share a left edge (±1px).
+"""r8 alignment check (r10: Design Work is chapter 03, its slots join the chapter groups; r11: console groups work-left / case; r13: case-study groups work-side / case-<id> / media-<id>): every heading / subtitle / paragraph / status row inside one text block must share a left edge (±1px).
 Usage: python3 scripts/align.py [tag]   (server: python3 -m http.server 8801). Runs chromium, webkit, firefox × desktop/mobile × en/zh."""
 import sys, json
 from playwright.sync_api import sync_playwright
@@ -17,20 +17,24 @@ JS = r"""() => {
   const groups = {};
   // text blocks: first rendered glyph; containers (grids / boxes holding SVG): content-box edge
   const C = (el) => { const b = el.getBoundingClientRect(), cs = getComputedStyle(el); return b.left + parseFloat(cs.paddingLeft) + parseFloat(cs.borderLeftWidth); };
-  const BOX = /wk-caps|wk-method|case-pmr|also-list|foot-meta|slot-row|draft-row|hero-note-sub/;
+  const BOX = /wk-caps|wk-method|case-pmr|wfig|foot-meta|slot-row|draft-row|hero-note-sub/;
   const add = (g, sel, root = document) => root.querySelectorAll(sel).forEach((el) => { if (vis(el)) (groups[g] = groups[g] || []).push([sel + (el.id ? "#" + el.id : ""), BOX.test(sel) ? C(el) : L(el)]); });
   add("hero", ".hero-copy .kicker"); add("hero", ".hero-h > span"); add("hero", "#heroNote"); add("hero", ".hero-note-sub");
   document.querySelectorAll(".chapter").forEach((sec) => {
     const g = sec.id, h = sec.querySelector("header.slots");
     ["slot-index", "slot-title", "slot-tagline", "slot-blurb", "slot-row", "draft-row"].forEach((c) => add(g, ":scope > ." + c, h));
   });
-  // r11: Design Work console — left column (title, capabilities, method) shares one edge; the visible case body is its own block
-  add("work-left", "#work .slot-title"); add("work-left", ".wk-caps-box > .wk-sec"); add("work-left", ".wk-caps"); add("work-left", ".wk-method-box > .wk-sec"); add("work-left", ".wk-method");
-  add("also", "#also .kicker"); add("also", ".also-list");
+  // r13: Design Work — the head's right column (capabilities, method, note) shares one edge; each case's text block shares
+  // one edge, and its lead screen and smaller screens share another (desktop: two columns; phone: the row scrolls, so lead only)
+  add("work-side", ".wk-caps-box > .wk-sec"); add("work-side", ".wk-caps"); add("work-side", ".wk-method-box > .wk-sec"); add("work-side", ".wk-method"); add("work-side", ".wk-note");
+  document.querySelectorAll(".wcase").forEach((c) => {
+    ["case-tag", "case-h", "case-sum", "case-pmr"].forEach((k) => add("case-" + c.id, ":scope ." + k, c));
+    add("media-" + c.id, ":scope .wfig-lead", c);
+    if (innerWidth > 760) add("media-" + c.id, ":scope .wfig-row > .wfig:first-child", c);
+  });
   add("about", ".about-h > span:first-child");
   add("about-col", ".about-p > p");
   add("footer", ".foot-h > span:first-child"); add("footer", ".foot-meta");
-  document.querySelectorAll(".case.is-on .case-body").forEach((b) => ["case-tag", "case-sum", "case-pmr"].forEach((c) => add("case", ":scope > ." + c, b)) || add("case", ":scope > h4", b));
   return groups;
 }"""
 bad = 0

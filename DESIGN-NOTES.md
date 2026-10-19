@@ -393,3 +393,84 @@ CONTENT-DRAFT.md 的 9 个待确认项都还在，页面上对应位置已经标
 - 「页面上的 Louis 是我的形象，由 AI 生成」是 Hero 简介里唯一解释 Louis 的一句话，请确认这个说法可以。
 - Hero 标题为了保持 3 行，把「做软件的 UX 设计师」拆成了「我是 UX 设计师，／做软件，眼下主要做 AI 工具」。
 - 文案仍然是草稿（OPEN-3），音频没有生成。
+
+## 13. r13（批 A：删「手头还有」· 设计作品改为完整案例，2026-10-19）
+
+这一节只写批 A（任务第 1、2 项）。批 B（3D 视效）尚未开始，做完后在本节追加。没有新依赖，没有调用外部生成服务；没有 push，没有部署。
+
+### 13.1 删除「手头还有 / Also on the bench」
+- 删掉了 `index.html` 里整个 `<section class="secondary" id="also">`，其中两个条目是「Agent 工程体系 / Agent engineering system」和「supplier-link-analysis」。
+- 同时清理了以下残留：
+  - CSS 里的 `.secondary` / `.also-list` 及其手机规则；
+  - `align.py` 的 `also` 分组；
+  - `shoot.py` 的 `09-also` 截图，改名为 `09-about`。
+- 「关于」一节补了上边线，原来这条线由 also 一节提供。
+- 导航、页脚、manifest 和制作日志里原本就没有指向它的锚点或引用。
+- 全站检索过 also / supplier / 手头还有 / Agent engineering：站点文件里已经没有残留。louis.js 注释里有一个英文单词 also，与此无关。
+
+### 13.2 设计作品（03）的新结构
+放弃 r11 的单屏控制台和页签，改成按顺序往下读的案例叙事。本章不再 pin：manifest 里 `stageHeightVh: null`，`sizeStages` 会跳过它；整章像普通页面一样滚动。
+- **章首**：左边是标题槽（和其他章同一套）。右边是「核心能力」，排成 2 × 2，每项带标签行；下面是方法条（对象 → 角色 → 流程 → 状态 → 规则 → 页面）和小注「界面图为脱敏示意 / Screens are anonymized mockups」。旧小注「示意图用 HTML/SVG 绘制，不是产品截图」已删除。
+- **吸顶案例索引**：一条 01–05 的横条，贴在顶栏下方，只在本章范围内吸顶。滚动时，当前案例的编号变成案例色，下面有一条下划线；点击会平滑滚到对应案例。手机上这条索引可以横向滑动，并自动把当前项滚进可视范围。
+- **案例模板**（五个案例统一）：12 栏里左 5 右 7。
+  - 左栏依次是：编号 / 领域、标题、一句话概述、「问题」、「我的做法」（3 条编号的设计决策；Support 也是 3 条）、「结果」。
+  - 右栏是一张主图，下面并排两张次图，每张都带编号图注（如 `02.1`）。Support 只有一张次图，它占满一行。
+  - 所有图都放在同一种框里：16:10、圆角 14px（次图 10px）、细边框、浅灰底，`object-fit: contain`，不裁切内容。
+  - 左栏文字只在屏幕高度超过 1060px 时吸顶，这时整段文字能完整放下；更矮的屏幕里，文字与主图顶对齐，跟着页面一起滚动。
+- **动效**：沿用现有的 `reveal-up`（滚动渐显）；主图随滚动有 ±14px 的轻微视差（`--py`）。手机和 reduced-motion 下没有视差，索引也不做过渡。
+- **手机**：单列，图在文上，主图全宽；两张次图做成横向 scroll-snap 的一行，每张占 78% 宽，避免五个案例加起来太长。图注 11px。
+- **数据**：manifest 的 `work.cases[]` 字段改为 `summary / problem / decisions[] / result / images[{src, w, h, alt, caption}]`，全部中英双语，第一人称。
+  - 文字由旧站 `projects/<case>/index.html` 整理而来：没有数字（旧站里的「6 类 / 7+ 团队 / 4 类模式」等全部去掉），没有产品名（OBS、云宝助手），「云内部」改成「某云平台内部」。
+  - r11 的 `problem / move` 单句字段和 HTML/SVG 示意图（`WV`）已删除，代码量反而减少：app.js gzip 后从 19.1KB 降到 16.3KB。
+- **图片**：用 `<img srcset>` 同时提供桌面图和 `-sm` 手机图，带 `loading="lazy" decoding="async"`，并写了 width / height。alt 和图注随语言切换（切换语言时整章重新渲染）。没有任何 base64 进 JS。
+- 制作日志新增一行「『设计作品』改成完整案例，配上原来的界面图」。
+
+### 13.3 选图清单与合规
+图片由 `scripts/work_images.py`（一次性脚本，可重跑）从旧站读取，旧站目录只读，没有改动。脚本用 Pillow 生成 WebP（q82, method 6），输出到 `assets/work/`。
+
+| 案例 | 主图（桌面 1400 宽） | 次图（桌面 1000 宽） |
+|---|---|---|
+| Agent Builder | workflow-editor（工作流编排） | process-visible（执行调试）、xinxi（信息架构） |
+| Data Annotation | annotation-workbench（标注工作台） | task-distribution（创建与分发）、review-dashboard（进度与验收） |
+| Data Platform | data-platform-hero（工作台） | permission-consumption（权限状态）、information-architecture |
+| Self-Service Analytics | analytics-hero（分析工作台） | data-field-selection、chart-config-panel |
+| Support | ai-process-recommendation-flow（方案结构） | problem-overview（760 宽，竖图） |
+
+**逐张检查**：先做拼版总览，再把候选图放大看。重点查四类问题：前雇主或云产品名称、logo、真人、内部数字。
+- 只有 Support 的 problem-overview 有问题：其中一张卡片的说明写着「云宝助手……」。处理方式是把四张卡片的说明文字一起抹掉（逐行用卡片底色渐变填平），只留标题和图标，这样四张卡片看起来一致。图注写明了这几处说明已隐去。
+- 界面图里的「GPT-4.1」是第三方模型名，不是前雇主；「Task #10456」「18,560」这类是示意界面里的假数据，可以使用。旧站自己也注明「内部产品页面图片由 AI 生成，仅示例业务」。
+- 没有选用的图：
+  - 所有 outcome-summary：图上是旧站的成果数字；
+  - 03-data-platform 能力图：带销售额等数字；
+  - 各个 cover 和 3D 图标插画：信息量低。
+
+**体积**：
+- 桌面共 14 张，单张 20–58KB；手机 14 张，13–23KB。
+- 全部 28 个文件合计 **718KB**（上限 1.6MB，单张上限 90KB）。
+- 本章首屏不加载任何一张图（全部懒加载）。
+
+### 13.4 部署脚本
+`/workspace/scripts/build-ailiu-preview-deploy.sh` 现在会额外做这些事：
+- 把 `assets/` 原样复制过去；
+- 复制 `louis-fallback.png`（原脚本没有复制它，部署目录里那份是手动放的）；
+- 为每个二进制文件生成 `files.json`，格式为 `[{file, sha, gitSha, size}]`。`sha` 是文件字节的 sha1；另外加了 `gitSha`（git blob sha），方便 GitHub contents API 使用；
+- 在 `b64/` 下按原路径输出 `.b64`（例如 `b64/assets/work/agent-1.webp.b64`）；
+- 保留原来的 `louis-fallback.b64`。
+
+已跑过：共 29 个二进制文件（28 张 webp + 回退头像），`bundle.js` 通过 `node --check`，并且包含 louis-data。
+
+### 13.5 自检（批 A）
+- `align.py r13a`：chromium / webkit / firefox × 1440 / 390 × en / zh，共 23 组，全部 **0 处不齐、0 溢出、0 错误**。新增的分组有：
+  - `work-side`：能力、方法、小注；
+  - 每个案例的文字块 `case-<id>`；
+  - 每个案例的图片列 `media-<id>`（桌面上主图和次图左边对齐）。
+- `shoot.py r13`：桌面和手机 × 中英，控制台 0 错误，横向溢出 0。逐张看了两轮：第一轮看全站拼版，第二轮看设计作品单帧原尺寸。修掉的问题有：
+  1. 1440×900 下吸顶的案例文字比可视高度长，下半截被字幕带挡住 → 改成只在 ≥1060px 高的屏幕上吸顶；
+  2. Support 的竖图在框里被裁切 → 图片改为绝对定位，`contain` 能正确生效。
+- 代表性截图：`/workspace/deliverables/ailiu-preview-v2-shots/r13-desktop-work-1.png`（章首 + 索引）、`r13-desktop-work-2.png`（案例 02）、`r13-mobile-work.png`。
+
+### 13.6 遗留（批 A）
+- 「核心能力」的英文标签行在 1440 宽时会折成两行（如「Controllable runs」），不影响阅读。
+- 章首下方到第一个案例之间留白偏大（章首 9vh + 案例 12vh）。这是为了和其他章的节奏一致，如果觉得空可以收窄。
+- 本章比其他章长（桌面约 6.3 屏，手机约 9.5 屏）。这是「内容更充实」的代价，§13-7 的「同权」在这里不成立，请确认可以接受。
+- Support 只有两张可用的图（旧站只有这两张），所以次图只有一张。

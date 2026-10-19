@@ -22,19 +22,12 @@ def run(pw, name, vp, mobile):
     for i, k in enumerate(KEYS, 1):
         info = pg.evaluate("""k => { const s = document.getElementById(k); const r = s.getBoundingClientRect();
             return {top: r.top + scrollY, h: r.height, vh: innerHeight}; }""", k)
-        if k == "work" and not mobile:
-            # r11: one pinned console — intro + one frame per case slice
-            for j, f in enumerate([0.04, 0.2, 0.37, 0.55, 0.72, 0.9]):
-                pg.evaluate(f"window.scrollTo(0,{info['top'] + f * (info['h'] - info['vh'])})"); pg.wait_for_timeout(1200)
-                pg.screenshot(path=f"{OUT}/{TAG}-{name}-{LANG}-{i:02d}-{k}-{j}.png")
-        elif k == "work":
-            # r11 mobile: scroll the stack, then pick the last case from the tabs
+        if k == "work":
+            # r13: case studies scroll as a page — one frame every 0.85 screens, desktop and phone
             n = max(1, int(-(-info["h"] // (info["vh"] * 0.85))))
             for j in range(n):
                 pg.evaluate(f"window.scrollTo(0,{info['top'] + j * info['vh'] * 0.85})"); pg.wait_for_timeout(900)
-                pg.screenshot(path=f"{OUT}/{TAG}-{name}-{LANG}-{i:02d}-{k}-{j}.png")
-            pg.evaluate("document.querySelector('#workTabs .wk-tab[data-i=\"4\"]').click(); document.getElementById('workConsole').scrollIntoView()"); pg.wait_for_timeout(900)
-            pg.screenshot(path=f"{OUT}/{TAG}-{name}-{LANG}-{i:02d}-{k}-pick.png")
+                pg.screenshot(path=f"{OUT}/{TAG}-{name}-{LANG}-{i:02d}-{k}-{j:02d}.png")
         elif mobile:
             n = max(1, int(-(-info["h"] // (info["vh"] * 0.85))))
             for j in range(n):
@@ -47,7 +40,7 @@ def run(pw, name, vp, mobile):
                 pg.evaluate(f"window.scrollTo(0,{y})"); pg.wait_for_timeout(900)
                 pg.screenshot(path=f"{OUT}/{TAG}-{name}-{LANG}-{i:02d}-{k}-{j}.png")
     pg.evaluate("window.scrollTo(0, document.body.scrollHeight - innerHeight*2.2)"); pg.wait_for_timeout(800)
-    pg.screenshot(path=f"{OUT}/{TAG}-{name}-{LANG}-09-also.png")
+    pg.screenshot(path=f"{OUT}/{TAG}-{name}-{LANG}-09-about.png")
     pg.evaluate("window.scrollTo(0, document.body.scrollHeight)"); pg.wait_for_timeout(800)
     pg.screenshot(path=f"{OUT}/{TAG}-{name}-{LANG}-10-footer.png")
     overflow = pg.evaluate("[document.documentElement.scrollWidth - innerWidth, innerWidth]")
