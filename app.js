@@ -41,9 +41,8 @@
     const ogl = $('meta[property="og:locale"]'); if (ogl) ogl.content = lang === "zh" ? "zh_CN" : "en_US";
     $$("[data-en]").forEach((el) => { el.textContent = el.dataset[lang] || el.dataset.en; });
     $$("[data-lang-opt]").forEach((el) => el.classList.toggle("on", el.dataset.langOpt === lang));
-    fillSlots(); renderWork(); buildNav(); renderSound(); buildTranscript(); renderLog();
+    fillSlots(); renderWork(); buildNav(); renderSound(); renderLog();
     measureAviso(); reelTxt = "";
-    narrator.onLang();
   }
   $("#langBtn").addEventListener("click", () => {
     lang = lang === "en" ? "zh" : "en";
@@ -309,129 +308,15 @@
 
   /* ------------------------------------------------------------------ Louis instances */
   // r12: a portrait that can't start leaves its static fallback (CSS) and a no-op stand-in; the page carries on
+  // r17: the caption bar (and its mini portrait) is gone; the hero portrait rides the shared wave with the WebGL field
   const mountLouis = (opts, el) => {
     try { return new Louis(opts).mount(el); }
-    catch (e) { el.classList.add("is-fallback"); return { lvl: 0, setState() {}, setLevel() {}, dock() {}, destroy() {} }; }
+    catch (e) { el.classList.add("is-fallback"); return { setState() {}, dock() {}, destroy() {} }; }
   };
-  const louisHero = mountLouis({ lines: 96, samples: 200 }, $("#louisHero"));
-  const louisMini = mountLouis({ lines: 30, samples: 64, relief: 0.8, interactive: false, glitch: false, mini: true, fps: 30, bg: "#060607" }, $("#narFace"));
-  const louisWild = mountLouis({ lines: 100, samples: 200, bg: "#050507", colorA: [185, 166, 255], colorB: [150, 232, 255], sweater: [122, 166, 150] }, $("#louisWild"));
-  const louises = [louisHero, louisMini, louisWild];
+  const louisHero = mountLouis({ lines: 96, samples: 200, wave: true }, $("#louisHero"));
+  mountLouis({ lines: 100, samples: 200, bg: "#050507", colorA: [185, 166, 255], colorB: [150, 232, 255], sweater: [122, 166, 150] }, $("#louisWild"));
 
-  /* ------------------------------------------------------------------ narrator (captions; §4.5 rules) */
-  // r6: the queue is keyed to where the reader *is*, not where they have been.
-  //  · a chapter only counts as "said" once its line actually starts (skipped chapters stay eligible);
-  //  · a queued line is dropped the moment its chapter stops being the current one (§4.5-3);
-  //  · a playing line whose chapter is ≥2 chapters behind fades out (200ms) and hands over at once;
-  //  · otherwise one line at a time with a ≥1.2s gap (§4.5-1).
-  const narrator = (() => {
-    const sub = $("#narSub"), box = $("#narrator"), idxEl = $("#narIdx"), nextEl = $("#narNext");
-    let nextTxt = "";
-    const said = new Set();
-    const FADE = 200, GAP = 1200;
-    let cur = null, queued = null, coolUntil = 0, startT = 0, dur = 0, words = [], fadeUntil = 0, shown = null, here = "hero", lastN = -1;
-    const estimate = (txt) => Math.max(1800, lang === "zh" ? (txt.length / 4.5) * 1000 : (txt.length / 15) * 1000);
-    const idxOf = (id) => (id === "hero" ? 0 : id ? order.indexOf(byKey[id]) + 1 : order.length + 1);
-    function lineFor(id) {
-      if (id === "hero") return { id, idx: 0, text: L(M.hero.narration[0].subtitle) };
-      const p = byKey[id]; return { id, idx: idxOf(id), text: L(p.narration[0].subtitle) };
-    }
-    function render(text) {
-      const parts = lang === "zh" ? Array.from(text) : text.split(/(\s+)/);
-      sub.innerHTML = parts.map((w) => (/^\s+$/.test(w) ? w : `<span class="w">${w.replace(/</g, "&lt;")}</span>`)).join("");
-      words = $$(".w", sub); lastN = -1;
-    }
-    function setIdx(n) { idxEl.textContent = `${pad(n)} / ${pad(order.length)}`; }
-    function play(line) {
-      said.add(line.id);
-      cur = line; shown = line.id; startT = performance.now(); dur = estimate(line.text);
-      render(line.text);
-      box.classList.remove("is-idle", "is-stale", "is-out");
-      setIdx(line.idx);
-      louises.forEach((l) => l.setState("talk"));
-    }
-    function finish(now) {
-      cur = null; coolUntil = now + GAP; box.classList.add("is-idle");
-      words.forEach((w) => w.classList.add("on")); sub.querySelectorAll(".now").forEach((w) => w.classList.remove("now"));
-      louises.forEach((l) => l.setState("idle"));
-    }
-    // called by the dwell detector: ≥55% of the viewport for ≥450ms (§4.5-2)
-    function request(id, force) {
-      if (!force && said.has(id)) return;
-      if (!force && id !== here) return;
-      if (!cur && !fadeUntil && performance.now() >= coolUntil) return play(lineFor(id));
-      queued = id;
-    }
-    // where the reader is right now ("hero", a chapter key, or null below the chapters)
-    function setHere(id) {
-      if (id === here) return;
-      here = id;
-      if (queued && queued !== here) queued = null;        // stale: drop, do not mark as said
-      if (!cur) idleView();
-    }
-    // when nothing is speaking, the bar shows the current chapter: its line if already heard (dim), else a quiet placeholder
-    function idleView() {
-      const n = idxOf(here);
-      if (!here || n > order.length) return;
-      setIdx(n);
-      if (shown === here) { box.classList.remove("is-stale"); return; }
-      if (said.has(here)) { shown = here; render(lineFor(here).text); words.forEach((w) => w.classList.add("on")); box.classList.remove("is-stale"); }
-      else { box.classList.add("is-stale"); render(""); shown = null; }
-    }
-    function tick(now) {
-      let level = 0;
-      if (fadeUntil) {
-        if (now >= fadeUntil) { fadeUntil = 0; box.classList.remove("is-out"); if (queued) { const q = queued; queued = null; play(lineFor(q)); } else idleView(); }
-      } else if (cur) {
-        // fast scroll: the reader is already 2+ chapters past this line → fade out 200ms, cut to the current chapter
-        if (here !== cur.id && Math.abs(idxOf(here) - cur.idx) >= 2) {
-          cur = null; fadeUntil = now + FADE; box.classList.add("is-out");
-          louises.forEach((l) => l.setState("idle"));
-        } else {
-          const t = (now - startT) / dur;
-          const n = reduced ? words.length : Math.ceil(clamp(t) * words.length); // §5.4: static captions under reduced motion
-          if (n !== lastN) {
-            for (let i = 0; i < words.length; i++) { words[i].classList.toggle("on", i < n); words[i].classList.toggle("now", i === n - 1); }
-            lastN = n;
-          }
-          // synthetic speech envelope (stand-in for AnalyserNode RMS until audio exists)
-          if (soundOn && t < 1) level = 0.28 + 0.42 * Math.abs(Math.sin(now / 90)) * (0.5 + 0.5 * Math.sin(now / 370));
-          if (t >= 1) { finish(now); if (here !== shown) idleView(); }
-        }
-      } else if (queued && now >= coolUntil) {
-        const q = queued; queued = null;
-        if (q === here) play(lineFor(q));
-      } else if (!queued && here !== shown && here) idleView();
-      // "→ 03": the next chapter's line is waiting for this one to finish (no overlap, §4.5-1)
-      const nx = (cur || fadeUntil) && here && (!cur || here !== cur.id) && !said.has(here) && idxOf(here) <= order.length ? `→ ${pad(idxOf(here))}` : "";
-      if (nx !== nextTxt) { nextEl.textContent = nx; nextTxt = nx; }
-      louises.forEach((l) => l.setLevel(level));
-      box.style.setProperty("--nar-t", cur ? clamp((now - startT) / dur).toFixed(3) : 1);
-      const r = $("#lvRead"); if (r) r.textContent = level.toFixed(2);
-    }
-    function onLang() {
-      // §4.5-7: stop the current line, no replay; the bar re-renders in the new language
-      if (cur) finish(performance.now());
-      queued = null;
-      if (shown) { render(lineFor(shown).text); words.forEach((w) => w.classList.add("on")); }
-    }
-    // §4.5-6: tab hidden → fade out and clear the queue
-    function stop() {
-      if (cur) { cur = null; fadeUntil = performance.now() + FADE; box.classList.add("is-out"); louises.forEach((l) => l.setState("idle")); }
-      queued = null;
-    }
-    function replay() {
-      const id = here || "hero";
-      if (cur) { cur = null; }
-      fadeUntil = 0; box.classList.remove("is-out"); coolUntil = 0;
-      play(lineFor(id));
-    }
-    return { request, tick, onLang, replay, setHere, stop };
-  })();
-  document.addEventListener("visibilitychange", () => { if (document.hidden) narrator.stop(); });
-  $("#narFace").addEventListener("click", () => { louisMini.setState("react"); narrator.replay(); });
-
-  /* ------------------------------------------------------------------ active chapter, glitch-cut, narration cue */
+  /* ------------------------------------------------------------------ active chapter, glitch-cut */
   let active = null;
   const glitched = new Set();
   function setActive(key, silent) {
@@ -457,7 +342,6 @@
     ind.style.transform = `translateX(${a.parentElement.offsetLeft}px)`;
     ind.style.width = a.offsetWidth + "px";
   }
-  const dwell = {};
   function checkChapters() {
     const vh = innerHeight;
     let best = null, bestCov = 0;
@@ -465,19 +349,13 @@
       const r = document.getElementById(p.key).getBoundingClientRect();
       const cov = clamp((Math.min(vh, r.bottom) - Math.max(0, r.top)) / vh);
       if (cov > bestCov) { bestCov = cov; best = p.key; }
-      // ≥55% of the viewport for ≥450ms → one line, once per session (§4.5-2)
-      if (cov >= 0.55) {
-        if (!dwell[p.key]) dwell[p.key] = performance.now();
-        else if (performance.now() - dwell[p.key] > 450) narrator.request(p.key);
-      } else dwell[p.key] = 0;
     });
     const heroR = $("#top").getBoundingClientRect();
     const heroCov = clamp((Math.min(vh, heroR.bottom) - Math.max(0, heroR.top)) / vh);
     const k = heroCov > bestCov || bestCov < 0.3 ? null : best;
     if (k !== active) setActive(k);
-    narrator.setHere(k || (heroCov >= 0.3 ? "hero" : null));
-    if (heroCov >= 0.55) { if (!dwell.hero) dwell.hero = performance.now(); else if (performance.now() - dwell.hero > 700) narrator.request("hero"); }
-    else dwell.hero = 0;
+    // r17: the hero fills the first screen down to its bottom edge, so the reel band steps aside until it scrolls away
+    document.body.classList.toggle("at-hero", heroR.bottom > vh - 40);
   }
 
   /* ------------------------------------------------------------------ per-stage progress */
@@ -487,7 +365,7 @@
     const span = r.height - st.firstElementChild.offsetHeight; // pin is shorter than the viewport (letterbox, r6)
     return span > 0 ? clamp(-r.top / span) : (r.top < innerHeight ? 1 : 0);
   }
-  // reel / caption progress spans the whole chapter (Design Work's body scrolls on past its pinned stage)
+  // reel progress spans the whole chapter (Design Work's body scrolls on past its pinned stage)
   function chapterProgress(key) {
     const st = $(`[data-stage="${key}"]`), r = document.getElementById(key).getBoundingClientRect();
     const span = r.height - st.firstElementChild.offsetHeight;
@@ -752,7 +630,7 @@
     };
   }, { tick() {} });
 
-  /* ------------------------------------------------------------------ footer voiceprint (Louis's signal, Atomic nod) */
+  /* ------------------------------------------------------------------ footer voiceprint (Atomic nod) */
   const voice = mod(() => {
     const c = $("#voiceprint"), ctx = c && c.getContext("2d");
     if (!ctx) return { tick() {} };
@@ -760,7 +638,7 @@
     function resize() { const dpr = Math.min(2, devicePixelRatio || 1); w = c.clientWidth; h = c.clientHeight; c.width = w * dpr; c.height = h * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); draw(0); }
     new IntersectionObserver(([e]) => { on = e.isIntersecting; }).observe(c);
     function draw(now) {
-      const t = now / 1000, lvl = louisHero.lvl || 0;
+      const t = now / 1000;
       ctx.clearRect(0, 0, w, h);
       const x0 = w * 0.22, x1 = w * 0.78, mid = h / 2;
       ctx.lineWidth = 1;
@@ -772,7 +650,7 @@
         for (let x = x0; x <= x1; x += 4) {
           const u = (x - x0) / (x1 - x0);
           const env = Math.sin(Math.PI * u) ** 1.6;
-          const y = mid + env * h * (0.18 + lvl * 0.15) * Math.sin(u * (3 + k * 0.7) * Math.PI + t * (0.6 + k * 0.13) + k);
+          const y = mid + env * h * 0.18 * Math.sin(u * (3 + k * 0.7) * Math.PI + t * (0.6 + k * 0.13) + k);
           x === x0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
         }
         ctx.stroke();
@@ -805,13 +683,6 @@
     });
     $("#maze").innerHTML = `<path d="${d}"/><circle class="m-s" cx="${o - 3}" cy="${o + cell / 2}" r="2.4"/><circle class="m-e" cx="${o + N * cell + 3}" cy="${o + N * cell - cell / 2}" r="2.4"/>`;
   });
-
-  /* ------------------------------------------------------------------ transcript (readable alternative to audio, §5.5) */
-  function buildTranscript() {
-    const items = [`<li><b>Louis:</b> ${esc(L(M.hero.narration[0].subtitle))}</li>`]
-      .concat(order.map((p, i) => `<li><b>${pad(i + 1)} ${esc(L(V(p, "title")))}:</b> ${esc(L(p.narration[0].subtitle))}</li>`));
-    $("#transcript").innerHTML = items.join("");
-  }
 
   /* ------------------------------------------------------------------ letterbox reel (desktop): one hairline segment per chapter */
   $("#reel").innerHTML = order.map(() => "<li><i></i></li>").join("");
@@ -851,7 +722,6 @@
       }
       run("chapters", checkChapters);
       run("reel", reel);
-      run("narrator", () => narrator.tick(now));
       run("rain", () => rain.tick(now));
       run("voice", () => voice.tick(now));
     }

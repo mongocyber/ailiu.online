@@ -2,8 +2,10 @@
    extracted offline from the approved front reference (scripts/louis_extract.py → louis-data.js).
    2D canvas only: each scanline is a ribbon whose thickness carries the light (engraving style), lifted
    slightly by a soft relief and occluding the rows behind it. No WebGL, no 3D models, no photo pixels.
-   The mouth carries a voice bar driven by --louis-level (setLevel).
-   Fixed interface: mount / setState / setLevel / dock / destroy.
+   r17: the old voice-level motion (mouth bar, level sweep) is gone. The hero portrait now moves in the same wave
+   as the WebGL field (fx3d.js): one shared clock and wave (window.FX_WAVE, below) drive both from a single rAF,
+   and a crest is computed from the same screen position, so it passes through the face and the field together.
+   Interface: mount / setState / dock / destroy.
    r12: hardened for real phones — the backing store is capped (DPR ≤ 2 and a total pixel budget, well under
    iOS's canvas memory limits), every draw is guarded, and the host only drops its static fallback portrait
    (CSS, louis-fallback.png) once a frame has really drawn pixels (.is-live). Any failure → .is-fallback. */
@@ -15,6 +17,52 @@
   // cheap deterministic value noise for "signal" grain on the lines
   const hash = (n) => { const s = Math.sin(n * 127.1) * 43758.5453; return s - Math.floor(s); };
   const noise1 = (x) => { const i = Math.floor(x), f = x - i; const a = hash(i), b = hash(i + 1); return a + (b - a) * f * f * (3 - 2 * f); };
+
+  // ---- r17: shared wave clock (hero portrait + WebGL field) ----
+  // One rAF advances t / phase / pointer / scroll and calls every subscriber (fx3d's draw, each running portrait).
+  // The wave is measured in the frame of the field canvas (#fx3d): x 0..1 across it, u 0..1 down it. A crest band
+  // travels down the screen; the pointer raises a local swell; scrolling the hero away speeds it up and lifts it.
+  // fx3d.js mirrors at() in GLSL, so both draw the same crest at the same place. `on` is true only while the WebGL
+  // field runs (fx=2d / reduced motion → no wave); `scale` and `fps` drop on the low tier.
+  const W = window.FX_WAVE = {
+    t: 0, freq: 1.6, amp: 1, speed: 0.2, phase: 0, bend: 0.35,
+    pointer: { x: 0.5, y: 0.5, k: 0 }, scroll: 0,
+    on: false, scale: 1, fps: 60, aspect: 1.6, box: null,
+    subs: new Set(),
+    at(x, u) {
+      const s = 0.5 + 0.5 * Math.sin(6.2832 * this.freq * u - this.phase + this.bend * Math.sin(x * 5 + this.t * 0.4));
+      const p = this.pointer; let b = 0;
+      if (p.k > 0.01) { const dx = (x - p.x) * this.aspect, du = u - p.y; b = p.k * Math.exp(-(dx * dx + du * du) / 0.01); }
+      return this.scale * this.amp * ((1 + 0.6 * this.scroll) * s * s * s + 0.7 * b);
+    },
+    sub(fn) { this.subs.add(fn); kick(); },
+    unsub(fn) { this.subs.delete(fn); }
+  };
+  let raf = 0, last = 0, prev = 0, cx = -1e4, cy = -1e4, inside = false;
+  addEventListener("pointermove", (e) => { if (e.pointerType === "mouse") { cx = e.clientX; cy = e.clientY; inside = true; } }, { passive: true });
+  document.addEventListener("mouseout", (e) => { if (!e.relatedTarget) inside = false; });
+  document.addEventListener("visibilitychange", () => { prev = 0; kick(); });
+  function kick() { if (!raf && W.subs.size && !document.hidden) raf = requestAnimationFrame(loop); }
+  function loop(now) {
+    raf = 0;
+    if (!W.subs.size || document.hidden) { prev = 0; return; }
+    raf = requestAnimationFrame(loop);
+    if (now - last < 1000 / W.fps - 2) return;
+    const dt = prev ? Math.min(0.1, (now - prev) / 1000) : 0;
+    prev = last = now;
+    const el = document.getElementById("fx3d") || document.getElementById("top");
+    const r = el ? el.getBoundingClientRect() : { left: 0, top: 0, width: innerWidth, height: innerHeight };
+    W.box = r; W.aspect = r.width / Math.max(1, r.height);
+    const hero = document.getElementById("top"), hh = (hero && hero.offsetHeight) || innerHeight;
+    W.scroll = Math.min(1, Math.max(0, scrollY / hh));
+    const p = W.pointer, px = (cx - r.left) / Math.max(1, r.width), py = (cy - r.top) / Math.max(1, r.height);
+    const inBox = inside && px >= 0 && px <= 1 && py >= 0 && py <= 1;
+    if (inBox) { p.x += (px - p.x) * 0.08; p.y += (py - p.y) * 0.08; }
+    p.k += ((inBox ? 1 : 0) - p.k) * 0.05;
+    W.t += dt;
+    W.phase = (W.phase + 6.2832 * W.speed * (1 + W.scroll) * dt) % 6.2832;
+    W.subs.forEach((fn) => { try { fn(now); } catch (e) { W.subs.delete(fn); } });
+  }
 
   // ---- field: decode once, shared by every instance ----
   // zone 0 background · 1 skin · 2 hair · 3 sweater · 4 collar rib; lev 0..1 light; rel 0..1 soft relief
@@ -62,11 +110,11 @@
       this.o = Object.assign({
         lines: 96, samples: 200, bg: "#060607", fps: 60,
         colorA: [150, 232, 255], colorB: [185, 166, 255], sweater: [92, 178, 128],
-        relief: 1.4, fill: 0.98, interactive: true, glitch: true, mini: false
+        relief: 1.4, fill: 0.98, interactive: true, glitch: true, mini: false, wave: false
       }, opts);
-      this.level = 0; this.lvl = 0; this.state = "idle";
+      this.state = "idle";
       this.mouse = { x: 0, y: 0, k: 0, px: 0, py: 0 };
-      this.glitchUntil = 0; this.nextGlitch = performance.now() + 2600;
+      this.glitchUntil = 0; this.nextGlitch = performance.now() + 5000;
       this.slice = null; this.running = false; this.last = 0;
       this.reduced = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
       this.failed = false; this.live = false;
@@ -74,7 +122,7 @@
     mount(el) {
       this.el = el;
       this.resize = this.resize.bind(this);
-      this.frame = this.frame.bind(this);
+      this.tick = this.tick.bind(this);
       try {
         this.fd = field();
         this.c = document.createElement("canvas");
@@ -141,32 +189,23 @@
       if (this.c) { this.c.width = this.c.height = 0; }  // hand the memory back
     }
     setState(s) { this.state = s; if (s === "react") this.glitchUntil = performance.now() + 140; }
-    setLevel(x) { this.level = Math.max(0, Math.min(1, x)); }
     dock(on) { this.el.classList.toggle("is-docked", !!on); }
-    start() { if (this.failed) return; if (this.running || this.reduced) { this.paint(performance.now()); return; } this.running = true; requestAnimationFrame(this.frame); }
-    stop() { this.running = false; }
+    // r17: no rAF of its own; a running portrait subscribes to the shared clock (paused off screen / tab hidden)
+    start() { if (this.failed) return; if (this.running || this.reduced) { this.paint(performance.now()); return; } this.running = true; W.sub(this.tick); }
+    stop() { this.running = false; W.unsub(this.tick); }
     destroy() { this.stop(); this.ro && this.ro.disconnect(); this.io && this.io.disconnect(); window.removeEventListener("pointermove", this.onMove); window.removeEventListener("resize", this.resize); this.c && this.c.remove(); }
-    frame(now) {
-      if (!this.running) return;
-      if (document.hidden) { requestAnimationFrame(this.frame); return; }
-      const minDt = 1000 / this.o.fps;
-      if (now - this.last >= minDt - 1) { this.last = now; this.paint(now); }
-      if (this.running) requestAnimationFrame(this.frame);
+    tick(now) {
+      if (!this.running || this.failed) return;
+      if (now - this.last >= 1000 / this.o.fps - 2) { this.last = now; this.paint(now); }
     }
     draw(now) {
       const { ctx, w, h, o, fd } = this;
-      const t = now / 1000;
-      // attack 40ms / release 180ms smoothing (§4.3)
-      const target = this.level;
-      const k = target > this.lvl ? 0.55 : 0.12;
-      this.lvl += (target - this.lvl) * k;
-      const lvl = this.lvl;
-      if (!o.mini) document.documentElement.style.setProperty("--louis-level", lvl.toFixed(3));
-      // glitch scheduler: one cut <=160ms, never faster than 3Hz
+      const t = this.o.wave ? W.t : now / 1000;
+      // glitch scheduler, kept quiet: one short cut every 5–11 s, small offset
       if (o.glitch && !this.reduced && now > this.nextGlitch) {
-        this.glitchUntil = now + 90 + Math.random() * 60;
-        this.slice = { a: Math.random() * 0.8, b: 0.06 + Math.random() * 0.12, dx: (Math.random() - 0.5) * 0.06 };
-        this.nextGlitch = now + 2200 + Math.random() * 3800 - lvl * 1200;
+        this.glitchUntil = now + 70 + Math.random() * 50;
+        this.slice = { a: Math.random() * 0.8, b: 0.04 + Math.random() * 0.08, dx: (Math.random() - 0.5) * 0.035 };
+        this.nextGlitch = now + 5000 + Math.random() * 6000;
       }
       const glitching = now < this.glitchUntil;
       // cursor: proximity (jitter) + eased parallax (2.5D: near layers shift more than the sweater)
@@ -184,8 +223,15 @@
       const N = o.lines, S = o.samples, gap = ph / N;
       const amp = gap * o.relief;
       const [ar, ag, ab] = o.colorA, [br, bg_, bb] = o.colorB, [sr, sg_, sb] = o.sweater;
-      const A = fd.A, mo = A.mouth;
-      const mouthLvl = Math.max(lvl, this.state === "talk" ? 0.12 : 0);
+      const A = fd.A;
+      // r17: the shared wave, sampled at this canvas's position inside the field's frame (hero portrait only)
+      const waving = o.wave && W.on && !this.reduced && W.box && W.box.width > 0;
+      let wx0 = 0, wxs = 0, wu0 = 0, wus = 0;
+      if (waving) {
+        const hr = this.el.getBoundingClientRect(), B = W.box;
+        wx0 = (hr.left - B.left) / B.width; wxs = 1 / B.width; wu0 = (hr.top - B.top) / B.height; wus = 1 / B.height;
+      }
+      const lift = gap * 1.4;
       // ribbon thickness from light: a hairline for shadow, up to ~0.8 of the row gap for highlights
       const thin = o.mini ? 0.35 : 0.45, thick = gap * (o.mini ? 0.95 : 0.78);
       if (!this.buf || this.buf.length !== (S + 1) * 4) { this.buf = new Float32Array((S + 1) * 4); this.pz = new Uint8Array(S + 1); }
@@ -222,9 +268,9 @@
           const y0 = py0 + fy * ph;
           let dx = 0;
           if (glitching && this.slice && fy > this.slice.a && fy < this.slice.a + this.slice.b) dx = this.slice.dx * pw;
-          dx += shift * (2 + lvl * 4);
-          const inMouth = Math.abs(fy - mo[1]) < mo[3] * 1.3;
-          let any = false, hasHair = false, hasSweater = false;
+          dx += shift * 2;
+          const wu = wu0 + y0 * wus;
+          let any = false, hasHair = false, hasSweater = false, wsum = 0;
           for (let s = 0; s <= S; s++) {
             const xs = -0.4 + (1.8 * s) / S;                   // samples run past the portrait so the background rows stay continuous
             const f = sample(fd, xs, fy);
@@ -232,21 +278,17 @@
             // 2.5D: the head sits nearer than the sweater → shifts more with the cursor
             const par = (z === 1 || z === 2 ? 1 : z ? 0.45 : 0.15);
             let hv = f.rel;
-            hv += (noise1(s * 0.35 + i * 7.3 + t * 2.2) - 0.5) * (0.04 + lvl * 0.08) * (z ? 1 : 0.5);
+            hv += (noise1(s * 0.35 + i * 7.3 + t * 2.2) - 0.5) * 0.04 * (z ? 1 : 0.5);
             if (z === 2) hv += (hash(s * 1.7 + i * 31) - 0.5) * 0.12;                       // crew-cut bristle
             if (m.k > 0.01 && z) hv += 0.25 * m.k * Math.exp(-(((xs * 2 - 1) - m.x) ** 2) / 0.02 - ((fy * 2 - 1 - m.y) ** 2) / 0.006) * Math.sin(t * 9 + s * 0.6);
             let li = f.lev;
-            // voice bar on the lip line: thickens and ripples with the level (§4.2: the mouth shows the signal)
-            if (inMouth && z === 1) {
-              const ex = Math.abs(xs - mo[0]) / mo[2];
-              if (ex < 1) {
-                const wv = (1 - ex * ex) * mouthLvl;
-                hv += wv * 0.5 * (0.55 + 0.45 * Math.sin(xs * 90 + t * 18)) * (0.6 + 0.4 * Math.sin(xs * 23 - t * 7));
-                li = Math.min(1, li + wv * 0.9);
-              }
-            }
             P[s * 4] = px0 + xs * pw + dx + (m.px * par * gap * 1.6);
             P[s * 4 + 1] = y0 - hv * amp + m.py * par * gap * 0.8;
+            if (waving) {
+              const wv = W.at(wx0 + P[s * 4] * wxs, wu);
+              P[s * 4 + 1] -= wv * lift; wsum += wv;
+              if (z === 1) li = Math.min(1, li + wv * 0.12);
+            }
             P[s * 4 + 2] = z === 2 ? (0.5 + li * thick * 0.35 * hash(s * 3.1 + i * 17)) / 2                          // hair: thin, ragged
               : z === 3 ? (thin + (0.2 + 0.6 * li) * thick * (0.55 + 0.45 * Math.abs(Math.sin(xs * 70 + (i & 1) * 1.57)))) / 2  // knit: a chain of stitches
               : z === 4 ? (thin + thick * (0.25 + 0.45 * Math.abs(Math.sin(xs * 150)))) / 2                                     // collar rib
@@ -268,11 +310,11 @@
           ctx.lineTo(P[S * 4], h + 2); ctx.lineTo(P[0], h + 2); ctx.closePath();
           ctx.globalCompositeOperation = "destination-out"; ctx.fillStyle = "#000"; ctx.fill();
           ctx.globalCompositeOperation = "source-over";
-          // the bottom rows fade out so the sweater doesn't fight the meta row under the portrait
-          const fade = o.mini ? 1 : 1 - 0.7 * smooth(0.86, 1, fy);
-          // background: one faint hairline per row, the scanline field the figure rises out of
+          // the bottom rows fade out; on the hero (r17) they dissolve fully into the WebGL field below
+          const fade = o.mini ? 1 : o.wave ? 1 - smooth(0.68, 1, fy) : 1 - 0.7 * smooth(0.86, 1, fy);
+          // background: one faint hairline per row, the scanline field the figure rises out of (brighter in a crest)
           if (!o.mini) {
-            ctx.globalAlpha = fade;
+            ctx.globalAlpha = Math.min(1, fade * (0.8 + 0.9 * wsum / (S + 1)));
             ctx.beginPath(); ctx.moveTo(P[0], P[1]);
             for (let s = 1; s <= S; s++) ctx.lineTo(P[s * 4], P[s * 4 + 1]);
             ctx.strokeStyle = bgGrad; ctx.lineWidth = 0.8; ctx.stroke();
@@ -319,17 +361,13 @@
         // marks from the reference, placed on the relief: the small dark points (lower cheek, neck) as holes in the ribbons.
         // r14B: no scar stroke and no forehead point by the left brow (screen right): the brows are just what the
         // scanlines draw from the light field, soft and unbroken
-        const at = (x, y) => [px0 + x * pw + m.px * gap * 1.6, py0 + y * ph - sample(fd, x, y).rel * amp + m.py * gap * 0.8];
+        const at = (x, y) => {
+          const X = px0 + x * pw + m.px * gap * 1.6, Y = py0 + y * ph;
+          return [X, Y - sample(fd, x, y).rel * amp + m.py * gap * 0.8 - (waving ? W.at(wx0 + X * wxs, wu0 + Y * wus) * lift : 0)];
+        };
         ctx.globalCompositeOperation = "destination-out"; ctx.fillStyle = "#000";
         for (const d of A.dots) { if (d[1] < 0.4) continue; const q = at(d[0], d[1]); ctx.beginPath(); ctx.arc(q[0], q[1], Math.max(1.2, gap * 0.42), 0, Math.PI * 2); ctx.fill(); }
         ctx.globalCompositeOperation = "source-over";
-        // scanline sweep tied to level (hacker overlay)
-        const sy = (t * 0.18 % 1) * h;
-        const sg = ctx.createRadialGradient(w / 2, sy, 0, w / 2, sy, w * 0.5);
-        sg.addColorStop(0, `rgba(150,232,255,${0.035 + lvl * 0.08})`);
-        sg.addColorStop(1, "rgba(150,232,255,0)");
-        ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.fillStyle = sg;
-        ctx.fillRect(0, sy - 1, w, 2); ctx.restore();
       }
     }
   }

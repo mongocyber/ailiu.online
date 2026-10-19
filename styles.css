@@ -1,5 +1,5 @@
 /* ailiu.online — preview v2
-   Global shell (base colour, type, nav, narrator, sound/lang) is identical across every
+   Global shell (base colour, type, nav, sound/lang) is identical across every
    chapter (D10). Chapter-specific colour and form live only inside each .pin stage. */
 
 /* ---------- 1. Motion tokens (INSTRUCTIONS §6.1) ---------- */
@@ -14,7 +14,6 @@
   --persp: 1200px; --z-s: 20px; --z-m: 60px; --z-l: 140px;
   --tilt-max: 18deg;
   --glitch-dur: 140ms;
-  --nar-fade: 200ms; /* §4.5-3: a superseded caption fades out in 200ms */
 
   /* global palette — never changed by a chapter */
   --bg: #060607;
@@ -26,7 +25,6 @@
   --line-2: rgba(255, 255, 255, .16);
   --sig-a: #96e8ff;
   --sig-b: #b9a6ff;
-  --louis-level: 0;
 
   /* r6 type: system stacks only (no web fonts, D24). Order = macOS → Windows → Linux/Android.
      Latin pages lead with the OS UI face (SF on Mac); CJK fallbacks are named explicitly so a
@@ -40,7 +38,7 @@
 
   --pad-x: clamp(20px, 4.2vw, 64px);
   --top-h: 64px;
-  --safe-b: 96px; /* r6: desktop letterbox band that holds the caption bar; stages end above it */
+  --safe-b: 40px; /* r6: desktop letterbox band under the stages; r17: the caption bar is gone, only the chapter reel is left */
 }
 @property --lift { syntax: "<number>"; inherits: true; initial-value: 0; }
 
@@ -57,7 +55,6 @@ a { color: inherit; }
 button { font: inherit; color: inherit; }
 .mono { font-family: var(--f-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
 html:lang(zh) .mono { letter-spacing: .04em; }
-html:lang(zh) .nar-sub { line-height: 1.45; min-height: 2.9em; }
 .display { font-weight: 500; letter-spacing: -.035em; line-height: 1.02; margin: 0; }
 html:lang(zh) .display { letter-spacing: -.01em; line-height: 1.18; }
 /* r8: the first-line indent (.indent, padding-left 16%) is retired; every block shares one left edge */
@@ -101,8 +98,8 @@ html:lang(zh) .display { letter-spacing: -.01em; line-height: 1.18; }
 .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 600; letter-spacing: -.02em; font-size: 17px; }
 .brand em { font-style: normal; color: var(--ink-3); font-weight: 400; }
 .brand-glyph { display: inline-flex; gap: 2px; align-items: center; height: 16px; }
-.brand-glyph i { width: 3px; border-radius: 2px; background: linear-gradient(var(--sig-a), var(--sig-b)); height: calc(5px + var(--louis-level) * 11px); transition: height var(--dur-instant) linear; }
-.brand-glyph i:nth-child(2) { height: calc(10px + var(--louis-level) * 6px); }
+.brand-glyph i { width: 3px; border-radius: 2px; background: linear-gradient(var(--sig-a), var(--sig-b)); height: 5px; transition: height var(--dur-instant) linear; }
+.brand-glyph i:nth-child(2) { height: 10px; }
 .chapnav ol { position: relative; display: flex; gap: 2px; list-style: none; margin: 0; padding: 4px; border: 1px solid var(--line); border-radius: 999px; background: rgba(13, 13, 15, .7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
 .chapnav a { display: flex; align-items: baseline; gap: 6px; padding: 6px 11px; border-radius: 999px; font-size: 12.5px; color: var(--ink-2); text-decoration: none; white-space: nowrap; transition: color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out); }
 .chapnav a b { font: 500 10px/1 var(--f-mono); color: var(--ink-3); }
@@ -122,18 +119,16 @@ html:lang(zh) .display { letter-spacing: -.01em; line-height: 1.18; }
 .lang-opt.on { color: var(--ink); font-weight: 600; }
 .lang-sep { color: var(--ink-3); }
 .eq { display: inline-flex; gap: 2px; align-items: flex-end; height: 12px; }
-.eq i { width: 2px; background: var(--sig-a); height: calc(3px + var(--louis-level) * 9px); border-radius: 1px; }
-.eq i:nth-child(2) { height: calc(6px + var(--louis-level) * 6px); }
-.eq i:nth-child(3) { height: calc(4px + var(--louis-level) * 8px); }
+.eq i { width: 2px; background: var(--sig-a); height: 3px; border-radius: 1px; }
+.eq i:nth-child(2) { height: 6px; }
+.eq i:nth-child(3) { height: 4px; }
 .ctl-sound[aria-pressed="false"] .eq i { background: var(--ink-3); height: 2px; }
 .sound-label { color: var(--ink); white-space: nowrap; }
 
-/* ---------- 5. Narrator / caption bar (film-subtitle position: bottom centre) ---------- */
-.narrator { position: fixed; z-index: 61; left: 50%; bottom: calc((var(--safe-b) - 72px) / 2); transform: translateX(-50%); width: min(680px, calc(100vw - 24px)); display: flex; gap: 14px; align-items: center; padding: 8px 18px 8px 8px; border: 1px solid var(--line-2); border-radius: 16px; background: rgba(13, 13, 15, .92); backdrop-filter: blur(16px) saturate(1.2); -webkit-backdrop-filter: blur(16px) saturate(1.2); transition: opacity var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out); }
-.narrator::before { content: ""; position: absolute; left: 70px; right: 18px; bottom: -1px; height: 1px; background: linear-gradient(90deg, var(--sig-a), var(--sig-b)); transform-origin: 0 50%; transform: scaleX(var(--nar-t, 1)); opacity: calc(.75 * (1 - var(--idle, 0))); transition: opacity var(--dur-base) var(--ease-out); }
-.narrator.is-idle { --idle: 1; }
-/* letterbox: an opaque band under the stages, so captions never sit on top of content (desktop) */
-.letterbox { position: fixed; z-index: 59; left: 0; right: 0; bottom: 0; height: var(--safe-b); background: var(--bg); pointer-events: none; }
+/* ---------- 5. Letterbox reel (desktop): chapter progress in a thin band at the bottom ---------- */
+/* letterbox: an opaque band under the stages that holds the chapter reel (desktop) */
+.letterbox { position: fixed; z-index: 59; left: 0; right: 0; bottom: 0; height: var(--safe-b); background: var(--bg); pointer-events: none; transition: opacity var(--dur-base) var(--ease-out); }
+body.at-hero .letterbox { opacity: 0; }
 .reel { position: absolute; left: var(--pad-x); right: var(--pad-x); top: -1px; height: 1px; margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(var(--n, 8), 1fr); gap: 6px; }
 .reel li { position: relative; background: var(--line-2); overflow: hidden; }
 .reel li i { position: absolute; top: 0; right: 0; bottom: 0; left: 0; inset: 0; background: linear-gradient(90deg, var(--sig-a), var(--sig-b)); transform-origin: 0 50%; transform: scaleX(var(--p, 0)); }
@@ -142,34 +137,19 @@ html:lang(zh) .display { letter-spacing: -.01em; line-height: 1.18; }
 .reel-l, .reel-r { position: absolute; top: 50%; transform: translateY(-50%); color: var(--ink-3); font-size: 10px; }
 .reel-l { left: var(--pad-x); } .reel-r { right: var(--pad-x); text-align: right; }
 .reel-l b, .reel-r b { color: var(--ink-2); font-weight: 500; }
-.narrator.is-idle .nar-sub { color: var(--ink-3); }
-.nar-face { position: relative; flex: none; width: 54px; height: 54px; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: var(--bg); padding: 0; cursor: pointer; transition: opacity var(--dur-base); }
-.nar-face canvas { width: 100%; height: 100%; }
-.nar-face::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px rgba(150, 232, 255, calc(var(--louis-level) * .8)), 0 0 24px rgba(150, 232, 255, calc(var(--louis-level) * .5)); }
-body.is-wild .nar-face { opacity: .25; }
-.nar-body { min-width: 0; flex: 1; }
-.nar-meta { display: flex; gap: 12px; color: var(--ink-3); font-size: 10px; line-height: 1.3; margin-bottom: 2px; white-space: nowrap; overflow: hidden; }
-.nar-meta > span:first-child { color: var(--sig-a); }
-.nar-state { overflow: hidden; text-overflow: ellipsis; }
-.nar-sub { margin: 0; font-size: 14.5px; line-height: 1.36; min-height: 2.72em; color: var(--ink); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.nar-sub { transition: opacity var(--nar-fade) linear; }
-.nar-sub .w { opacity: .22; transition: opacity var(--dur-fast) linear, color var(--dur-base) var(--ease-out); }
-.nar-sub .w.on { opacity: 1; }
-.nar-sub .w.now { color: var(--sig-a); }
-.narrator.is-out .nar-sub { opacity: 0; }
-.narrator.is-stale .nar-sub::before { content: "· · ·"; color: var(--ink-3); letter-spacing: .3em; }
-.nar-next { color: var(--sig-a); opacity: .8; }
-.nar-next:empty { display: none; }
 
 /* ---------- 6. Hero ---------- */
-.hero { position: relative; min-height: 100vh; min-height: 100svh; padding: calc(var(--top-h) + 3vh) var(--pad-x) 0; display: flex; flex-direction: column; overflow: hidden; }
+.hero { position: relative; padding: 0 var(--pad-x); overflow: hidden; }
 .rain { position: absolute; top: 0; right: 0; bottom: 0; left: 0; inset: 0; width: 100%; height: 100%; opacity: .5; -webkit-mask-image: radial-gradient(70% 70% at 70% 45%, #000, transparent 75%); mask-image: radial-gradient(70% 70% at 70% 45%, #000, transparent 75%); }
 /* r13: WebGL scanline field (fx3d.js) behind the copy and the portrait; the glyph rain is its 2D fallback */
-.fx3d { display: none; position: absolute; top: 0; right: 0; bottom: 0; left: 0; inset: 0; width: 100%; height: 100%; pointer-events: none; -webkit-mask-image: linear-gradient(180deg, transparent 6%, #000 42%, #000 82%, transparent 100%); mask-image: linear-gradient(180deg, transparent 6%, #000 42%, #000 82%, transparent 100%); }
+.fx3d { display: none; position: absolute; top: 0; right: 0; left: 0; width: 100%; height: 100vh; height: 100dvh; pointer-events: none; -webkit-mask-image: linear-gradient(180deg, transparent 6%, #000 42%, #000 82%, transparent 100%); mask-image: linear-gradient(180deg, transparent 6%, #000 42%, #000 82%, transparent 100%); }
 html[data-fx^="webgl"] .fx3d { display: block; }
 @media (max-width: 760px) { .fx3d { bottom: auto; -webkit-mask-image: linear-gradient(180deg, transparent 4%, #000 30%, #000 70%, transparent 100%); mask-image: linear-gradient(180deg, transparent 4%, #000 30%, #000 70%, transparent 100%); } }
 html[data-fx^="webgl"] .rain { display: none; }
-.hero-inner { position: relative; flex: 1; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); align-items: center; gap: 3vw; }
+/* r17: the first screen is the hero alone (100vh, 100dvh where supported); the portrait fills ~86% of it on the right,
+   bottom-anchored so its shoulders dissolve into the field; the copy sits a little above centre; the chapter index is below the fold */
+.hero-inner { position: relative; min-height: 100vh; min-height: 100dvh; padding-top: var(--top-h); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 3vw; }
+.hero-copy { position: relative; z-index: 1; margin-top: -10vh; }
 .kicker { display: flex; align-items: center; gap: 10px; color: var(--ink-2); margin: 0 0 28px; }
 .live-dot { width: 7px; height: 7px; border-radius: 50%; background: #7dffb0; box-shadow: 0 0 10px #7dffb0; }
 .hero-h { font-size: clamp(40px, 5.3vw, 84px); max-width: 13.5em; color: #f2f1ec; }
@@ -180,31 +160,23 @@ html:lang(zh) .hero-h span { word-break: keep-all; }
 html:lang(zh) .hero-note { line-height: 1.75; }
 /* r8: no indent, no left rule (a hanging rule would be cut off by the reveal preset's clip-path); shares the title's left edge */
 .hero-note { text-wrap: pretty; max-width: 30em; color: var(--ink-2); font-size: 15px; margin: 30px 0 0; }
-.louis-hero { position: relative; margin: 0; height: min(70vh, 660px, calc(100vh - 380px)); min-height: 300px; align-self: center; }
+.louis-hero { position: relative; margin: 0 calc(var(--pad-x) * -0.5) 0 0; height: min(86vh, calc(100vh - var(--top-h) - 12px)); height: min(86dvh, calc(100dvh - var(--top-h) - 12px)); min-height: 300px; align-self: end; }
 .louis-host { position: absolute; top: 0; right: 0; bottom: 0; left: 0; inset: 0; }
 .louis-host canvas { width: 100%; height: 100%; }
 /* r11 2.5D: the portrait tilts a little toward the cursor (--lx/--ly eased in louis.js) over a back halo that drifts the other way */
 .louis-hero { perspective: 1100px; }
-.louis-hero::before { content: ""; position: absolute; top: 6%; right: 18%; bottom: 14%; left: 18%; inset: 6% 18% 14%; border-radius: 50%; background: radial-gradient(closest-side, rgba(150, 232, 255, calc(.07 + var(--louis-level) * .08)), rgba(185, 166, 255, .03) 60%, transparent); transform: translate(calc(var(--lx, 0) * -14px), calc(var(--ly, 0) * -8px)); pointer-events: none; }
+.louis-hero::before { content: ""; position: absolute; top: 6%; right: 18%; bottom: 14%; left: 18%; inset: 6% 18% 14%; border-radius: 50%; background: radial-gradient(closest-side, rgba(150, 232, 255, .07), rgba(185, 166, 255, .03) 60%, transparent); transform: translate(calc(var(--lx, 0) * -14px), calc(var(--ly, 0) * -8px)); pointer-events: none; }
 #louisHero { transform: rotateY(calc(var(--lx, 0) * 5deg)) rotateX(calc(var(--ly, 0) * -3deg)); }
 /* r12: no tilt or halo on touch screens — a 3D-transformed canvas layer can drop out on iOS Safari, and there is no cursor to follow anyway */
 @media (hover: none), (pointer: coarse) { .louis-hero { perspective: none; } .louis-hero::before { display: none; } #louisHero { transform: none; } }
 /* r12: static fallback portrait (pre-rendered from louis-data by scripts/louis_fallback.py). Shown until a canvas has
    really drawn (.is-live); stays if the canvas can't be created, has no size, is blank, or throws (.is-fallback). */
-.louis-host, .nar-face, .wl-louis { background-repeat: no-repeat; background-position: 50% 100%; background-size: contain; }
+.louis-host, .wl-louis { background-repeat: no-repeat; background-position: 50% 100%; background-size: contain; }
 .louis-host:not(.is-live), .wl-louis:not(.is-live) { background-image: url("louis-fallback.png"); }
-.nar-face:not(.is-live) { background-image: url("louis-fallback.png"); background-size: 118% auto; background-position: 50% 0; }
 .wl-louis:not(.is-live) { filter: hue-rotate(28deg); }
 .is-fallback canvas { display: none; }
-.louis-read { z-index: 1; }
-.louis-read { position: absolute; left: 0; bottom: 0; display: flex; flex-wrap: wrap; gap: 6px 18px; color: var(--ink-3); font-size: 10px; }
-.louis-read b { color: var(--ink-2); font-weight: 500; margin-right: 4px; }
-.louis-read em { font-style: normal; color: var(--sig-a); }
 .is-ai { color: var(--sig-b) !important; border: 1px solid rgba(185, 166, 255, .4); border-radius: 4px; padding: 2px 6px; }
-.corner { position: absolute; width: 14px; height: 14px; border: 1px solid rgba(150, 232, 255, .45); }
-.corner.tl { top: 0; left: 0; border-right: 0; border-bottom: 0; } .corner.tr { top: 0; right: 0; border-left: 0; border-bottom: 0; }
-.corner.bl { bottom: 26px; left: 0; border-right: 0; border-top: 0; } .corner.br { bottom: 26px; right: 0; border-left: 0; border-top: 0; }
-.hero-index { position: relative; list-style: none; margin: 3vh 0 0; padding: 0 0 var(--safe-b); display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); border-top: 1px solid var(--line); }
+.hero-index { position: relative; list-style: none; margin: 0; padding: 0 0 calc(var(--safe-b) + 6vh); display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); border-top: 1px solid var(--line); }
 .hero-index li a { display: block; padding: 14px 14px 0 0; text-decoration: none; }
 .hero-index li + li a { padding-left: 14px; border-left: 1px solid var(--line); }
 .hero-index b { display: block; font: 500 10.5px/1 var(--f-mono); color: var(--ink-3); margin-bottom: 9px; }
@@ -258,7 +230,6 @@ html:lang(zh) .slot-blurb { height: auto; max-height: 8em; }
 .dr-soc span { color: var(--ink-2); line-height: 1.2; }
 .dr-soc em { line-height: 1.2; }
 .hero-note p { margin: 0; }
-.hero-note-sub { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px !important; font-size: 10px; text-transform: none; letter-spacing: .02em; color: var(--ink-3); }
 .foot-links { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 10px; }
 .foot-links li { display: grid; grid-template-columns: 4.5em 1fr; align-items: baseline; gap: 12px; }
 .foot-links span { color: var(--ink-3); font-size: 10px; }
@@ -645,10 +616,6 @@ html:lang(zh) .foot-h span, html:lang(zh) .about-h span { word-break: keep-all; 
 .made-log time { color: var(--ink-3); font-variant-numeric: tabular-nums; }
 .made-log li span { color: var(--ink-2); font-family: var(--f-sans); font-size: 13px; }
 .foot-made + .foot-meta { margin-top: 6vh; }
-.transcript { margin-top: 18px; color: var(--ink-2); }
-.transcript summary { cursor: pointer; color: var(--ink-3); }
-.transcript ol { font-size: 14px; padding-left: 20px; max-width: 760px; }
-.transcript li { margin: 6px 0; }
 
 /* =========================================================================
    03 DESIGN WORK — case studies (r13). No pinned stage: the head (title slots | capabilities + method) is
@@ -753,7 +720,7 @@ html:lang(zh) .case-pmr { grid-template-columns: 5em minmax(0, 1fr); }
 .wfig-row.is-one { grid-template-columns: 1fr; }
 .wfig-row.is-one .wfig-frame { aspect-ratio: 16 / 7; }
 
-/* the case text only pins when the screen is tall enough to hold all of it (below the top bar, index and caption band) */
+/* the case text only pins when the screen is tall enough to hold all of it (below the top bar, index and reel band) */
 @media (min-width: 761px) and (max-height: 1060px) {
   .wcase-text, .wcase.is-open .wcase-text { position: relative; top: auto; }
   .case-pmr { font-size: 13.5px; }
@@ -776,28 +743,21 @@ html:lang(zh) .case-pmr { grid-template-columns: 5em minmax(0, 1fr); }
 
 /* ---------- 10. Mobile: no sticky scrub, every treatment uses its mobileFallback ---------- */
 @media (max-width: 760px) {
-  :root { --top-h: 56px; --safe-b: 96px; }
+  :root { --top-h: 56px; --safe-b: 24px; }
   .topbar { grid-template-columns: 1fr auto; }
   .chapnav { display: none; }
   .ctl { height: 32px; padding: 0 11px; font-size: 12px; }
   .sound-label { display: none; }
-  .narrator { bottom: calc(10px + env(safe-area-inset-bottom, 0px)); padding: 8px 12px 8px 8px; gap: 10px; border-radius: 16px; background: #0d0d0f; -webkit-backdrop-filter: none; backdrop-filter: none; /* r12: solid — WebKit let text bleed through the translucent bar; no blur cost on phones */ box-shadow: 0 16px 40px rgba(0, 0, 0, .55); }
-  .narrator::before { left: 62px; }
   .letterbox { display: none; }
-  .nar-face { width: 46px; height: 46px; border-radius: 11px; }
-  .nar-sub { font-size: 13.5px; }
-  .nar-state { display: none; }
 
-  .hero { padding-top: calc(var(--top-h) + 8px); }
-  .hero-inner { grid-template-columns: 1fr; gap: 0; align-content: start; }
-  .louis-hero { order: -1; height: 40vh; margin: 0 -8px; }
-  .louis-read { font-size: 9px; gap: 4px 12px; }
-  .louis-hero .louis-host { bottom: 34px; } /* r11: the portrait ends above the two-line meta row */
+  .hero-inner { grid-template-columns: 1fr; gap: 0; align-content: start; padding-top: calc(var(--top-h) + 4px); }
+  .hero-copy { margin-top: 0; }
+  .louis-hero { order: -1; height: 50vh; height: 50svh; margin: 0 -8px; align-self: auto; }
   .hero-h { font-size: clamp(32px, 9.4vw, 44px); }
   html:lang(zh) .hero-h { font-size: clamp(30px, 8.6vw, 40px); }
   .kicker { margin: 18px 0 16px; }
   .hero-note { margin: 18px 0 0; font-size: 14px; }
-  .hero-index { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 28px; }
+  .hero-index { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 8px; padding-bottom: 48px; }
   .hero-index li a, .hero-index li + li a { padding: 12px 10px 12px 0; border-left: 0; border-bottom: 1px solid var(--line); }
   .hero-index li:nth-child(even) a { padding-left: 12px; border-left: 1px solid var(--line); }
 

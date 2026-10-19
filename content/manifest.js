@@ -1,4 +1,4 @@
-/* Project manifest — single source for nav, fixed text slots, narration queue.
+/* Project manifest — single source for nav, fixed text slots; narration lines kept as data (r17: not rendered, kept for voice-over).
    Mirrors INSTRUCTIONS §8 shape (trimmed for this static preview).
    All copy is a DRAFT pending user approval (OPEN-3). No metrics, no invented numbers.
    r7: each project carries a `draft` block (copy, status, links from CONTENT-DRAFT.md, unconfirmed);
@@ -29,7 +29,8 @@ window.MANIFEST = {
     { date: "2026-10-19", zh: "「设计作品」改成完整案例，配上原来的界面图", en: "Rebuilt Design Work as full case studies with the original screens", model: null, costUsd: 0 },
     { date: "2026-10-19", zh: "首页背景换成实时 3D 扫描线地形", en: "Gave the home page a live 3D scanline field", model: null, costUsd: 0 },
       { date: "2026-10-19", zh: "野生路易斯一章改为自我介绍，搭建记录移到页脚", en: "Wild Louis became a self-introduction; the build notes moved to the footer", model: null, costUsd: 0 },
-    { date: "2026-10-19", zh: "设计作品的案例默认收起；章节换序；加入背景音乐和音效", en: "Design Work cases start folded; chapters reordered; background music and sound effects added", model: null, costUsd: 0 }
+    { date: "2026-10-19", zh: "设计作品的案例默认收起；章节换序；加入背景音乐和音效", en: "Design Work cases start folded; chapters reordered; background music and sound effects added", model: null, costUsd: 0 },
+    { date: "2026-10-19", zh: "首屏改为全屏，放大画像，画像与背景地形同步起伏", en: "Made the first screen full height with a larger portrait that moves with the field", model: null, costUsd: 0 }
   ],
   persona: {
     draft: true,

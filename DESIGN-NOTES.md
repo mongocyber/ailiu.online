@@ -800,3 +800,89 @@ CONTENT-DRAFT.md 的 9 个待确认项都还在，页面上对应位置已经标
 - 注意：Chrome/Safari 规范上只有点击、按键、触摸结束算用户激活，真实浏览器里纯滚动/滚轮可能仍解不开，要等下一次点或触摸（Playwright 无头里滚轮即可解开）。
 - 旁白台词 9 条（Hero + 8 章，中英）整理到 /workspace/deliverables/ailiu-audio/narration-lines.md，供 Suno Speech 逐句配音。Louis 说话动效本步未做。
 - align 24 组全 0；chromium/webkit 测试：加载 data-sound=blocked、无提示、交互后 on、0 pageerror。（直接手改，未调用 Claude Code。）
+
+## 17. r17（画像与地形同步起伏 · Hero 全屏构图 · 删除底部字幕条，2026-10-19）
+在 r16-1（17c787d）之上一次提交。没有新依赖，没有 push，没有部署。
+
+### 17.1 画像与 WebGL 地形：同一个时钟、同一种波
+- **共享对象** `window.FX_WAVE`（定义在 louis.js 顶部，因为它比 fx3d.js 先加载）：`t / freq 1.6 / amp / speed 0.2 / phase / bend / pointer {x, y, k} / scroll / on / scale / fps / box`。
+  - 只有**一个 rAF**。它推进时间和相位，读取光标与滚动，然后依次调用订阅者：fx3d 的绘制、每个正在运行的画像。
+  - louis.js 和 fx3d.js 都不再有自己的 rAF。
+  - 订阅者离开视口时退订（IntersectionObserver）；没有订阅者或标签页隐藏时，rAF 完全停止。
+- **波的定义**：坐标取在地形画布（`#fx3d`）的屏幕框内，x 为 0..1 横向，u 为 0..1 纵向。
+  - 主体是一条沿 y 向下传播的波峰带：`(½+½·sin(2π·freq·u − phase + bend·sin(5x + 0.4t)))³`。
+  - 光标处叠加一个局部隆起 `k·exp(−d²/0.01)`。光标只响应鼠标；离开画布后 k 渐回 0。
+  - 滚动时，振幅最多加 60%，相位速度最多加倍。
+  - JS 里是 `FX_WAVE.at(x, u)`，着色器里是 `wave()`，两边公式逐项一致。
+- **地形**：顶点着色器先按未抬起的位置投影，得到该点的屏幕 (x, u)，再取 wave 值。抬起 0.55 个世界单位，亮度乘 (1 + 0.9w)。
+  - 原来的光标隆起和与 `--louis-level` 挂钩的亮度都已删除，统一由 `FX_WAVE.pointer` 驱动；镜头随光标的漂移也改读同一个指针。
+- **画像**：Hero 实例开 `wave: true`。每个采样点按它在 `#fx3d` 框里的屏幕位置取同一个 wave 值，向上抬 1.4 个行距；肤色亮度加 0.12w，背景细线随波峰变亮。挖空的小点也跟着抬，不会错位。
+  - 因为两边用的是同一个屏幕坐标，同一道波峰会在同一时刻、同一高度穿过脸和地形。见 `r17-sync-a.png` / `r17-sync-b.png`（间隔 0.6s）：a 帧波峰在眼睛一带，b 帧下移到嘴和地形前沿。
+- **衔接**：Hero 画像底部 32% 的扫描线渐隐到 0，毛衣溶进地形。
+  - 地形里的「洞」（亮度 16%）只罩住头部（以画像下沿上方 0.6 倍高处为中心，半径 0.34 × 0.42 个画像高），肩部以下露出地形线。
+  - 桌面镜头抬高视线（目标点 y 0.9 → 3.9，机位 1.7 → 1.5），地平线落在肩部一带，不再穿过标题。
+- **删除的旧动效**：嘴部「声音条」、与电平挂钩的扫描光带、`setLevel` / `--louis-level`（顶栏 logo 和声音按钮的小柱随之变为静态高度）、页脚声纹里的电平项。
+  - glitch 保留但更克制：每 5–11s 一次，70–120ms，横移幅度从 0.06 减到 0.035。
+  - 眉毛沿用 r14 的修正（不画疤痕笔画、不画眉旁的点）。
+- **降级**：
+  - `fx=2d`（reduced-motion、`?fx=off`、没有 WebGL、着色器失败、上下文丢失）时 `FX_WAVE.on = false`，画像不加波。
+  - reduced-motion 下画像只画一帧静态图；非 reduced 的 2d 档保留原来的轻微噪声起伏，没有波。
+  - `webgl-low`（手机）：`FX_WAVE.scale = 0.6`，`fps = 30`，画像与地形一起降幅、降帧。
+  - canvas 失败时仍显示 `louis-fallback.png`。
+  - 地形绘制中途抛错 → 转 2d（`data-fx-why=error`），不再留下冻结的画面。
+- 体积（gzip）：fx3d.js 5.4KB，louis.js 8.2KB。
+
+### 17.2 Hero 构图
+- 删除了画像外围的四个角框，以及 NARRATOR / LEVEL（模拟）/ FORM 读数行。
+- kicker 改为「AILIU.ONLINE · 作品集 / AILIU.ONLINE · PORTFOLIO」。
+- **桌面**：
+  - `.hero-inner` 为 `min-height: 100vh; 100dvh`，左右各 1fr。
+  - 画像框高 `min(86dvh, 100dvh − 顶栏 − 12px)`，贴底、靠右；1440×900 下为 774px，占屏高 86%，画像本身宽约 578px。
+  - 标题块垂直居中后再上移 10vh（1440×900 中文：kicker 在 y≈263，简介止于 ≈615）。
+  - 地形画布高 100dvh，只铺第一屏。
+  - 章节索引条（01–08）移到首屏之下，不再挤压首屏。
+  - 底部那条进度带在 Hero 可见时淡出（`body.at-hero`），首屏能一直画到底边。
+- **手机**：
+  - 画像在标题上方，高 50svh。Pixel 7 上为 60–480，标题和简介在 480–722，首屏 839，不重叠、不溢出；iPhone 13（664 高）上简介止于 628。
+  - 地形仍只铺到画像框底部。
+
+### 17.3 删除底部讲解字幕条
+- **删掉的部分**：
+  - `index.html`：`<aside class="narrator">`（迷你头像、LOUIS nn/08、仅字幕状态、字幕行、进度线）、Hero 的「草稿」chip 和「旁白目前只有字幕。」、页脚「显示 Louis 全部旁白文字」transcript。
+  - `app.js`：字幕队列 `narrator`、停留检测、`buildTranscript`、迷你头像实例、电平模拟。
+  - `styles.css`：`.narrator / .nar-* / .transcript / .louis-read / .corner / .hero-note-sub / --nar-fade / --louis-level`。
+- **保留的部分**：manifest 里各章的 `narration` 数据（不渲染，留给以后配音）；`/workspace/deliverables/ailiu-audio/narration-lines.md` 未动；声音开关、背景音乐、音效、首次交互开声音的逻辑未动。
+- **底部带**：桌面 `--safe-b` 从 96px 改为 40px，只放章节进度（reel）。手机 96px → 24px（手机原来就不显示这条带）。
+- **脚本**：`align.py` 去掉了 `.hero-note-sub`；`shoot.py` 不依赖字幕条，未改。新增 `scripts/hero.py`，生成首屏截图、同步帧对和降级矩阵。
+- 制作日志新增一条（共 11 条）：「首屏改为全屏，放大画像，画像与背景地形同步起伏」。
+- 全站检索 NARRATOR / LEVEL / 字幕 / 旁白 / Captions / narrated / 讲解：页面上已没有可见残留。剩下的只有代码注释、manifest 的 `narration` 字段，以及设计作品图注（`caption`，指图片说明，与此无关）。
+
+### 17.4 自检
+- `align.py r17`：chromium / webkit / firefox × 1440 / 390 × 中英 × 收起 / 展开，24 组全部 **0 处不齐、0 溢出、0 错误**。
+- `shoot.py r17`（zh、en）：桌面和手机都是 0 错误、横向溢出 0。看了两轮：
+  - 第一轮：拼版全站。字幕条已经不在，各章底部没有被挡；
+  - 第二轮：原尺寸看 Hero 中英、蒸汽站、野生路易斯、页脚，以及手机 Hero。
+  - 两轮中修掉的问题：
+    1. 地平线穿过标题第二行 → 镜头抬高视线；
+    2. 进度带盖住 Hero 底部 40px → Hero 可见时淡出；
+    3. 波峰扫过简介末行 → 地平线再压低、标题上移。
+- `hero.py r17`，全部 0 pageerror / console error：
+
+| 场景 | data-fx | 画像 |
+|---|---|---|
+| chromium / webkit / firefox 1440 | webgl-high，wave on，60fps | canvas |
+| chromium Pixel 7、webkit iPhone 13 | webgl-low，scale 0.6，30fps | canvas |
+| 1440、Pixel 7、iPhone 13 + reduced-motion | 2d（reduced-motion），无波 | 静态 canvas |
+| `?fx=off` | 2d（param） | canvas，无波 |
+| getContext('webgl') → null（chromium 1440、webkit iPhone） | 2d（no-webgl） | canvas，无波 |
+| getContext 全部 → null（chromium 1440、webkit iPhone） | 2d | is-fallback，显示 louis-fallback.png |
+
+- 截图在 `/workspace/deliverables/ailiu-preview-v2-shots/`：`r17-desktop-hero.png`、`r17-desktop-hero-en.png`、`r17-mobile-hero.png`（Pixel 7）、`r17-webkit-iphone-hero.png`、`r17-reduced-motion-hero.png`、`r17-sync-a.png` / `r17-sync-b.png`。
+- 部署脚本已跑：`bundle.js` 通过 `node --check`，包含 `LOUIS_DATA`、`FX_WAVE` 和 `webgl-high`。
+
+### 17.5 遗留
+- 测试都跑在无头浏览器的软件渲染上。真机 GPU（iOS Safari、中低端 Android）的帧率还没实测：画像每帧要多算 96 × 201 次 wave。如果偏重，可以把手机的画像行数或 fps 再降。
+- 波峰经过时，脸部有一段扫描线会被整体抬起、压密（约 1.4 个行距）。这是「同步起伏」的可见证据，脸仍能认出来；如果觉得干扰，可以把 `lift` 调小。
+- 地形线会叠在 Hero 画像的肩部和毛衣上，这是有意的衔接；手机上更明显。
+- 「关于」一节的「草稿 · 措辞尚未定稿」chip 不在本轮删除范围内，保留了。
+- 交付目录里另有 `r17-user-feedback-2.png`（设计作品吸顶索引）和 `r17-user-feedback-3.png`（关于一节）。TASK-r17 没有提到它们，也没有附说明，本轮没有处理，请确认是否要另起一轮。

@@ -5,7 +5,10 @@
      ?fx=off → 2d · ?fx=low / ?fx=high → force a tier (WebGL still has to work).
      prefers-reduced-motion → 2d. No WebGL / shader failure / any throw → 2d. webglcontextlost → 2d.
      hardwareConcurrency ≤ 4, deviceMemory ≤ 4, or a coarse pointer on a small screen → low (DPR ≤ 1, fewer points, 30 fps).
-   Pauses while the tab is hidden or the hero is off screen. DPR ≤ 1.5 and a total pixel budget per tier. */
+   Pauses while the tab is hidden or the hero is off screen. DPR ≤ 1.5 and a total pixel budget per tier.
+   r17: no rAF of its own. It draws from the shared clock in louis.js (window.FX_WAVE): same time, same wave (wave()
+   below mirrors FX_WAVE.at), measured in the same screen frame, so a crest lifts the field and the portrait together.
+   The cursor swell and the scroll speed-up come from the same object; the voice-level glow is gone. */
 (function () {
   "use strict";
   var root = document.documentElement;
@@ -31,15 +34,21 @@
   function start(gl, tier) {
     var HI = tier === "high";
     var NX = HI ? 200 : 120, NZ = HI ? 112 : 64, ND = HI ? 420 : 160;
-    var DPR = HI ? 1.5 : 1, BUDGET = HI ? 2.4e6 : 0.8e6, STEP = HI ? 0 : 33;
+    var DPR = HI ? 1.5 : 1, BUDGET = HI ? 2.4e6 : 0.8e6;
+    var W = window.FX_WAVE;
+    if (!W) throw new Error("no clock");
 
     var VS = [
       "attribute vec3 a;",
-      "uniform mat4 uV, uP; uniform float uT, uS, uAmp, uLvl, uPs, uLeft; uniform vec2 uM; uniform vec4 uHole;",
+      "uniform mat4 uV, uP; uniform float uT, uS, uAmp, uPs, uLeft; uniform vec4 uHole, uW, uWP; uniform vec2 uWS;",
       "varying float vA; varying vec3 vC;",
       "float h2(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }",
       "float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);",
       "  return mix(mix(h2(i), h2(i + vec2(1.0, 0.0)), f.x), mix(h2(i + vec2(0.0, 1.0)), h2(i + vec2(1.0, 1.0)), f.x), f.y); }",
+      // r17: FX_WAVE.at(x, u) — uW = freq, phase, bend, t · uWP = pointer x, u, k, aspect · uWS = scale × amp, scroll
+      "float wave(vec2 p){ float s = 0.5 + 0.5 * sin(6.2832 * uW.x * p.y - uW.y + uW.z * sin(p.x * 5.0 + uW.w * 0.4));",
+      "  vec2 d = vec2((p.x - uWP.x) * uWP.w, p.y - uWP.y); float b = uWP.z * exp(-dot(d, d) / 0.01);",
+      "  return uWS.x * ((1.0 + 0.6 * uWS.y) * s * s * s + 0.7 * b); }",
       "float fbm(vec2 p){ float s = 0.0, k = 0.5; for (int i = 0; i < 4; i++) { s += k * vn(p); p = p * 2.03 + vec2(1.7, 9.2); k *= 0.5; } return s; }",
       "void main(){",
       "  vec3 A = vec3(0.17, 0.64, 0.9), B = vec3(0.73, 0.65, 1.0);", // --sig-a #96e8ff, --sig-b #b9a6ff
@@ -50,10 +59,13 @@
       "    vec2 q = vec2(X * 0.26, (Z - f) * 0.26);",
       "    float n = fbm(q), r = 1.0 - abs(n * 2.0 - 1.0); r *= r;",
       "    float side = 0.32 + 0.68 * smoothstep(0.6, 5.5, abs(X - 1.4));",
-      "    float cur = exp(-pow(length(vec2(X - uM.x * 7.0, Z + 6.0 - uM.y * 3.0)) * 0.42, 2.0));",
-      "    Y = (n * 1.1 + r * 1.2) * side * uAmp - 1.2 + cur * (0.55 + uLvl * 0.6);",
+      "    Y = (n * 1.1 + r * 1.2) * side * uAmp - 1.2;",
+      // the shared wave, sampled where this point sits on screen before it is lifted
+      "    vec4 b = uP * (uV * vec4(X, Y, Z, 1.0));",
+      "    float w = wave(vec2(0.5 + 0.5 * b.x / b.w, 0.5 - 0.5 * b.y / b.w));",
+      "    Y += w * 0.55;",
       "    al = smoothstep(0.0, 0.07, d) * (1.0 - smoothstep(0.55, 1.0, d)) * (1.0 - smoothstep(0.82, 1.0, abs(a.x)));",
-      "    al *= 0.35 + 0.65 * smoothstep(0.25, 0.85, n + r * 0.4) + cur * 0.5;",
+      "    al *= (0.35 + 0.65 * smoothstep(0.25, 0.85, n + r * 0.4)) * (1.0 + w * 0.9);",
       "    vC = mix(A, B, clamp(d * 1.3 + (n - 0.5) * 0.6, 0.0, 1.0));",
       "  } else {",
       "    float s = a.z - 1.0;",
@@ -106,7 +118,7 @@
     var vb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, vb); gl.bufferData(gl.ARRAY_BUFFER, V, gl.STATIC_DRAW);
     var ib = gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, I, gl.STATIC_DRAW);
     var loc = gl.getAttribLocation(pr, "a"); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 3, gl.FLOAT, false, 0, 0);
-    var U = {}; ["uV", "uP", "uT", "uS", "uAmp", "uLvl", "uPs", "uLeft", "uM", "uPt", "uK", "uHole"].forEach(function (n) { U[n] = gl.getUniformLocation(pr, n); });
+    var U = {}; ["uV", "uP", "uT", "uS", "uAmp", "uPs", "uLeft", "uPt", "uK", "uHole", "uW", "uWP", "uWS"].forEach(function (n) { U[n] = gl.getUniformLocation(pr, n); });
     gl.disable(gl.DEPTH_TEST); gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE);
     gl.clearColor(0, 0, 0, 0);
 
@@ -134,48 +146,55 @@
       c.width = Math.round(w * dpr); c.height = Math.round(h * dpr);
       gl.viewport(0, 0, c.width, c.height);
       mobile = w < 760;
+      // r17: the hole covers the head only (the portrait is bottom-anchored, aspect 0.747); the shoulders sit on the field
       var lh = document.getElementById("louisHero"), cr = c.getBoundingClientRect(), r = lh && lh.getBoundingClientRect();
-      if (r && r.width) hole = [((r.left + r.width / 2 - cr.left) / w) * 2 - 1, 1 - ((r.top + r.height * 0.45 - cr.top) / h) * 2, r.width * 0.42 / w * 2, r.height * 0.5 / h * 2];
-      else hole = [9, 9, 1, 1];
+      if (r && r.width) {
+        var ph = Math.min(r.height * 0.98, r.width / 0.747);
+        hole = [((r.left + r.width / 2 - cr.left) / w) * 2 - 1, 1 - ((r.bottom - ph * 0.6 - cr.top) / h) * 2, ph * 0.34 / w * 2, ph * 0.42 / h * 2];
+      } else hole = [9, 9, 1, 1];
     }
 
-    var mx = 0, my = 0, tx = 0, ty = 0, on = true, raf = 0, last = 0, dead = false, t0 = performance.now();
-    window.addEventListener("pointermove", function (e) { if (e.pointerType === "mouse") { tx = e.clientX / innerWidth * 2 - 1; ty = e.clientY / innerHeight * 2 - 1; } }, { passive: true });
-    function frame(now) {
-      raf = 0;
-      if (dead || !on || document.hidden) return;
-      raf = requestAnimationFrame(frame);
-      if (STEP && now - last < STEP) return;
-      last = now;
+    var mx = 0, my = 0, on = true, dead = false, subbed = false;
+    function frame() {
+      if (dead) return;
+      try { draw(); } catch (e) { fail("error"); }
+    }
+    function draw() {
       if (c.width !== Math.round(c.clientWidth * dpr) || !w) resize();
       if (!w) return;
-      var t = (now - t0) / 1000, hh = hero.offsetHeight || h, s = Math.min(1, Math.max(0, window.scrollY / hh));
-      mx += (tx - mx) * 0.04; my += (ty - my) * 0.04;
-      var lvl = parseFloat(root.style.getPropertyValue("--louis-level")) || 0;
-      var e = [mx * 1.4, (mobile ? 2.2 : 1.7) - s * 0.6 - my * 0.3, 3.2 - s * 1.5], o = [mx * 0.5 + (mobile ? 0 : 0.6), 0.9 - s * 0.9, -12];
+      var t = W.t, s = W.scroll, P = W.pointer;
+      // camera drift follows the same eased pointer as the swell (mouse only; eases home when the pointer leaves)
+      mx += ((P.x * 2 - 1) * P.k - mx) * 0.04; my += ((P.y * 2 - 1) * P.k - my) * 0.04;
+      // r17: desktop looks a little up, so the horizon sits around the portrait's shoulders, below the title
+      var e = [mx * 1.4, (mobile ? 2.2 : 1.5) - s * 0.6 - my * 0.3, 3.2 - s * 1.5], o = [mx * 0.5 + (mobile ? 0 : 0.6), (mobile ? 0.9 : 3.9) - s * 0.9, -12];
       gl.uniformMatrix4fv(U.uV, false, look(e, o));
       gl.uniformMatrix4fv(U.uP, false, persp((mobile ? 64 : 48) * Math.PI / 180, w / h, 0.1, 60));
-      gl.uniform1f(U.uT, t); gl.uniform1f(U.uS, s); gl.uniform1f(U.uAmp, 1 + s * 0.7); gl.uniform1f(U.uLvl, lvl);
-      gl.uniform1f(U.uPs, dpr); gl.uniform1f(U.uLeft, mobile ? 0.5 : 0.2); gl.uniform2f(U.uM, mx, my); gl.uniform4f(U.uHole, hole[0], hole[1], hole[2], hole[3]);
+      gl.uniform1f(U.uT, t); gl.uniform1f(U.uS, s); gl.uniform1f(U.uAmp, 1 + s * 0.7);
+      gl.uniform1f(U.uPs, dpr); gl.uniform1f(U.uLeft, mobile ? 0.5 : 0.2); gl.uniform4f(U.uHole, hole[0], hole[1], hole[2], hole[3]);
+      gl.uniform4f(U.uW, W.freq, W.phase, W.bend, t); gl.uniform4f(U.uWP, P.x, P.y, P.k, W.aspect); gl.uniform2f(U.uWS, W.scale * W.amp, s);
       gl.clear(gl.COLOR_BUFFER_BIT);
       gl.uniform1f(U.uPt, 0); gl.uniform1f(U.uK, HI ? 0.34 : 0.42);
       gl.drawElements(gl.LINES, I.length, gl.UNSIGNED_SHORT, 0);
       gl.uniform1f(U.uPt, 1); gl.uniform1f(U.uK, 0.9);
       gl.drawArrays(gl.POINTS, 0, nT + ND);
     }
-    function go() { if (!raf && !dead && on && !document.hidden) raf = requestAnimationFrame(frame); }
+    // subscribed to the shared clock only while the canvas is on screen (the clock itself stops when the tab is hidden)
+    function go() { var want = on && !dead; if (want !== subbed) { subbed = want; want ? W.sub(frame) : W.unsub(frame); } }
     function fail(why) {
-      dead = true; if (raf) cancelAnimationFrame(raf); raf = 0;
+      dead = true; go(); W.on = false;
       set("2d", why); window.dispatchEvent(new Event("fx:2d"));
     }
     c.addEventListener("webglcontextlost", function (e) { fail("context-lost"); });
-    document.addEventListener("visibilitychange", go);
     if ("IntersectionObserver" in window) new IntersectionObserver(function (en) { on = en[0].isIntersecting; go(); }).observe(c);
     window.addEventListener("resize", resize);
     set("webgl-" + tier, q || (tier === "low" ? "low-end" : "default"));
+    // the low tier slows the shared clock and softens the wave for the portrait too
+    W.scale = HI ? 1 : 0.6; W.fps = HI ? 60 : 30;
     resize();
     // one synchronous draw so a broken driver fails here (→ 2d) instead of leaving an empty layer
-    frame(performance.now());
-    if (gl.getError() !== gl.NO_ERROR) fail("gl-error");
+    draw();
+    if (gl.getError() !== gl.NO_ERROR) return fail("gl-error");
+    W.on = true;
+    go();
   }
 })();

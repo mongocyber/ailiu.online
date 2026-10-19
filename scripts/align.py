@@ -1,4 +1,4 @@
-"""r8 alignment check (r10: Design Work is chapter 03, its slots join the chapter groups; r11: console groups work-left / case; r13: case-study groups work-side / case-<id> / media-<id>; r14B: folded and one-open states): every heading / subtitle / paragraph / status row inside one text block must share a left edge (±1px).
+"""r8 alignment check (r10: Design Work is chapter 03, its slots join the chapter groups; r11: console groups work-left / case; r13: case-study groups work-side / case-<id> / media-<id>; r14B: folded and one-open states; r17: hero note row removed): every heading / subtitle / paragraph / status row inside one text block must share a left edge (±1px).
 Usage: python3 scripts/align.py [tag]   (server: python3 -m http.server 8801). Runs chromium, webkit, firefox × desktop/mobile × en/zh."""
 import sys, json
 from playwright.sync_api import sync_playwright
@@ -17,9 +17,9 @@ JS = r"""() => {
   const groups = {};
   // text blocks: first rendered glyph; containers (grids / boxes holding SVG): content-box edge
   const C = (el) => { const b = el.getBoundingClientRect(), cs = getComputedStyle(el); return b.left + parseFloat(cs.paddingLeft) + parseFloat(cs.borderLeftWidth); };
-  const BOX = /wk-caps|wk-method|case-pmr|wfig|foot-meta|made-log|slot-row|draft-row|hero-note-sub/;
+  const BOX = /wk-caps|wk-method|case-pmr|wfig|foot-meta|made-log|slot-row|draft-row/;
   const add = (g, sel, root = document) => root.querySelectorAll(sel).forEach((el) => { if (vis(el)) (groups[g] = groups[g] || []).push([sel + (el.id ? "#" + el.id : ""), BOX.test(sel) ? C(el) : L(el)]); });
-  add("hero", ".hero-copy .kicker"); add("hero", ".hero-h > span"); add("hero", "#heroNote"); add("hero", ".hero-note-sub");
+  add("hero", ".hero-copy .kicker"); add("hero", ".hero-h > span"); add("hero", "#heroNote");
   document.querySelectorAll(".chapter").forEach((sec) => {
     const g = sec.id, h = sec.querySelector("header.slots");
     ["slot-index", "slot-title", "slot-tagline", "slot-blurb", "slot-row", "draft-row"].forEach((c) => add(g, ":scope > ." + c, h));
