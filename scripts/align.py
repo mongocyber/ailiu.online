@@ -33,8 +33,6 @@ JS = r"""() => {
     add("media-" + c.id, ":scope .wfig-lead", c); add("media-" + c.id, ":scope .wfig-cap", c);
     if (innerWidth > 760) add("media-" + c.id, ":scope .wfig-row > .wfig:first-child", c);
   });
-  add("about", ".about-h > span:first-child");
-  add("about-col", ".about-p > p");
   add("footer", ".foot-h > span:first-child"); add("footer", ".foot-meta");
   // r14: "How this site is made" shares the footer's left edge; its build log lines up with the contact column
   add("footer", ".made-copy > .kicker"); add("footer", ".made-p");

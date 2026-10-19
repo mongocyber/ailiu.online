@@ -454,7 +454,13 @@
 
   /* ---- 03 Design Work (r13): the sticky index follows the case in view; lead screens drift a few px (parallax) */
   const wkIdx = $("#workIndex");
+  // r17B: the index docks at the top bar's measured height (every breakpoint), and marks itself while docked
+  let topbarH = $(".topbar").getBoundingClientRect().height;
+  const setTopbarH = () => { topbarH = $(".topbar").getBoundingClientRect().height; document.documentElement.style.setProperty("--topbar-h", topbarH + "px"); };
+  setTopbarH();
+  if ("ResizeObserver" in window) new ResizeObserver(setTopbarH).observe($(".topbar"));
   function workStage() {
+    wkIdx.classList.toggle("is-stuck", Math.abs(wkIdx.getBoundingClientRect().top - topbarH) < 1);
     const cases = $$("#workCases .wcase"), mid = innerHeight * 0.42;
     let on = 0;
     cases.forEach((el, i) => {

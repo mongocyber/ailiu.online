@@ -884,5 +884,29 @@ CONTENT-DRAFT.md 的 9 个待确认项都还在，页面上对应位置已经标
 - 测试都跑在无头浏览器的软件渲染上。真机 GPU（iOS Safari、中低端 Android）的帧率还没实测：画像每帧要多算 96 × 201 次 wave。如果偏重，可以把手机的画像行数或 fps 再降。
 - 波峰经过时，脸部有一段扫描线会被整体抬起、压密（约 1.4 个行距）。这是「同步起伏」的可见证据，脸仍能认出来；如果觉得干扰，可以把 `lift` 调小。
 - 地形线会叠在 Hero 画像的肩部和毛衣上，这是有意的衔接；手机上更明显。
-- 「关于」一节的「草稿 · 措辞尚未定稿」chip 不在本轮删除范围内，保留了。
-- 交付目录里另有 `r17-user-feedback-2.png`（设计作品吸顶索引）和 `r17-user-feedback-3.png`（关于一节）。TASK-r17 没有提到它们，也没有附说明，本轮没有处理，请确认是否要另起一轮。
+- ~~「关于」一节的「草稿 · 措辞尚未定稿」chip 保留~~、~~feedback-2 / -3 未处理~~：已在 r17B 处理（见 17.6、17.7）。
+- 第 7 项（X 联系方式改为 @LouisLiu88）由用户自己完成，见 a406eba。
+
+### 17.6 r17B：设计作品二级导航吸顶缝隙（TASK-r17 第 5 项）
+- **原因**：二级导航（`#workIndex`）吸顶在 `top: var(--top-h)`，位置本身贴着顶栏；但顶栏背景是 `var(--bg) 0–88% → 透明` 的渐变（r11 为了让下沿柔和），最下面约 8px 是半透明的，从这条缝里能看到经过的案例图（feedback-2）。
+- **做法**：
+  - `app.js`：用 ResizeObserver 量顶栏实际高度，写进 `--topbar-h`（桌面 64px，手机 56px；以后顶栏换行或改高也跟着变）。`workStage` 每帧判断索引的 top 是否等于顶栏高度（误差小于 1px）；如果相等，就给它加 `.is-stuck`。
+  - `styles.css`：`.wk-index` 的 `top: var(--topbar-h, var(--top-h))`，背景本来就是不透明的 `var(--bg)`，不依赖 backdrop-filter。新增 `.wk-index::before`：一条和顶栏同高的不透明色带，接在索引上方，只在 `.is-stuck` 时显示。它的层级低于顶栏（20 < 60），所以只会填上顶栏渐隐的那一段，顶栏的字和按钮不受影响。没吸顶时这条色带隐藏，不会挡住设计作品章头。
+  - 顶栏自身的渐变没改，其他章节的顶栏观感和 r11 一样。
+- **验证**：滚到第 01 个案例的主图正好从栏下经过。chromium 1440×900：顶栏底 64 = 索引顶 64；Pixel 7：56 = 56。两处都是 `is-stuck`，没有透出的缝，0 pageerror。截图：`r17-subnav-desktop.png`、`r17-subnav-mobile.png`。
+
+### 17.7 r17B：删除「关于」过渡屏（TASK-r17 第 6 项）
+- 实际 DOM 里它在野生路易斯（08）之后、页脚之前，不在 Hero 之后。
+- **删掉的部分**：
+  - `index.html`：整个 `<section class="about" id="about">`，包括大标题「本职做设计，／业余自己动手做…」/「Design by day…」、右侧说明和「草稿 · 措辞尚未定稿」。注释改成 `CONTACT`。
+  - `styles.css`：`.about / .about-grid / .about-h / .about-p / .about-sub`。和页脚共用的选择器只保留 `.foot-h` 部分（逐行显示、中文 keep-all），手机断点里的 `.about-grid` 也去掉了。
+  - `align.py`：`about`、`about-col` 两组，现在共 22 组。
+  - `shoot.py`：`09-about` 那一帧。
+  - 导航、manifest、app.js 都没有引用 `#about`，也没有 about 相关的旁白条目，所以无需改动。
+- **现在的顺序**：Hero → 01 Aviso … 08 野生路易斯 → 页脚（「想一起做点什么？」）。Hero 到 01 Aviso 的衔接：首屏下面是 01–08 索引条，接着是分隔线和 Aviso 的章头，中间没有多余空屏。截图：`r17-hero-to-aviso.png`（桌面），另附 `r17-hero-to-aviso-mobile.png`。
+
+### 17.8 r17B 自检
+- `align.py`：chromium / webkit / firefox × 1440 / 390 × 中英 × 收起 / 展开，22 组全部 **0 处不齐、0 溢出、0 错误**。
+- `hero.py r17` 重跑，降级矩阵结果和 17.4 相同，全部 0 错误。重新截了 `r17-desktop-hero.png`（1440×900 中文）和 `r17-mobile-hero.png`（Pixel 7）。
+- 全站检索「措辞尚未定稿 / Wording not final / 本职做设计 / Design by day / about-」：页面、脚本、样式里都没有残留。
+- 本轮没有重跑部署打包脚本（不部署）。

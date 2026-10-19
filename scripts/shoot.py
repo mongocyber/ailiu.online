@@ -46,8 +46,6 @@ def run(pw, name, vp, mobile):
                 y = info["top"] + f * (info["h"] - info["vh"])
                 pg.evaluate(f"window.scrollTo(0,{y})"); pg.wait_for_timeout(900)
                 pg.screenshot(path=f"{OUT}/{TAG}-{name}-{LANG}-{i:02d}-{k}-{j}.png")
-    pg.evaluate("window.scrollTo(0, document.body.scrollHeight - innerHeight*2.2)"); pg.wait_for_timeout(800)
-    pg.screenshot(path=f"{OUT}/{TAG}-{name}-{LANG}-09-about.png")
     pg.evaluate("window.scrollTo(0, document.body.scrollHeight)"); pg.wait_for_timeout(800)
     pg.screenshot(path=f"{OUT}/{TAG}-{name}-{LANG}-10-footer.png")
     # r14: footer with the build log unfolded ("How this site is made")
