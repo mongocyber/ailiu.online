@@ -631,7 +631,7 @@ html:lang(zh) .foot-h span, html:lang(zh) .about-h span { word-break: keep-all; 
 .foot-mail { font-size: clamp(18px, 1.8vw, 26px); margin: 8px 0 0; color: var(--ink-2); border-bottom: 1px dashed var(--line-2); display: inline-block; padding-bottom: 4px; }
 .foot-meta { display: flex; flex-wrap: wrap; gap: 10px 28px; justify-content: space-between; margin-top: 9vh; padding-top: 18px; border-top: 1px solid var(--line); color: var(--ink-3); }
 .foot-meta a { text-decoration: none; }
-.foot-ai { text-transform: none; letter-spacing: .01em; color: var(--sig-b); }
+
 /* r14: how this site is made — note on the left, build log (folded) on the right; same columns as .foot-grid */
 .foot-made { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 5vw; align-items: start; margin-top: 9vh; padding-top: 22px; border-top: 1px solid var(--line); }
 .made-p { margin: 10px 0 0; max-width: 40em; color: var(--ink-2); font-size: 14.5px; line-height: 1.65; text-wrap: pretty; }

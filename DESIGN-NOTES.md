@@ -788,3 +788,9 @@ CONTENT-DRAFT.md 的 9 个待确认项都还在，页面上对应位置已经标
 - 手机上小姨家的书（depth-rise 渐显）刚进入本章时还没出现，下面会空一段，稍往下滚就出现。这是原有行为，这次没有改。
 - 14.5 里「页脚『Louis 的声音』由 AI 生成的说明保留」一条已作废（见 14.9）。其余 r13 / r14 遗留不变。
 - 上生产前请先由星野 / 幕僚长和用户确认。
+
+## 15. r15（页脚去掉 AI 说法）
+- 「这个网站是怎么做的」改为：中「这个网站是纯静态页面：Louis 是在 Canvas 上逐行画出的扫描线画像，首页背景是 WebGL 实时渲染的地形，配有轻声的背景音乐和音效。网站还在持续更新，每改一次，日志就多一行。」/ EN "It's a plain static page: Louis is a scanline portrait drawn line by line on a canvas, the home background is a live WebGL field, and a quiet score and sound effects play as you scroll. It keeps changing, and every change adds a line to the log."
+- 删除页脚 foot-meta 里的桃桃屋 AI 标注（.foot-ai）；制作日志 2026-10-17 条去掉「（无 AI 素材）」。桃桃屋章内 disclosure 保留不动。
+- 小姨家「门店导视」保留（用户确认当时有实体店）。
+- align：3 浏览器 × 1440/390 × 中英 × 收起/展开，24 组全 0。（直接手改，未调用 Claude Code。）

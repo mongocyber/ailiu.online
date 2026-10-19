@@ -21,7 +21,7 @@ window.MANIFEST = {
   // r14: the build log moved from the Wild Louis chapter to the footer ("How this site is made")
   buildLog: [
     { date: "2026-10-15", zh: "写下这份说明书", en: "Wrote the build spec", model: null, costUsd: 0 },
-    { date: "2026-10-17", zh: "做出第二版静态样片（无 AI 素材）", en: "Built preview v2, a static sample with no AI assets", model: null, costUsd: 0 },
+    { date: "2026-10-17", zh: "做出第二版静态样片", en: "Built preview v2, a static sample", model: null, costUsd: 0 },
     { date: "2026-10-18", zh: "接入内容草稿和联系方式", en: "Wired in draft copy and contacts", model: null, costUsd: 0 },
     { date: "2026-10-18", zh: "统一左对齐，调整章节顺序，加入「设计作品」", en: "Aligned every left edge, reordered chapters, added Design Work", model: null, costUsd: 0 },
     { date: "2026-10-18", zh: "「设计作品」成为第 03 章", en: "Made Design Work chapter 03", model: null, costUsd: 0 },
