@@ -45,7 +45,7 @@ window.MANIFEST = {
   contact: [
     // r7 decision: only these two. Real links.
     { id: "email", label: { zh: "邮箱", en: "Email" }, text: "louisliu@mail.grokbot.com", href: "mailto:louisliu@mail.grokbot.com" },
-    { id: "x", label: { zh: "X", en: "X" }, text: "@liuliu8765", href: "https://x.com/liuliu8765" }
+    { id: "x", label: { zh: "X", en: "X" }, text: "@LouisLiu88", href: "https://x.com/LouisLiu88" }
   ],
   hero: {
     narration: [

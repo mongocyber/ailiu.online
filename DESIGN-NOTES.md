@@ -138,7 +138,7 @@ Atomic 是主要参考，我取的是它的**骨架**，没有照搬它的外观
    - 07 章：副标题「这个站，就是我的作品」；简介用草稿原文；下方 note 解释「前六章是 ailiu 的作品，也就是 Louis 的；这一章是 Louis 自己的」。
    - AI 标注保留：07 章「本章内容全部由 AI 生成」；桃桃屋加「内容为 AI 生成」（草稿依据：仓库规定各平台勾 AI 生成）；页脚改为逐项列出 AI 生成的部分。
 2. **野生路易斯社交入口**：视频号 / 抖音 / 小红书 / 快手 / 公众号 五个占位图标（单字字形块，没有用平台商标），无链接，`aria-disabled`，每个标「待补 / TBD」。
-3. **联系方式**：页脚只放 `louisliu@mail.grokbot.com`（mailto）和 X `@liuliu8765`（https://x.com/liuliu8765），来自 `MANIFEST.contact`。旧邮箱、GitHub 都不放。
+3. **联系方式**：页脚只放 `louisliu@mail.grokbot.com`（mailto）和 X `@LouisLiu88`（https://x.com/LouisLiu88；10/19 账号改名后更新），来自 `MANIFEST.contact`。旧邮箱、GitHub 都不放。
 
 ### 草稿字段（content/manifest.js）
 - 每个项目新增 `draft` 块：`label / blurb / statusLabel / statusClass / note / links`，07 章还有 `tagline / socials`，小姨家有 `title`（EN 用草稿的「Aunt’s Home」）。页面渲染时用 `draft` 覆盖基础字段（`V(p, f)`），每章都有一个琥珀色「草稿 / DRAFT」标签。
