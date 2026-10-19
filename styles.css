@@ -114,9 +114,6 @@ html:lang(zh) .display { letter-spacing: -.01em; line-height: 1.18; }
 .chapnav a[aria-current="true"] b { color: var(--bg); opacity: .6; }
 .controls { position: relative; display: flex; justify-content: flex-end; gap: 8px; }
 /* r14C: shown while the browser holds the sound back (no user activation yet); any tap or key lifts it */
-.sound-hint { position: absolute; top: calc(100% + 8px); right: 0; padding: 7px 11px; border: 1px solid rgba(150, 232, 255, .4); border-radius: 999px; background: #0d0d0f; color: var(--sig-a); font-size: 10.5px; white-space: nowrap; cursor: pointer; box-shadow: 0 10px 30px rgba(0, 0, 0, .5); animation: hint-in var(--dur-base) var(--ease-out) both; }
-.sound-hint[hidden] { display: none; }
-@keyframes hint-in { from { opacity: 0; transform: translateY(-4px); } }
 .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .chapnav { justify-self: center; min-width: 0; }
 .ctl { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 13px; border: 1px solid var(--line-2); border-radius: 999px; background: rgba(13, 13, 15, .7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); cursor: pointer; font-size: 12.5px; color: var(--ink-2); transition: border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out); }
@@ -925,5 +922,4 @@ html:lang(zh) .case-pmr { grid-template-columns: 5em minmax(0, 1fr); }
   .wfig-lead img { transform: none; }
   .wk-index a, .wk-index a::after { transition: none; }
   .wcase, .case-fold, .case-fold-in, .wfig-lead .wfig-frame, .case-pm::before, .case-pm::after { transition: none !important; }
-  .sound-hint { animation: none; }
 }

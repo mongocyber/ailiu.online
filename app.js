@@ -195,8 +195,8 @@
   /* ------------------------------------------------------------------ sound (r14C): background music + effects */
   // Files: assets/audio (scripts/audio_prep.sh; .m4a for Safari / iOS, .webm Opus where AAC is missing).
   // On by default and remembered. On load an AudioContext is created; if the browser keeps it suspended (no user
-  // activation yet: scroll and mousemove don't count), a "tap for sound" hint shows and the first
-  // tap or key resumes it. Nothing is downloaded until the context runs; the music loop
+  // activation yet), it waits quietly — no hint (r16) — and the visitor's first interaction of any kind
+  // (scroll, wheel, touch, click, key) tries to resume it. Nothing is downloaded until the context runs; the music loop
   // (~0.7–0.9 MB) only then. Music plays far below the effects, fades in / out, and pauses while the tab is hidden.
   let soundOn = store.get("ailiu.sound") !== "off";
   const sfx = mod(() => {
@@ -231,8 +231,6 @@
       if (then) setTimeout(then, 520);
     }
     function sync() {
-      const hint = $("#soundHint");
-      if (hint) hint.hidden = !(soundOn && ctx && !running());
       document.documentElement.dataset.sound = !soundOn ? "off" : running() ? "on" : "blocked";
     }
     function unlock() {
@@ -240,14 +238,18 @@
       init();
       const p = ctx.resume(); (p && p.then ? p : Promise.resolve()).then(() => { sync(); startBg(); }, sync);
     }
-    // pointerdown for Chromium / WebKit; Firefox only counts pointerup / click / keydown / touchend as activation
-    ["pointerdown", "pointerup", "click", "keydown", "touchend"].forEach((ev) => addEventListener(ev, unlock, { capture: true, passive: true }));
+    // r16: any first interaction tries to resume. Browsers only grant activation on pointer / click / key / touchend,
+    // so scroll and wheel are attempts that succeed where the browser allows it; the rest wait for the next gesture.
+    // Listeners drop off once the context is running.
+    const GEST = ["pointerdown", "pointerup", "click", "keydown", "touchstart", "touchend", "wheel", "scroll"];
+    function onGesture() { unlock(); if (running()) GEST.forEach((ev) => removeEventListener(ev, onGesture, true)); }
+    GEST.forEach((ev) => addEventListener(ev, onGesture, { capture: true, passive: true }));
     document.addEventListener("visibilitychange", () => {
       if (!ctx) return;
       if (document.hidden) stopBg(() => { if (document.hidden) ctx.suspend(); });
       else if (soundOn) ctx.resume().then(startBg, () => {});
     });
-    if (soundOn) { init(); if (running()) startBg(); }
+    if (soundOn) { init(); if (running()) startBg(); else unlock(); } // try to play on load; stay quiet if blocked
     setTimeout(sync, 0); if (ctx && ctx.addEventListener) ctx.addEventListener("statechange", sync);
     return {
       play(name) {

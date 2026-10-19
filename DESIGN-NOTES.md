@@ -794,3 +794,9 @@ CONTENT-DRAFT.md 的 9 个待确认项都还在，页面上对应位置已经标
 - 删除页脚 foot-meta 里的桃桃屋 AI 标注（.foot-ai）；制作日志 2026-10-17 条去掉「（无 AI 素材）」。桃桃屋章内 disclosure 保留不动。
 - 小姨家「门店导视」保留（用户确认当时有实体店）。
 - align：3 浏览器 × 1440/390 × 中英 × 收起/展开，24 组全 0。（直接手改，未调用 Claude Code。）
+
+## 16. r16 第一步（声音无提示 + 台词清单）
+- 删除「轻点任意处开启声音」提示（#soundHint 按钮、CSS、keyframes）。加载时仍尝试播放；被拦时静默等待，访客首次任意交互（pointerdown/pointerup/click/keydown/touchstart/touchend/wheel/scroll）都会尝试 resume，成功后移除监听。常驻声音开关不变。
+- 注意：Chrome/Safari 规范上只有点击、按键、触摸结束算用户激活，真实浏览器里纯滚动/滚轮可能仍解不开，要等下一次点或触摸（Playwright 无头里滚轮即可解开）。
+- 旁白台词 9 条（Hero + 8 章，中英）整理到 /workspace/deliverables/ailiu-audio/narration-lines.md，供 Suno Speech 逐句配音。Louis 说话动效本步未做。
+- align 24 组全 0；chromium/webkit 测试：加载 data-sound=blocked、无提示、交互后 on、0 pageerror。（直接手改，未调用 Claude Code。）
