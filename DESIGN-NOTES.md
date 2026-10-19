@@ -547,3 +547,82 @@ CONTENT-DRAFT.md 的 9 个待确认项都还在，页面上对应位置已经标
 - 「章节过渡处的 3D 层次」没有做，3D 只放在 Hero，以免和各章已有的编排冲突。
 - 批 A 的遗留（13.6）不变。
 
+
+## 14. r14（野生路易斯改为自我介绍 · 搭建记录移到页脚 · 设计作品留白修复，2026-10-19）
+
+一次提交。没有新依赖，没有调用外部生成服务；没有 push，没有部署。
+
+### 14.1 第 07 章「野生路易斯」重写
+野生路易斯和 ailiu.online 是两个独立项目（网站的内容来自野生路易斯）。本章改为野生路易斯本人第一人称的简短自我介绍，由他带出自己的网站。
+
+- 删掉了：
+  - 「野生路易斯就是 ailiu.online 这个网站……」及英文版；
+  - 章内的第三方说明 note（「其他章节是我的设计和项目，这一章讲网站自己是怎么做出来的」）；
+  - 章内的「本章内容全部由 AI 生成」disclosure（`disclosure: null`，`#wlDisc` 已删）；
+  - 「网站源码 / 搭建记录」整体：manifest 实时源码面板、runtime 面板、制作日志、X 光栅格背景（HTML、CSS、JS 全部移除）。
+- 新文案（manifest 的 draft 字段为页面显示值；base 字段同步改过）：
+
+| 位置 | 中文 | English |
+|---|---|---|
+| tagline | 设计师，爱试新鲜东西 | A designer who likes trying new things |
+| blurb | 我是一名设计师，喜欢尝试各种新鲜东西。做了什么就分享出来，也聊聊想法和见解。我做过的东西，都收在我的网站 ailiu.online。 | I'm a designer, and I like trying new things. Whatever I make, I share, along with my thoughts and takes. My site, ailiu.online, is where the things I've made live. Come have a look. |
+| 状态 | 进行中 · 持续分享 | Ongoing · still sharing |
+| 旁白 / 字幕 | 我爱试新鲜东西，做出来就分享。做过的都在 ailiu.online。 | I like trying new things and sharing what I make. It all lives at ailiu.online. |
+
+  中文 tagline 10 字，blurb 65 字（不含空格）。
+- 社交平台图标（视频号 / 抖音 / 小红书 / 快手 / 公众号，均为「待补」）保留。
+- **新版式**：文字槽在左侧，垂直居中（与桃桃屋同一种做法，宽 `min(34vw, 480px)`）；Louis 画像占右半，右边对齐 `--pad-x`，底部有一条细光线。画像随章节进入，从 0.8 倍放大到 1 倍并渐显（`--grow`）。手机上依次排列：文字、社交、画像（56vh）。
+- treatment 改名为 `wild-louis-portrait`。runtime 面板里「portrait canvas / static fallback」那一行读数改为写在 `<html data-portrait>` 上（真机排查时用 devtools 看）。
+- 页脚 AI 说明改为「AI 生成：Louis 的声音，桃桃屋和野生路易斯的内容。」/「AI-generated: Louis's voice, and the content of TaoTao House and Wild Louis.」，不再提「一章」。
+- 「关于」正文的结尾「还有这个网站」改为「还有野生路易斯」（英文同步改为 "and Wild Louis"），因为这一项现在指的是野生路易斯，不是网站。
+
+### 14.2 页脚「这个网站是怎么做的 / How this site is made」
+位置在联系区和版权行之间，两栏，和 `.foot-grid` 用同一套栏宽。左栏是标签和正文；右栏是制作日志，和「联系」栏左边对齐。
+
+- 中文：「这个网站是我和 AI 一起搭的。它是纯静态页面：Louis 是在 Canvas 上逐行画出的扫描线画像，首页背景是 WebGL 实时渲染的地形。网站还在持续更新，每改一次，日志就多一行。」
+- English: "I build this site together with AI. It's a plain static page: Louis is a scanline portrait drawn on a canvas, and the home background is a live WebGL field. It keeps changing, and every change adds a line to the log."
+- **制作日志**：用原生 `<details>`，默认折叠。标题行显示「制作日志 · 9 条 / Build log · 9 entries」和 +/− 号，展开后按日期倒序列出。只保留日期和事项，model / cost 两列已去掉。手机上是单列，点标题行即可展开。没有放仓库链接。
+- 日志数据从 `wild-louis.log` 移到顶层 `MANIFEST.buildLog`，并新增一条：2026-10-19「野生路易斯一章改为自我介绍，搭建记录移到页脚 / Wild Louis became a self-introduction; the build notes moved to the footer」。
+
+### 14.3 设计作品（03）留白修复
+- **章首到第一个案例**：
+  - `.wk-head` 的内边距从上 9vh / 下 9vh 改为上 7vh / 下 5vh；
+  - 第一个案例的上内边距从 12vh 改为 5vh，后面的案例保持 12vh。
+- **索引下方的大块空白**：原因是渐显没有触发。共用的 IntersectionObserver 设了 `rootMargin: -12%`；1440×900 时，第一个案例的顶边加上 reveal 的下移量，正好落在触发线以下，于是整块保持 `opacity: 0`，看起来就是空白。
+  - 修复：案例单独使用一个 `threshold: 0`、不带 margin 的 observer，只要露出一点就显示；
+  - 再加上 5vh 的上内边距，索引下方直接接案例内容。
+- **实测**（chromium，进入本章时）：从章首最后一行到索引、从索引到案例文字、从索引到主图的间距如下，三处一致，案例内容立即可见。
+
+| 宽度 | 间距 |
+|---|---|
+| 1280 | 40px |
+| 1440 | 45px |
+| 1920 | 54px |
+
+  章节长度和案例内容都没有改。
+
+### 14.4 自检
+- `align.py r14`：chromium / webkit / firefox × 1440 / 390 × en / zh，共 24 组，全部 **0 处不齐、0 溢出、0 错误**。新增了两个分组：
+  - `footer`：标签和正文，与页脚标题、版权行对齐；
+  - `foot-col`：日志标题行与「联系」标签对齐。
+- `shoot.py r14`：桌面和手机 × 中英，控制台 0 错误，横向溢出 0。新增 `11-footer-log` 一帧（日志展开）。看了两轮：
+  - 第一轮：野生路易斯（桌面中英、手机）、页脚（折叠和展开）、设计作品章首。发现中文 blurb 第三行只剩「逛。」，收短了文案。
+  - 第二轮：野生路易斯章刚进入时（画像渐显中）、设计作品中文首帧、关于区、手机设计作品首帧，没有发现问题。
+  - 另外单独截了 1280 / 1440 / 1920 下设计作品章首和野生路易斯的中英版。
+- **全站检索**（index.html、app.js、styles.css、manifest、louis*.js、fx3d.js）：「野生路易斯就是 / is ailiu.online itself / 分身 / 虚拟形象 / avatar / digital twin / virtual persona / 我是路易斯 / 八章 / 本章内容全部 / 网站本身 / site itself」均无残留。
+- **部署脚本**：`node --check` 通过；bundle 里能找到 `LOUIS_DATA`、`webgl-high`（fx3d）和 `buildLog`。用部署目录单独起服务打开，结果为 `data-fx=webgl-high`、app-ready、日志 9 条、0 错误。
+- **截图**（`/workspace/deliverables/ailiu-preview-v2-shots/`）：
+  - `r14-desktop-wild-louis.png`
+  - `r14-mobile-wild-louis.png`
+  - `r14-desktop-wild-louis-en.png`
+  - `r14-desktop-footer.png`（日志展开）
+  - `r14-mobile-footer.png`（日志展开）
+  - `r14-desktop-work-top.png`
+
+### 14.5 遗留
+- 野生路易斯的 blurb 里有「我是一名设计师」，这和 Hero 标题「我是 UX 设计师」是两个人各自的自我介绍，口吻相近。如果觉得重复，可以把这一章改成「一名设计师，……」开头。
+- 野生路易斯的旁白仍显示在标着 LOUIS 的字幕条里，口吻是野生路易斯本人；其他章的旁白口吻是 ailiu。这符合「由他介绍自己的网站」的要求，但两种口吻并存，请确认。
+- 社交平台都还没有链接（待补）。
+- 页脚「Louis 的声音」由 AI 生成的说明保留（同 13.10）。
+- r13 的遗留（13.6、13.10）不变。
+- 上生产前请先由星野 / 幕僚长和用户确认。

@@ -41,7 +41,7 @@
     const ogl = $('meta[property="og:locale"]'); if (ogl) ogl.content = lang === "zh" ? "zh_CN" : "en_US";
     $$("[data-en]").forEach((el) => { el.textContent = el.dataset[lang] || el.dataset.en; });
     $$("[data-lang-opt]").forEach((el) => el.classList.toggle("on", el.dataset.langOpt === lang));
-    fillSlots(); renderWork(); buildNav(); renderSound(); buildTranscript(); renderWildSource(true); renderLog();
+    fillSlots(); renderWork(); buildNav(); renderSound(); buildTranscript(); renderLog();
     measureAviso(); reelTxt = "";
     narrator.onLang();
   }
@@ -87,8 +87,6 @@
     $("#heroNote").textContent = L(M.persona.line);
     $("#footContact").innerHTML = M.contact.map((c) =>
       `<li><span class="mono">${esc(L(c.label))}</span><a href="${c.href}"${c.id === "x" ? ' target="_blank" rel="noopener"' : ""}>${esc(c.text)}</a></li>`).join("");
-    const d = byKey["wild-louis"].disclosure;
-    $("#wlDisc").textContent = L(d);
   }
   /* ------------------------------------------------------------------ 03 Design Work: case studies from MANIFEST.work (r13) */
   // Head: capabilities + method. Body: a sticky index (01–05) and one article per case in a single grid template —
@@ -133,7 +131,8 @@
       </article>`;
     }).join("");
     // re-rendered on every language switch: the new blocks join the reveal observer (the ones in view reveal at once)
-    $$("#workCases [data-preset]").forEach((el) => presetIO.observe(el));
+    // r14: cases reveal as soon as any part is on screen (the shared -12% margin left the first case blank under the index)
+    $$("#workCases [data-preset]").forEach((el) => caseIO.observe(el));
     wkActive = -1;
   }
   let wkActive = -1;
@@ -156,6 +155,9 @@
   const presetIO = new IntersectionObserver((ens) => {
     ens.forEach((en) => { if (en.isIntersecting) { en.target.classList.add("is-in"); presetIO.unobserve(en.target); } });
   }, { rootMargin: "0px 0px -12% 0px", threshold: 0.01 });
+  const caseIO = new IntersectionObserver((ens) => {
+    ens.forEach((en) => { if (en.isIntersecting) { en.target.classList.add("is-in"); caseIO.unobserve(en.target); } });
+  }, { threshold: 0 });
   $$(".chapter .slots").forEach((sl) => {
     let i = 0;
     $$(":scope > .slot-tagline, :scope > .slot-blurb, :scope > .slot-row", sl).forEach((el) => { el.dataset.preset = "reveal-up"; el.style.setProperty("--i", ++i); });
@@ -603,51 +605,19 @@
     ttCells.forEach((c) => c.classList.toggle("is-playing", playing.includes(c)));
   }
 
-  /* ---- 07 Wild Louis */
-  const wlSrc = $("#wlSrc"), wlPin = $("#wild-louis .pin");
-  let srcLines = [], shownLines = -1;
-  function renderWildSource(force) {
-    const p = byKey["wild-louis"];
-    const view = { key: p.key, order: p.order, type: p.type, status: p.status, title: L(V(p, "title")), tagline: L(V(p, "tagline")), draft: !!p.draft,
-      treatment: p.treatment.id, choreography: p.treatment.choreographyId, enter: p.transition.enter, exit: p.transition.exit,
-      stageHeightVh: p.stageHeightVh, aiGenerated: p.aiGenerated, narration: p.narration[0].subtitle[lang], logEntries: p.log.length };
-    srcLines = JSON.stringify(view, null, 2).split("\n");
-    if (force) shownLines = -1;
-  }
+  /* ---- 07 Wild Louis: the portrait grows in as the chapter arrives (r14: source / runtime / log panels removed) */
+  const wlPin = $("#wild-louis .pin");
   const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
-  function paintSrc(n) {
-    if (n === shownLines) return; shownLines = n;
-    const html = srcLines.slice(0, n).map((ln) => esc(ln)
-      .replace(/^(\s*)"([^"]+)":/, '$1<span class="k">"$2"</span>:')
-      .replace(/: "(.*)"(,?)$/, ': <span class="s">"$1"</span>$2')).join("\n");
-    wlSrc.innerHTML = html + (n < srcLines.length ? '<span class="cur"></span>' : "");
-  }
-  function renderLog() {
-    const log = byKey["wild-louis"].log;
-    $("#wlLog").innerHTML = log.slice().reverse().map((e) =>
-      `<li><time>${e.date}</time><span>${esc(e[lang])}<small>model: ${e.model || "none"} · cost: $${e.costUsd.toFixed(2)}</small></span></li>`).join("");
-    $("#wlLogCount").textContent = log.length + (lang === "zh" ? " 条" : " entries");
-  }
-  const cssTok = getComputedStyle(document.documentElement);
   function wild(p) {
-    const m = isMobile() || reduced;
-    wlPin.style.setProperty("--xr", m ? 1 : sstep(0, 0.2, p).toFixed(3));
-    wlPin.style.setProperty("--grow", m ? 1 : sstep(0.08, 0.42, p).toFixed(3));
-    paintSrc(m ? Math.min(12, srcLines.length) : Math.round(sstep(0.08, 0.62, p) * srcLines.length));
-    const lvl = getComputedStyle(document.documentElement).getPropertyValue("--louis-level").trim() || "0";
-    const rows = [
-      ["--louis-level", (+lvl).toFixed(3)],
-      ["progress", p.toFixed(3)],
-      ["viewport", innerWidth + "×" + innerHeight],
-      ["lang", lang],
-      ["narrationScope", M.narrationScope],
-      ["--dur-base", cssTok.getPropertyValue("--dur-base").trim()],
-      ["--ease-out", cssTok.getPropertyValue("--ease-out").trim()],
-      ["reduced-motion", String(reduced)],
-      ["portrait", louisHero.live ? "canvas" : "static fallback"],
-      ["fx", document.documentElement.dataset.fx || "2d"],   // r13: hero 3D tier (webgl-high / webgl-low / 2d)   // r12: which render path the hero portrait is on
-    ];
-    $("#wlRuntime").innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("");
+    wlPin.style.setProperty("--grow", isMobile() || reduced ? 1 : sstep(0, 0.36, p).toFixed(3));
+    document.documentElement.dataset.portrait = louisHero.live ? "canvas" : "fallback";   // r12 readout, now an attribute
+  }
+
+  /* ---- footer: build log (r14: moved here from Wild Louis; folded by default) */
+  function renderLog() {
+    const log = M.buildLog;
+    $("#madeLogList").innerHTML = log.slice().reverse().map((e) => `<li><time>${e.date}</time><span>${esc(e[lang])}</span></li>`).join("");
+    $("#madeLogCount").textContent = log.length + (lang === "zh" ? " 条" : " entries");
   }
 
   /* ------------------------------------------------------------------ hero glyph rain (hero only, §4.7) */
@@ -812,7 +782,6 @@
   addEventListener("resize", layout);
   if (mqMobile.addEventListener) mqMobile.addEventListener("change", layout); else if (mqMobile.addListener) mqMobile.addListener(layout); // iOS < 14
 
-  run("wild-source", () => renderWildSource(true));
   run("lang", applyLang);
   run("layout", layout);
   requestAnimationFrame(frame);

@@ -17,7 +17,7 @@ JS = r"""() => {
   const groups = {};
   // text blocks: first rendered glyph; containers (grids / boxes holding SVG): content-box edge
   const C = (el) => { const b = el.getBoundingClientRect(), cs = getComputedStyle(el); return b.left + parseFloat(cs.paddingLeft) + parseFloat(cs.borderLeftWidth); };
-  const BOX = /wk-caps|wk-method|case-pmr|wfig|foot-meta|slot-row|draft-row|hero-note-sub/;
+  const BOX = /wk-caps|wk-method|case-pmr|wfig|foot-meta|made-log|slot-row|draft-row|hero-note-sub/;
   const add = (g, sel, root = document) => root.querySelectorAll(sel).forEach((el) => { if (vis(el)) (groups[g] = groups[g] || []).push([sel + (el.id ? "#" + el.id : ""), BOX.test(sel) ? C(el) : L(el)]); });
   add("hero", ".hero-copy .kicker"); add("hero", ".hero-h > span"); add("hero", "#heroNote"); add("hero", ".hero-note-sub");
   document.querySelectorAll(".chapter").forEach((sec) => {
@@ -35,6 +35,9 @@ JS = r"""() => {
   add("about", ".about-h > span:first-child");
   add("about-col", ".about-p > p");
   add("footer", ".foot-h > span:first-child"); add("footer", ".foot-meta");
+  // r14: "How this site is made" shares the footer's left edge; its build log lines up with the contact column
+  add("footer", ".made-copy > .kicker"); add("footer", ".made-p");
+  add("foot-col", ".foot-contact > .kicker"); add("foot-col", ".made-log > summary");
   return groups;
 }"""
 bad = 0

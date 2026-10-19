@@ -16,6 +16,18 @@ window.MANIFEST = {
     zh: { title: "ailiu.online · 做软件和 AI 工具的体验设计", description: "软件 UX 体验设计，眼下主要做 AI 工具：我工作里的设计案例，和业余做的东西。" },
     en: { title: "ailiu.online · UX designer for software and AI tools", description: "UX design for software, these days mostly AI tools: my design work, and the things I build on the side." }
   },
+  // r14: the build log moved from the Wild Louis chapter to the footer ("How this site is made")
+  buildLog: [
+    { date: "2026-10-15", zh: "写下这份说明书", en: "Wrote the build spec", model: null, costUsd: 0 },
+    { date: "2026-10-17", zh: "做出第二版静态样片（无 AI 素材）", en: "Built preview v2, a static sample with no AI assets", model: null, costUsd: 0 },
+    { date: "2026-10-18", zh: "写清 Louis 的身份，接入内容草稿和联系方式", en: "Spelled out who Louis is; wired in draft copy and contacts", model: null, costUsd: 0 },
+    { date: "2026-10-18", zh: "统一左对齐，调整章节顺序，加入「设计作品」", en: "Aligned every left edge, reordered chapters, added Design Work", model: null, costUsd: 0 },
+    { date: "2026-10-18", zh: "「设计作品」成为第 03 章", en: "Made Design Work chapter 03", model: null, costUsd: 0 },
+    { date: "2026-10-18", zh: "修好手机上不显示的头像，重写首页文案", en: "Fixed the portrait on phones; rewrote the home page copy", model: null, costUsd: 0 },
+    { date: "2026-10-19", zh: "「设计作品」改成完整案例，配上原来的界面图", en: "Rebuilt Design Work as full case studies with the original screens", model: null, costUsd: 0 },
+    { date: "2026-10-19", zh: "首页背景换成实时 3D 扫描线地形", en: "Gave the home page a live 3D scanline field", model: null, costUsd: 0 },
+    { date: "2026-10-19", zh: "野生路易斯一章改为自我介绍，搭建记录移到页脚", en: "Wild Louis became a self-introduction; the build notes moved to the footer", model: null, costUsd: 0 }
+  ],
   persona: {
     draft: true,
     // r12: every line on the site is ailiu speaking (first person); Louis is just the face on the page.
@@ -377,43 +389,31 @@ window.MANIFEST = {
     {
       key: "wild-louis", order: 70, type: "virtual", status: "self",
       title: { zh: "野生路易斯", en: "Wild Louis" },
-      tagline: { zh: "这个站，是我做的", en: "I made this site" },
+      // r14: Wild Louis and this site are two separate projects (the site's content comes from Wild Louis).
+      // The chapter is Wild Louis introducing himself, first person, plus his social channels; the build log lives in the footer.
+      tagline: { zh: "设计师，爱试新鲜东西", en: "A designer who likes trying new things" },
       blurb: {
-        zh: "这一章是本站的源码层和制作日志。",
-        en: "This chapter is the site’s source layer and build log."
+        zh: "我是一名设计师，喜欢尝试各种新鲜东西。",
+        en: "I'm a designer who likes trying new things."
       },
-      statusLabel: { zh: "AI 生成", en: "AI-generated" },
-      treatment: { id: "wild-louis-meta-layer", choreographyId: "wildlouis.meta-layer.v1" },
+      statusLabel: { zh: "进行中", en: "Ongoing" },
+      treatment: { id: "wild-louis-portrait", choreographyId: "wildlouis.portrait.v1" },
       transition: { enter: "mask-wipe", exit: "fade-through" },
       stageHeightVh: 160,
       accent: "#B9A6FF",
       narration: [{ id: "wild-louis-1", subtitle: {
-        zh: "这是这个站的骨架。每做一件新东西，日志就多一行。",
-        en: "This is the scaffolding of this site. Every new thing adds a line to the log." } }],
-      log: [
-        { date: "2026-10-15", zh: "写下这份说明书", en: "Wrote the build spec", model: null, costUsd: 0 },
-        { date: "2026-10-17", zh: "做出第二版静态样片（无 AI 素材）", en: "Built preview v2, a static sample with no AI assets", model: null, costUsd: 0 },
-        { date: "2026-10-18", zh: "写清 Louis 的身份，接入内容草稿和联系方式", en: "Spelled out who Louis is; wired in draft copy and contacts", model: null, costUsd: 0 },
-        { date: "2026-10-18", zh: "统一左对齐，调整章节顺序，加入「设计作品」", en: "Aligned every left edge, reordered chapters, added Design Work", model: null, costUsd: 0 },
-        { date: "2026-10-18", zh: "「设计作品」成为第 03 章", en: "Made Design Work chapter 03", model: null, costUsd: 0 },
-        { date: "2026-10-18", zh: "修好手机上不显示的头像，重写首页文案", en: "Fixed the portrait on phones; rewrote the home page copy", model: null, costUsd: 0 },
-        { date: "2026-10-19", zh: "「设计作品」改成完整案例，配上原来的界面图", en: "Rebuilt Design Work as full case studies with the original screens", model: null, costUsd: 0 },
-        { date: "2026-10-19", zh: "首页背景换成实时 3D 扫描线地形", en: "Gave the home page a live 3D scanline field", model: null, costUsd: 0 }
-      ],
+        zh: "我爱试新鲜东西，做出来就分享。做过的都在 ailiu.online。",
+        en: "I like trying new things and sharing what I make. It all lives at ailiu.online." } }],
       links: [],
       draft: {
         label: { zh: "草稿", en: "Draft" },
-        tagline: { zh: "这个网站本身，和它的制作日志", en: "This site itself, and how it gets built" },
+        tagline: { zh: "设计师，爱试新鲜东西", en: "A designer who likes trying new things" },
         blurb: {
-          zh: "野生路易斯就是 ailiu.online 这个网站。我和 AI 一起搭它，这一章由 AI 生成；这里能看到它实时的源码和制作日志。",
-          en: "Wild Louis is ailiu.online itself. I build it together with AI, and this chapter is AI-generated. Here you can read its live source and build log."
+          zh: "我是一名设计师，喜欢尝试各种新鲜东西。做了什么就分享出来，也聊聊想法和见解。我做过的东西，都收在我的网站 ailiu.online。",
+          en: "I'm a designer, and I like trying new things. Whatever I make, I share, along with my thoughts and takes. My site, ailiu.online, is where the things I've made live. Come have a look."
         },
-        statusLabel: { zh: "进行中 · 持续生长", en: "Ongoing · still growing" },
+        statusLabel: { zh: "进行中 · 持续分享", en: "Ongoing · still sharing" },
         statusClass: "is-ai",
-        note: {
-          zh: "其他章节是我的设计和项目，这一章讲网站自己是怎么做出来的。",
-          en: "The other chapters are my design work and projects; this one is about how the site itself gets made."
-        },
         socials: [
           { id: "channels", label: { zh: "视频号", en: "WeChat Channels" }, glyph: "视" },
           { id: "douyin", label: { zh: "抖音", en: "Douyin" }, glyph: "抖" },
@@ -424,8 +424,8 @@ window.MANIFEST = {
         links: []
       },
       aiGenerated: true,
-      disclosure: { zh: "本章内容全部由 AI 生成。", en: "Everything in this section is AI-generated." },
-      mobileFallback: "static-source-snippet"
+      disclosure: null,
+      mobileFallback: "portrait-stack"
     },
     {
       key: "xiaoyi", order: 80, type: "design", status: "pending",

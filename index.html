@@ -440,34 +440,20 @@
   </div>
 </section>
 
-<!-- ========================= 07 WILD LOUIS — meta layer ========================= -->
+<!-- ========================= 07 WILD LOUIS — self-introduction ========================= -->
+<!-- r14: Wild Louis introducing himself (first person) and his channels; the site's build notes live in the footer -->
 <section class="chapter ch-wild" id="wild-louis" data-key="wild-louis">
   <div class="stage" data-stage="wild-louis">
     <div class="pin">
       <div class="cut" aria-hidden="true"><i></i><i></i><i></i></div>
-      <div class="wl-xray" id="wlXray" aria-hidden="true">
-        <div class="wl-cols"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-      </div>
-      <div class="wl-left">
       <header class="slots wl-slots">
         <span class="slot-index mono" data-slot="index"></span>
         <h2 class="slot-title" data-slot="title"></h2>
         <p class="slot-tagline" data-slot="tagline"></p>
         <p class="slot-blurb" data-slot="blurb"></p>
-        <div class="slot-row"><span class="slot-status mono is-ai" data-slot="status"></span><span class="wl-disc mono" id="wlDisc"></span></div>
+        <div class="slot-row"><span class="slot-status mono is-ai" data-slot="status"></span></div>
       </header>
-      <div class="wl-src mono" aria-label="This chapter's manifest entry">
-        <div class="wl-file"><span>content/manifest.js</span><span data-en="this chapter, live" data-zh="本章，实时读取">this chapter, live</span></div>
-        <pre id="wlSrc"></pre>
-      </div>
-      </div>
       <div class="wl-louis" id="louisWild" aria-hidden="true"></div>
-      <div class="wl-panel mono">
-        <div class="wl-file"><span>runtime</span><span data-en="read from this page" data-zh="从本页读取">read from this page</span></div>
-        <dl id="wlRuntime"></dl>
-        <div class="wl-file wl-logh"><span data-en="build log" data-zh="制作日志">build log</span><span id="wlLogCount"></span></div>
-        <ol class="wl-log" id="wlLog"></ol>
-      </div>
     </div>
   </div>
 </section>
@@ -517,7 +503,7 @@
   <div class="wrap about-grid">
     <h2 class="display about-h" id="about-h" data-preset="reveal-up"><span data-en="Design by day," data-zh="本职做设计，">Design by day,</span> <span data-en="and on the side I make things: code, paper, songs, pictures." data-zh="业余自己动手做：代码、纸、歌、画面。">and on the side I make things: code, paper, songs, pictures.</span></h2>
     <div class="about-p" data-preset="reveal-up">
-      <p data-en="Chapter 03, Design Work, is my day job: B2B and AI product design. The rest I made on my own time: a browser extension, a print site, calculators, a mini program, a kids' song channel, a brand, and this site." data-zh="第 03 章「设计作品」是我的本职：B 端与 AI 产品设计。其余是我业余做的：浏览器插件、打印网站、计算器、小程序、儿歌频道、一个品牌，还有这个网站。">Chapter 03, Design Work, is my day job: B2B and AI product design. The rest I made on my own time: a browser extension, a print site, calculators, a mini program, a kids' song channel, a brand, and this site.</p>
+      <p data-en="Chapter 03, Design Work, is my day job: B2B and AI product design. The rest I made on my own time: a browser extension, a print site, calculators, a mini program, a kids' song channel, a brand, and Wild Louis." data-zh="第 03 章「设计作品」是我的本职：B 端与 AI 产品设计。其余是我业余做的：浏览器插件、打印网站、计算器、小程序、儿歌频道、一个品牌，还有野生路易斯。">Chapter 03, Design Work, is my day job: B2B and AI product design. The rest I made on my own time: a browser extension, a print site, calculators, a mini program, a kids' song channel, a brand, and Wild Louis.</p>
       <p class="about-sub mono"><span class="dr-chip" data-en="Draft" data-zh="草稿">Draft</span><span data-en="Wording not final yet." data-zh="措辞尚未定稿。">Wording not final yet.</span></p>
     </div>
   </div>
@@ -532,9 +518,20 @@
       <ul class="foot-links" id="footContact"></ul>
     </div>
   </div>
+  <!-- r14: how this site is made: a short note (first person = ailiu) and the build log, folded by default -->
+  <div class="wrap foot-made">
+    <div class="made-copy">
+      <p class="kicker mono" data-en="How this site is made" data-zh="这个网站是怎么做的">How this site is made</p>
+      <p class="made-p" data-en="I build this site together with AI. It's a plain static page: Louis is a scanline portrait drawn on a canvas, and the home background is a live WebGL field. It keeps changing, and every change adds a line to the log." data-zh="这个网站是我和 AI 一起搭的。它是纯静态页面：Louis 是在 Canvas 上逐行画出的扫描线画像，首页背景是 WebGL 实时渲染的地形。网站还在持续更新，每改一次，日志就多一行。">I build this site together with AI. It's a plain static page: Louis is a scanline portrait drawn on a canvas, and the home background is a live WebGL field. It keeps changing, and every change adds a line to the log.</p>
+    </div>
+    <details class="made-log" id="madeLog">
+      <summary class="mono"><span data-en="Build log" data-zh="制作日志">Build log</span><span class="made-n" id="madeLogCount"></span></summary>
+      <ol class="mono" id="madeLogList"></ol>
+    </details>
+  </div>
   <div class="wrap foot-meta mono">
     <span>© 2026 ailiu.online</span>
-    <span class="foot-ai" data-en="AI-generated: Louis's voice, TaoTao House content, and the Wild Louis chapter." data-zh="AI 生成：Louis 的声音、桃桃屋内容、「野生路易斯」一章。">AI-generated: Louis's voice, TaoTao House content, and the Wild Louis chapter.</span>
+    <span class="foot-ai" data-en="AI-generated: Louis's voice, and the content of TaoTao House and Wild Louis." data-zh="AI 生成：Louis 的声音，桃桃屋和野生路易斯的内容。">AI-generated: Louis's voice, and the content of TaoTao House and Wild Louis.</span>
     <a href="#top" data-en="Back to top ↑" data-zh="回到顶部 ↑">Back to top ↑</a>
   </div>
   <details class="wrap transcript">
