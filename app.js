@@ -644,12 +644,15 @@
       ["--dur-base", cssTok.getPropertyValue("--dur-base").trim()],
       ["--ease-out", cssTok.getPropertyValue("--ease-out").trim()],
       ["reduced-motion", String(reduced)],
-      ["portrait", louisHero.live ? "canvas" : "static fallback"],   // r12: which render path the hero portrait is on
+      ["portrait", louisHero.live ? "canvas" : "static fallback"],
+      ["fx", document.documentElement.dataset.fx || "2d"],   // r13: hero 3D tier (webgl-high / webgl-low / 2d)   // r12: which render path the hero portrait is on
     ];
     $("#wlRuntime").innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("");
   }
 
   /* ------------------------------------------------------------------ hero glyph rain (hero only, §4.7) */
+  // r13: while the WebGL field (fx3d.js) runs, the rain stays hidden and idle
+  const fx3d = () => /^webgl/.test(document.documentElement.dataset.fx || "");
   const rain = mod(() => {
     const c = $("#rain"); if (!c || reduced) return { tick() {} };
     const ctx = c.getContext("2d"); if (!ctx) return { tick() {} };
@@ -663,9 +666,10 @@
     }
     new IntersectionObserver(([e]) => { on = e.isIntersecting; }).observe(c);
     addEventListener("resize", resize); resize();
+    addEventListener("fx:2d", resize);   // r13: the WebGL field dropped out (context lost) → the rain takes over
     return {
       tick(now) {
-        if (!on || now - last < 42) return; last = now;
+        if (!on || fx3d() || now - last < 42) return; last = now;
         ctx.fillStyle = "rgba(6,6,7,0.18)"; ctx.fillRect(0, 0, w, h);
         ctx.font = `${fs}px ${monoFont}`;
         cols.forEach((col, i) => {

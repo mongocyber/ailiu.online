@@ -394,9 +394,9 @@ CONTENT-DRAFT.md 的 9 个待确认项都还在，页面上对应位置已经标
 - Hero 标题为了保持 3 行，把「做软件的 UX 设计师」拆成了「我是 UX 设计师，／做软件，眼下主要做 AI 工具」。
 - 文案仍然是草稿（OPEN-3），音频没有生成。
 
-## 13. r13（批 A：删「手头还有」· 设计作品改为完整案例，2026-10-19）
+## 13. r13（删「手头还有」· 设计作品改为完整案例 · 首页 3D · 删 Louis 的 AI 说明句，2026-10-19）
 
-这一节只写批 A（任务第 1、2 项）。批 B（3D 视效）尚未开始，做完后在本节追加。没有新依赖，没有调用外部生成服务；没有 push，没有部署。
+13.1–13.6 是批 A（任务第 1、2 项，提交 6c4ebb6），13.7–13.11 是批 B（第 3、4 项）。没有新依赖，没有调用外部生成服务；没有 push，没有部署。
 
 ### 13.1 删除「手头还有 / Also on the bench」
 - 删掉了 `index.html` 里整个 `<section class="secondary" id="also">`，其中两个条目是「Agent 工程体系 / Agent engineering system」和「supplier-link-analysis」。
@@ -474,3 +474,76 @@ CONTENT-DRAFT.md 的 9 个待确认项都还在，页面上对应位置已经标
 - 章首下方到第一个案例之间留白偏大（章首 9vh + 案例 12vh）。这是为了和其他章的节奏一致，如果觉得空可以收窄。
 - 本章比其他章长（桌面约 6.3 屏，手机约 9.5 屏）。这是「内容更充实」的代价，§13-7 的「同权」在这里不成立，请确认可以接受。
 - Support 只有两张可用的图（旧站只有这两张），所以次图只有一张。
+
+### 13.7 首页 3D 视效（批 B，第 3 项）
+**方案**：原生 WebGL 1，自写着色器，没有依赖，没有 CDN。新文件 `fx3d.js`，gzip 后 **4.9KB**（上限 60KB）。
+- **画面**：一片「扫描线地形」。地形网格的每一行点用线连起来，形成一条条横向扫描线，和 Louis 的扫描线肖像同一种语言。
+  - 起伏由顶点着色器里的 4 层 value-noise fbm 加脊线算出，朝观众方向缓慢流动；另有少量缓慢上升的光尘。
+  - 颜色沿用站点的 `--sig-a`（近处，青）到 `--sig-b`（远处，紫），加法混合，远处与两侧淡出。
+- **交互**：
+  - 光标：镜头随光标缓慢偏移（只响应鼠标）；光标位置下方的地形会微微隆起。
+  - 滚动：镜头前推、降低，起伏变大，地形流速加快。
+  - 声音电平：模拟的 `--louis-level` 会让隆起处更亮。
+- **层级**：画布 `#fx3d` 放在 Hero 底层，与原来的 `#rain` 同一位置，在 `.hero-inner` 之下。Louis 画像的 canvas、读数、声音开关和字幕条都不受影响。
+  - 着色器在 `.louis-host` 位置挖了一个椭圆「洞」，画像背后的地形亮度只剩 16%，不会把线条透到脸上；
+  - 屏幕左侧（标题和简介所在）亮度压到 20%；
+  - 画布用 CSS mask 做上下渐隐，标题基本不与线条重叠。
+- **手机**：画像在文字上方，所以画布只铺到画像框的底部（JS 按 `.louis-hero` 位置设置高度），向下渐隐，正文背后没有线条。镜头略高，视角更广。
+- **2D 回退**：原来的字幕字符雨（`#rain`）。WebGL 运行时，字符雨被 CSS 隐藏，`rain.tick` 也不再绘制；回退到 2D 时（包括运行中途丢失上下文）字符雨重新接管。
+
+**降级矩阵**（结果写在 `<html data-fx>`，原因写在 `data-fx-why`；野生路易斯章的 runtime 读数也新增了一行 `fx`）：
+
+| 条件 | data-fx | 说明 |
+|---|---|---|
+| 桌面，硬件正常 | `webgl-high` | 200×112 点 + 线，DPR ≤ 1.5，像素预算 2.4M，开抗锯齿，60fps |
+| `hardwareConcurrency ≤ 4`、`deviceMemory ≤ 4`、`pointer: coarse` 且屏幕短边 ≤ 820、省流量模式，或 high 档拿不到上下文（`failIfMajorPerformanceCaveat`） | `webgl-low` | 120×64 点，DPR ≤ 1，像素预算 0.8M，30fps |
+| `prefers-reduced-motion: reduce` | `2d` | 不创建 WebGL。原有规则下字符雨也不显示，Hero 是静态的 |
+| 拿不到 WebGL 上下文、着色器编译或链接失败、首帧 `gl.getError()`、任何异常 | `2d` | 字符雨 |
+| 运行中 `webglcontextlost` | `2d` | 停帧，派发 `fx:2d` 事件，字符雨重算尺寸后接管 |
+| `?fx=off` / `?fx=low` / `?fx=high` | 对应档位 | 调试参数；low / high 仍要求 WebGL 可用 |
+
+- **暂停**：标签页隐藏时，或画布离开视口时（IntersectionObserver），rAF 完全停止，不是空转；恢复时再启动。
+
+**降级验证**（Playwright，控制台和 pageerror 都是 0 错误）：
+- chromium 1440：`webgl-high`；`?fx=high` → `webgl-high`；`?fx=off` → `2d`；reduced-motion → `2d`。
+- chromium Pixel 7：`webgl-low`；加上 reduced-motion → `2d`。
+- webkit iPhone 13：`webgl-low`；加上 reduced-motion → `2d`。
+- webkit 1440 和 firefox 1440：`webgl-high`。
+- 用 init script 让 `getContext('webgl')` 返回 null：chromium 桌面和 webkit iPhone 都是 `2d`（why = `no-webgl`），无报错，字符雨正常显示。
+- 用 `WEBGL_lose_context.loseContext()` 模拟上下文丢失：从 `webgl-high` 变为 `2d`（why = `context-lost`），`#fx3d` 隐藏，`#rain` 显示并重新取得宽度（1440），无报错。
+
+### 13.8 删掉 Louis 的 AI 说明句（批 B，第 4 项）
+- 删掉了 Hero 简介（manifest `persona.line`）最后一句：「页面上的 Louis 是我的形象，由 AI 生成。」/「Louis, the face on this page, is me, drawn by AI.」。简介现在是：「下面是我做过的东西：工作里的设计案例，也有业余做的小产品、儿歌频道和品牌。」句子通顺，Hero 排版没有变化（中英截图都看过）。
+- Hero 读数里的「AI 生成 / AI-generated」标签是对 Louis 的同类说明，已整个去掉。读数现在是 NARRATOR / LEVEL / FORM 三项，没有换成别的标签。原来的 `.tag-ai` 样式随之删除，`.is-ai` 保留。
+- 野生路易斯章的草稿简介：「Louis 的形象和这一章都由 AI 生成」改为「这一章由 AI 生成」（英文同步改）。
+- 页脚：「AI 生成：Louis 的形象与声音、桃桃屋内容、『野生路易斯』一章。」改为「AI 生成：Louis 的声音、桃桃屋内容、『野生路易斯』一章。」。
+- meta 和 og 里本来就没有这句；字幕（narration）里也没有同义句。
+- 全站检索过「由 AI 生成 / drawn by AI / AI-generated / 形象」。剩下的都和 Louis 的形象无关，是规范要求保留的披露：桃桃屋 `disclosure`、野生路易斯 `statusLabel` / `disclosure`、页脚说明。另有一处 Support 案例正文，说的是产品里由 AI 填写字段。
+- 制作日志新增一行「首页背景换成实时 3D 扫描线地形」。
+
+### 13.9 自检（批 B）
+- `align.py r13b`：chromium / webkit / firefox × 1440 / 390 × en / zh，共 23 组，全部 **0 处不齐、0 溢出、0 错误**（改完 manifest 后又跑了一遍）。
+- `shoot.py r13`：桌面和手机 × 中英，共 126 张，控制台 0 错误，横向溢出 0。看了两轮：
+  - 第一轮看四张拼版；
+  - 第二轮看 Hero 单帧原尺寸。
+- 两轮中修掉的问题：
+  1. 地形地平线太高，穿过英文标题第三行 → 镜头放低、视线抬高，地平线落到简介一带，左侧亮度再压低；
+  2. 线条透过 Louis 的脸 → 在画像位置挖椭圆洞；
+  3. 手机上地形落在正文和小字背后，影响阅读 → 画布只铺到画像框，向下渐隐。
+- 代表性截图在 `/workspace/deliverables/ailiu-preview-v2-shots/`：
+  - `r13-desktop-hero.png`（webgl-high）
+  - `r13-mobile-hero.png`（chromium Pixel 7，webgl-low）
+  - `r13-webkit-iphone-hero.png`（webkit iPhone 13，webgl-low）
+  - `r13-reduced-motion-hero.png`（2d）
+  - `r13-desktop-work-1.png` / `-2.png` / `r13-mobile-work.png`（用本轮截图刷新）
+- 部署脚本：`bundle.js` 的拼接顺序改为 manifest → louis-data → louis → **fx3d** → app，`index.html` 里对应的 `<script>` 也一并去掉。
+  - 已跑过：29 个二进制文件，`node --check` 通过；bundle 里能找到 `LOUIS_DATA` 和 `webgl-high`；assets 已复制（28 张 webp）。
+  - 用部署目录单独起服务打开，`data-fx=webgl-high`，app-ready，0 错误。
+
+### 13.10 遗留（批 B）
+- 这些测试都跑在无头浏览器的软件渲染（SwiftShader 等）上。真机 GPU（尤其 iOS Safari 和中低端 Android）的帧率和发热还没实测，建议上线前用真机看一眼。如果偏重，可以把 low 档点数再减半，或者把手机默认改成 2d。
+- 中文桌面版里，地形的最高脊线会轻微擦过标题最后一行「AI 工具。」的下沿（亮度已压到约 20–30%），不影响阅读。如果想完全避开，可以把地平线再压低一点。
+- 页脚仍写着「Louis 的声音」由 AI 生成。这说的是声音，不是形象，所以保留了。如果也不要，删掉这几个字即可。
+- 「章节过渡处的 3D 层次」没有做，3D 只放在 Hero，以免和各章已有的编排冲突。
+- 批 A 的遗留（13.6）不变。
+

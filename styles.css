@@ -163,6 +163,11 @@ body.is-wild .nar-face { opacity: .25; }
 /* ---------- 6. Hero ---------- */
 .hero { position: relative; min-height: 100vh; min-height: 100svh; padding: calc(var(--top-h) + 3vh) var(--pad-x) 0; display: flex; flex-direction: column; overflow: hidden; }
 .rain { position: absolute; top: 0; right: 0; bottom: 0; left: 0; inset: 0; width: 100%; height: 100%; opacity: .5; -webkit-mask-image: radial-gradient(70% 70% at 70% 45%, #000, transparent 75%); mask-image: radial-gradient(70% 70% at 70% 45%, #000, transparent 75%); }
+/* r13: WebGL scanline field (fx3d.js) behind the copy and the portrait; the glyph rain is its 2D fallback */
+.fx3d { display: none; position: absolute; top: 0; right: 0; bottom: 0; left: 0; inset: 0; width: 100%; height: 100%; pointer-events: none; -webkit-mask-image: linear-gradient(180deg, transparent 6%, #000 42%, #000 82%, transparent 100%); mask-image: linear-gradient(180deg, transparent 6%, #000 42%, #000 82%, transparent 100%); }
+html[data-fx^="webgl"] .fx3d { display: block; }
+@media (max-width: 760px) { .fx3d { bottom: auto; -webkit-mask-image: linear-gradient(180deg, transparent 4%, #000 30%, #000 70%, transparent 100%); mask-image: linear-gradient(180deg, transparent 4%, #000 30%, #000 70%, transparent 100%); } }
+html[data-fx^="webgl"] .rain { display: none; }
 .hero-inner { position: relative; flex: 1; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); align-items: center; gap: 3vw; }
 .kicker { display: flex; align-items: center; gap: 10px; color: var(--ink-2); margin: 0 0 28px; }
 .live-dot { width: 7px; height: 7px; border-radius: 50%; background: #7dffb0; box-shadow: 0 0 10px #7dffb0; }
@@ -194,7 +199,7 @@ html:lang(zh) .hero-note { line-height: 1.75; }
 .louis-read { position: absolute; left: 0; bottom: 0; display: flex; flex-wrap: wrap; gap: 6px 18px; color: var(--ink-3); font-size: 10px; }
 .louis-read b { color: var(--ink-2); font-weight: 500; margin-right: 4px; }
 .louis-read em { font-style: normal; color: var(--sig-a); }
-.tag-ai, .is-ai { color: var(--sig-b) !important; border: 1px solid rgba(185, 166, 255, .4); border-radius: 4px; padding: 2px 6px; }
+.is-ai { color: var(--sig-b) !important; border: 1px solid rgba(185, 166, 255, .4); border-radius: 4px; padding: 2px 6px; }
 .corner { position: absolute; width: 14px; height: 14px; border: 1px solid rgba(150, 232, 255, .45); }
 .corner.tl { top: 0; left: 0; border-right: 0; border-bottom: 0; } .corner.tr { top: 0; right: 0; border-left: 0; border-bottom: 0; }
 .corner.bl { bottom: 26px; left: 0; border-right: 0; border-top: 0; } .corner.br { bottom: 26px; right: 0; border-left: 0; border-top: 0; }

@@ -19,10 +19,11 @@ window.MANIFEST = {
   persona: {
     draft: true,
     // r12: every line on the site is ailiu speaking (first person); Louis is just the face on the page.
+    // r13: the line no longer says where Louis's image comes from (that sentence was removed on request).
     // The one self-introduction is the hero title; nothing else re-introduces.
     line: {
-      zh: "下面是我做过的东西：工作里的设计案例，也有业余做的小产品、儿歌频道和品牌。页面上的 Louis 是我的形象，由 AI 生成。",
-      en: "Below is what I’ve made: design work from my day job, and things I build on the side, from small products to a kids’ song channel and a brand. Louis, the face on this page, is me, drawn by AI."
+      zh: "下面是我做过的东西：工作里的设计案例，也有业余做的小产品、儿歌频道和品牌。",
+      en: "Below is what I’ve made: design work from my day job, and things I build on the side, from small products to a kids’ song channel and a brand."
     }
   },
   contact: [
@@ -396,15 +397,16 @@ window.MANIFEST = {
         { date: "2026-10-18", zh: "统一左对齐，调整章节顺序，加入「设计作品」", en: "Aligned every left edge, reordered chapters, added Design Work", model: null, costUsd: 0 },
         { date: "2026-10-18", zh: "「设计作品」成为第 03 章", en: "Made Design Work chapter 03", model: null, costUsd: 0 },
         { date: "2026-10-18", zh: "修好手机上不显示的头像，重写首页文案", en: "Fixed the portrait on phones; rewrote the home page copy", model: null, costUsd: 0 },
-        { date: "2026-10-19", zh: "「设计作品」改成完整案例，配上原来的界面图", en: "Rebuilt Design Work as full case studies with the original screens", model: null, costUsd: 0 }
+        { date: "2026-10-19", zh: "「设计作品」改成完整案例，配上原来的界面图", en: "Rebuilt Design Work as full case studies with the original screens", model: null, costUsd: 0 },
+        { date: "2026-10-19", zh: "首页背景换成实时 3D 扫描线地形", en: "Gave the home page a live 3D scanline field", model: null, costUsd: 0 }
       ],
       links: [],
       draft: {
         label: { zh: "草稿", en: "Draft" },
         tagline: { zh: "这个网站本身，和它的制作日志", en: "This site itself, and how it gets built" },
         blurb: {
-          zh: "野生路易斯就是 ailiu.online 这个网站。我和 AI 一起搭它，Louis 的形象和这一章都由 AI 生成；这里能看到它实时的源码和制作日志。",
-          en: "Wild Louis is ailiu.online itself. I build it together with AI; Louis’s image and this chapter are AI-generated. Here you can read its live source and build log."
+          zh: "野生路易斯就是 ailiu.online 这个网站。我和 AI 一起搭它，这一章由 AI 生成；这里能看到它实时的源码和制作日志。",
+          en: "Wild Louis is ailiu.online itself. I build it together with AI, and this chapter is AI-generated. Here you can read its live source and build log."
         },
         statusLabel: { zh: "进行中 · 持续生长", en: "Ongoing · still growing" },
         statusClass: "is-ai",
