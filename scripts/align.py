@@ -1,4 +1,4 @@
-"""r8 alignment check (r10: Design Work is chapter 03, its slots join the chapter groups; r11: console groups work-left / case; r13: case-study groups work-side / case-<id> / media-<id>): every heading / subtitle / paragraph / status row inside one text block must share a left edge (±1px).
+"""r8 alignment check (r10: Design Work is chapter 03, its slots join the chapter groups; r11: console groups work-left / case; r13: case-study groups work-side / case-<id> / media-<id>; r14B: folded and one-open states): every heading / subtitle / paragraph / status row inside one text block must share a left edge (±1px).
 Usage: python3 scripts/align.py [tag]   (server: python3 -m http.server 8801). Runs chromium, webkit, firefox × desktop/mobile × en/zh."""
 import sys, json
 from playwright.sync_api import sync_playwright
@@ -29,7 +29,8 @@ JS = r"""() => {
   add("work-side", ".wk-caps-box > .wk-sec"); add("work-side", ".wk-caps"); add("work-side", ".wk-method-box > .wk-sec"); add("work-side", ".wk-method"); add("work-side", ".wk-note");
   document.querySelectorAll(".wcase").forEach((c) => {
     ["case-tag", "case-h", "case-sum", "case-pmr"].forEach((k) => add("case-" + c.id, ":scope ." + k, c));
-    add("media-" + c.id, ":scope .wfig-lead", c);
+    add("case-" + c.id, ":scope .case-more", c);
+    add("media-" + c.id, ":scope .wfig-lead", c); add("media-" + c.id, ":scope .wfig-cap", c);
     if (innerWidth > 760) add("media-" + c.id, ":scope .wfig-row > .wfig:first-child", c);
   });
   add("about", ".about-h > span:first-child");
@@ -56,16 +57,20 @@ with sync_playwright() as pw:
                 pg.evaluate("window.scrollTo(0, document.body.scrollHeight)"); pg.wait_for_timeout(300)
                 pg.evaluate("document.querySelectorAll('[data-preset]').forEach(e => e.classList.add('is-in'))")
                 pg.evaluate("window.scrollTo(0, 0)"); pg.wait_for_timeout(1400)  # reveal-up transitions settle
-                groups = pg.evaluate(JS)
-                ov = pg.evaluate("document.documentElement.scrollWidth - innerWidth")
-                fails = []
-                for g, items in groups.items():
-                    xs = [x for _, x in items]
-                    if max(xs) - min(xs) > 1: fails.append((g, [(s, round(x, 1)) for s, x in items]))
-                if fails: bad += 1
+                # r14B: Design Work cases start folded; check that state, then again with one case open (the second)
+                for state in ["folded", "open-1"]:
+                    if state == "open-1":
+                        pg.evaluate("document.querySelector('#case-annotation .case-btn').click()"); pg.wait_for_timeout(1200)
+                    groups = pg.evaluate(JS)
+                    ov = pg.evaluate("document.documentElement.scrollWidth - innerWidth")
+                    fails = []
+                    for g, items in groups.items():
+                        xs = [x for _, x in items]
+                        if max(xs) - min(xs) > 1: fails.append((g, [(s, round(x, 1)) for s, x in items]))
+                    if fails: bad += 1
+                    print(f"{bn:8} {vn} {lang} {state:6}: groups={len(groups)} misaligned={len(fails)} overflow={ov} errors={errs}")
+                    for f in fails: print("   ", f)
                 pg.screenshot(path=f"shots/{TAG}-align-{bn}-{vn}-{lang}.png")
-                print(f"{bn:8} {vn} {lang}: groups={len(groups)} misaligned={len(fails)} overflow={ov} errors={errs}")
-                for f in fails: print("   ", f)
                 ctx.close()
         b.close()
 sys.exit(1 if bad else 0)

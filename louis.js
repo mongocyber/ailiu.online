@@ -316,17 +316,13 @@
         }
       }
       if (!o.mini) {
-        // marks from the reference, placed on the relief: the scar through his left brow (screen right) as a
-        // short bright nick, and the small dark points (forehead, lower cheek, neck) as holes in the ribbons
+        // marks from the reference, placed on the relief: the small dark points (lower cheek, neck) as holes in the ribbons.
+        // r14B: no scar stroke and no forehead point by the left brow (screen right): the brows are just what the
+        // scanlines draw from the light field, soft and unbroken
         const at = (x, y) => [px0 + x * pw + m.px * gap * 1.6, py0 + y * ph - sample(fd, x, y).rel * amp + m.py * gap * 0.8];
-        const sc = A.scar, p0 = at(sc[0], sc[1]), p1 = at(sc[2], sc[3]);
         ctx.globalCompositeOperation = "destination-out"; ctx.fillStyle = "#000";
-        for (const d of A.dots) { const q = at(d[0], d[1]); ctx.beginPath(); ctx.arc(q[0], q[1], Math.max(1.2, gap * 0.42), 0, Math.PI * 2); ctx.fill(); }
+        for (const d of A.dots) { if (d[1] < 0.4) continue; const q = at(d[0], d[1]); ctx.beginPath(); ctx.arc(q[0], q[1], Math.max(1.2, gap * 0.42), 0, Math.PI * 2); ctx.fill(); }
         ctx.globalCompositeOperation = "source-over";
-        ctx.strokeStyle = `rgba(${(ar + 255 * 2) / 3 | 0},${(ag + 255 * 2) / 3 | 0},${(ab + 255 * 2) / 3 | 0},0.9)`;
-        ctx.lineWidth = Math.max(1.2, gap * 0.4); ctx.lineCap = "round";
-        ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke();
-        ctx.lineCap = "butt";
         // scanline sweep tied to level (hacker overlay)
         const sy = (t * 0.18 % 1) * h;
         const sg = ctx.createRadialGradient(w / 2, sy, 0, w / 2, sy, w * 0.5);

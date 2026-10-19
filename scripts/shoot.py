@@ -6,7 +6,7 @@ from playwright.sync_api import sync_playwright
 TAG = sys.argv[1] if len(sys.argv) > 1 else "r1"
 LANG = sys.argv[2] if len(sys.argv) > 2 else "en"
 BASE = f"http://localhost:8801/index.html?lang={LANG}"
-KEYS = ["aviso", "printplay", "work", "steam", "suikou", "taotao", "wild-louis", "xiaoyi"]  # r10: Design Work = 03
+KEYS = ["aviso", "printplay", "work", "steam", "suikou", "taotao", "xiaoyi", "wild-louis"]  # r10: Design Work = 03; r14B: Xiaoyi 07, Wild Louis 08
 OUT = "shots"
 
 def run(pw, name, vp, mobile):
@@ -28,6 +28,13 @@ def run(pw, name, vp, mobile):
             for j in range(n):
                 pg.evaluate(f"window.scrollTo(0,{info['top'] + j * info['vh'] * 0.85})"); pg.wait_for_timeout(900)
                 pg.screenshot(path=f"{OUT}/{TAG}-{name}-{LANG}-{i:02d}-{k}-{j:02d}.png")
+            # r14B: cases are folded; one more pair of frames with the first case open (top, then its screens)
+            pg.evaluate("document.querySelector('#case-agent .case-btn').click()"); pg.wait_for_timeout(900)
+            y = pg.evaluate("document.getElementById('case-agent').getBoundingClientRect().top + scrollY - 110")
+            for j, dy in enumerate([0, info["vh"] * 0.8]):
+                pg.evaluate(f"window.scrollTo(0,{y + dy})"); pg.wait_for_timeout(900)
+                pg.screenshot(path=f"{OUT}/{TAG}-{name}-{LANG}-{i:02d}-{k}-open-{j}.png")
+            pg.evaluate("document.querySelector('#case-agent .case-btn').click()"); pg.wait_for_timeout(700)
         elif mobile:
             n = max(1, int(-(-info["h"] // (info["vh"] * 0.85))))
             for j in range(n):

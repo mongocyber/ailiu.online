@@ -89,18 +89,21 @@
       `<li><span class="mono">${esc(L(c.label))}</span><a href="${c.href}"${c.id === "x" ? ' target="_blank" rel="noopener"' : ""}>${esc(c.text)}</a></li>`).join("");
   }
   /* ------------------------------------------------------------------ 03 Design Work: case studies from MANIFEST.work (r13) */
-  // Head: capabilities + method. Body: a sticky index (01–05) and one article per case in a single grid template —
-  // text (summary, problem, decisions, result) beside a lead screen and smaller screens with captions.
-  // Images are plain <img> files (desktop + "-sm" phone size), lazy and async, with width / height set against layout shift.
+  // Head: capabilities + method. Body: a sticky index (01–05) and one article per case in a single grid template.
+  // r14B: every case starts folded: tag, title, summary and a cropped lead screen. The title is the toggle
+  // (h3 > button, aria-expanded / aria-controls); it opens two regions labelled by the heading: the text
+  // (problem, moves, outcome) under the summary, and the screens (caption, smaller screens) under the lead.
+  // Folded regions are visibility:hidden, so their images stay lazy until a case opens.
   const smOf = (src) => src.replace(/\.webp$/, "-sm.webp");
-  function figure(c, im, k, lead) {
-    const smW = Math.round(Math.min(im.w, k === 0 || im.h <= im.w ? 720 : 560));
-    return `<figure class="wfig${lead ? " wfig-lead" : ""}">
-        <div class="wfig-frame"><img src="${im.src}" srcset="${smOf(im.src)} ${smW}w, ${im.src} ${im.w}w"
+  function shot(im, lead) {
+    const smW = Math.round(Math.min(im.w, lead || im.h <= im.w ? 720 : 560));
+    return `<img src="${im.src}" srcset="${smOf(im.src)} ${smW}w, ${im.src} ${im.w}w"
           sizes="${lead ? "(max-width: 760px) 100vw, 56vw" : "(max-width: 760px) 80vw, 28vw"}"
-          width="${im.w}" height="${im.h}" loading="lazy" decoding="async" alt="${esc(L(im.alt))}"></div>
-        <figcaption class="mono"><b>${pad(c)}.${k + 1}</b>${esc(L(im.caption))}</figcaption>
-      </figure>`;
+          width="${im.w}" height="${im.h}" loading="lazy" decoding="async" alt="${esc(L(im.alt))}">`;
+  }
+  const cap = (c, im, k) => `<b>${pad(c)}.${k + 1}</b>${esc(L(im.caption))}`;
+  function figure(c, im, k) {
+    return `<figure class="wfig"><div class="wfig-frame">${shot(im, false)}</div><figcaption class="mono">${cap(c, im, k)}</figcaption></figure>`;
   }
   function renderWork() {
     const W = M.work, n = W.cases.length;
@@ -112,21 +115,28 @@
     $("#workIndex").innerHTML = `<ol>${W.cases.map((c, i) =>
       `<li><a href="#case-${c.id}" class="case-${c.id}" data-i="${i}"><b>${pad(i + 1)}</b><span>${esc(c.title)}</span></a></li>`).join("")}</ol>`;
     $("#workCases").innerHTML = W.cases.map((c, i) => {
-      const [lead, ...rest] = c.images;
-      return `<article class="wcase case-${c.id}" id="case-${c.id}" data-i="${i}" aria-labelledby="case-h-${c.id}">
+      const [lead, ...rest] = c.images, id = c.id, open = wkOpen.has(id);
+      return `<article class="wcase case-${id}${open ? " is-open" : ""}" id="case-${id}" data-i="${i}" aria-labelledby="case-h-${id}">
         <div class="wcase-text" data-preset="reveal-up">
           <p class="case-tag mono"><span>${pad(i + 1)} / ${pad(n)}</span>${esc(L(c.domain))}</p>
-          <h3 class="case-h" id="case-h-${c.id}">${esc(c.title)}</h3>
+          <h3 class="case-h" id="case-h-${id}"><button class="case-btn" type="button" id="case-b-${id}" aria-expanded="${open}" aria-controls="case-dt-${id} case-dm-${id}">${esc(c.title)}<i class="case-pm" aria-hidden="true"></i></button></h3>
           <p class="case-sum">${esc(L(c.summary))}</p>
-          <dl class="case-pmr">
-            <dt class="mono">${T("问题", "The problem")}</dt><dd>${esc(L(c.problem))}</dd>
-            <dt class="mono">${T("我的做法", "What I did")}</dt><dd><ol class="case-dec">${c.decisions.map((d) => `<li>${esc(L(d))}</li>`).join("")}</ol></dd>
-            <dt class="mono">${T("结果", "Outcome")}</dt><dd>${esc(L(c.result))}</dd>
-          </dl>
+          <span class="case-more mono" aria-hidden="true"><span class="cm-o">${T("展开：问题、做法、结果", "Open: problem, moves, outcome")}</span><span class="cm-c">${T("收起", "Fold")}</span><i class="case-pm"></i></span>
+          <div class="case-fold" id="case-dt-${id}" role="region" aria-labelledby="case-h-${id}"><div class="case-fold-in">
+            <dl class="case-pmr">
+              <dt class="mono">${T("问题", "The problem")}</dt><dd>${esc(L(c.problem))}</dd>
+              <dt class="mono">${T("我的做法", "What I did")}</dt><dd><ol class="case-dec">${c.decisions.map((d) => `<li>${esc(L(d))}</li>`).join("")}</ol></dd>
+              <dt class="mono">${T("结果", "Outcome")}</dt><dd>${esc(L(c.result))}</dd>
+            </dl>
+          </div></div>
         </div>
         <div class="wcase-media" data-preset="reveal-up">
-          ${figure(i + 1, lead, 0, true)}
-          <div class="wfig-row${rest.length === 1 ? " is-one" : ""}">${rest.map((im, k) => figure(i + 1, im, k + 1, false)).join("")}</div>
+          <div class="wfig wfig-lead"><div class="wfig-frame">${shot(lead, true)}</div></div>
+          <div class="case-fold" id="case-dm-${id}" role="region" aria-labelledby="case-h-${id} case-sl-${id}"><div class="case-fold-in">
+            <span class="sr-only" id="case-sl-${id}">${T("界面图", "Screens")}</span>
+            <p class="wfig-cap mono">${cap(i + 1, lead, 0)}</p>
+            <div class="wfig-row${rest.length === 1 ? " is-one" : ""}">${rest.map((im, k) => figure(i + 1, im, k + 1)).join("")}</div>
+          </div></div>
         </div>
       </article>`;
     }).join("");
@@ -136,10 +146,28 @@
     wkActive = -1;
   }
   let wkActive = -1;
+  const wkOpen = new Set();   // open cases survive a language switch
+  function setCase(el, open) {
+    if (!el || el.classList.contains("is-open") === open) return;
+    el.classList.toggle("is-open", open);
+    $(".case-btn", el).setAttribute("aria-expanded", String(open));
+    if (open) wkOpen.add(el.id.slice(5)); else wkOpen.delete(el.id.slice(5));
+    sfx.play(open ? "expand" : "collapse");
+  }
+  // the title button toggles; the "open" line and the lead screen are larger mouse / touch targets for the same thing
+  $("#workCases").addEventListener("click", (e) => {
+    const t = e.target.closest(".case-btn, .case-more, .wfig-lead");
+    if (!t) return;
+    const el = t.closest(".wcase");
+    if (t.classList.contains("wfig-lead") && el.classList.contains("is-open")) return;
+    setCase(el, !el.classList.contains("is-open"));
+  });
+  // index: scroll to the case and open it
   $("#workIndex").addEventListener("click", (e) => {
     const a = e.target.closest("a[data-i]"); if (!a) return;
     e.preventDefault();
     const el = document.getElementById(a.getAttribute("href").slice(1));
+    setCase(el, true);
     const top = el.getBoundingClientRect().top + scrollY - ($(".topbar").offsetHeight + $("#workIndex").offsetHeight) + 1;
     window.scrollTo({ top, behavior: reduced ? "auto" : "smooth" });
   });
@@ -164,12 +192,75 @@
   });
   $$("[data-preset]").forEach((el, i) => presetIO.observe(el));
 
-  /* ------------------------------------------------------------------ sound (muted placeholder) */
-  // Real flow (§5.1): on load create AudioContext → resume() and audio.play() the opening line;
-  // one-shot unlock listeners on keydown/pointerdown/touchend/click (scroll/mousemove are NOT
-  // user activation per HTML spec, so most first visits will be blocked until a click/key).
-  // This preview has no recorded voice, so nothing is played and no "tap for sound" chip is shown.
+  /* ------------------------------------------------------------------ sound (r14C): background music + effects */
+  // Files: assets/audio (scripts/audio_prep.sh; .m4a for Safari / iOS, .webm Opus where AAC is missing).
+  // On by default and remembered. On load an AudioContext is created; if the browser keeps it suspended (no user
+  // activation yet: scroll and mousemove don't count), a "tap for sound" hint shows and the first
+  // tap or key resumes it. Nothing is downloaded until the context runs; the music loop
+  // (~0.7–0.9 MB) only then. Music plays far below the effects, fades in / out, and pauses while the tab is hidden.
   let soundOn = store.get("ailiu.sound") !== "off";
+  const sfx = mod(() => {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return { play() {}, set() {}, blocked: () => false };
+    const probe = document.createElement("audio");
+    const ext = probe.canPlayType('audio/mp4; codecs="mp4a.40.2"') === "probably" || !probe.canPlayType('audio/webm; codecs="opus"') ? "m4a" : "webm";
+    const VOL = { click: 0.45, whoosh: 0.28, expand: 0.5, collapse: 0.5 }, BG = 0.14;
+    let ctx = null, master = null, bgGain = null, bgSrc = null, bgBuf = null, loading = {}, bufs = {}, lastWhoosh = 0;
+    const load = (name) => loading[name] || (loading[name] = fetch(`assets/audio/${name}.${ext}`)
+      .then((r) => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
+      .then((a) => new Promise((ok, no) => ctx.decodeAudioData(a, ok, no)))
+      .then((b) => (bufs[name] = b)).catch(() => null));
+    function init() {
+      if (ctx) return;
+      ctx = new AC(); master = ctx.createGain(); master.connect(ctx.destination);
+      bgGain = ctx.createGain(); bgGain.gain.value = 0; bgGain.connect(master);
+    }
+    const running = () => ctx && ctx.state === "running";
+    function startBg() {
+      if (!running() || !soundOn || document.hidden) return;
+      ["click", "whoosh", "expand", "collapse"].forEach(load);
+      load("bg-loop").then((b) => {
+        if (!b || !running() || !soundOn || document.hidden) return;
+        if (!bgSrc) { bgSrc = ctx.createBufferSource(); bgSrc.buffer = b; bgSrc.loop = true; bgSrc.connect(bgGain); bgSrc.start(); }
+        const t = ctx.currentTime; bgGain.gain.cancelScheduledValues(t); bgGain.gain.setValueAtTime(bgGain.gain.value, t); bgGain.gain.linearRampToValueAtTime(BG, t + 2.5);
+      });
+    }
+    function stopBg(then) {
+      if (!ctx) return;
+      const t = ctx.currentTime; bgGain.gain.cancelScheduledValues(t); bgGain.gain.setValueAtTime(bgGain.gain.value, t); bgGain.gain.linearRampToValueAtTime(0, t + 0.5);
+      if (then) setTimeout(then, 520);
+    }
+    function sync() {
+      const hint = $("#soundHint");
+      if (hint) hint.hidden = !(soundOn && ctx && !running());
+      document.documentElement.dataset.sound = !soundOn ? "off" : running() ? "on" : "blocked";
+    }
+    function unlock() {
+      if (!soundOn) return;
+      init();
+      const p = ctx.resume(); (p && p.then ? p : Promise.resolve()).then(() => { sync(); startBg(); }, sync);
+    }
+    // pointerdown for Chromium / WebKit; Firefox only counts pointerup / click / keydown / touchend as activation
+    ["pointerdown", "pointerup", "click", "keydown", "touchend"].forEach((ev) => addEventListener(ev, unlock, { capture: true, passive: true }));
+    document.addEventListener("visibilitychange", () => {
+      if (!ctx) return;
+      if (document.hidden) stopBg(() => { if (document.hidden) ctx.suspend(); });
+      else if (soundOn) ctx.resume().then(startBg, () => {});
+    });
+    if (soundOn) { init(); if (running()) startBg(); }
+    setTimeout(sync, 0); if (ctx && ctx.addEventListener) ctx.addEventListener("statechange", sync);
+    return {
+      play(name) {
+        if (!soundOn || !running()) return;
+        if (name === "whoosh") { const now = performance.now(); if (now - lastWhoosh < 1800) return; lastWhoosh = now; }
+        const b = bufs[name]; if (!b) { load(name); return; }
+        const src = ctx.createBufferSource(), g = ctx.createGain();
+        g.gain.value = VOL[name] || 0.4; src.buffer = b; src.connect(g); g.connect(master); src.start();
+      },
+      set(on) { if (on) { init(); unlock(); } else stopBg(() => { if (!soundOn && ctx) ctx.suspend(); }); sync(); },
+      ext
+    };
+  }, { play() {}, set() {} });
   // Draft row: 草稿 chip, AI tag, note, then every link that isn't the CTA. Only state "ok" becomes an <a>.
   const LINK_TAG = { confirm: ["待确认", "to confirm"], tbd: ["待补", "TBD"] };
   function renderDraftRow(p, sec) {
@@ -200,12 +291,18 @@
     const b = $("#soundBtn");
     b.setAttribute("aria-pressed", String(soundOn));
     $(".sound-label", b).textContent = lang === "zh" ? (soundOn ? "声音 开" : "声音 关") : (soundOn ? "Sound on" : "Sound off");
-    b.title = lang === "zh" ? "声音为静音占位：Louis 的声音尚未录制" : "Muted placeholder: Louis's voice is not recorded yet";
+    b.title = T("背景音乐和音效", "Background music and sound effects");
   }
   $("#soundBtn").addEventListener("click", () => {
     soundOn = !soundOn;
     store.set("ailiu.sound", soundOn ? "on" : "off");
+    sfx.set(soundOn);
     renderSound();
+  });
+  // effects: a click for links and buttons (case toggles have their own expand / collapse sound)
+  document.addEventListener("click", (e) => {
+    const t = e.target.closest("a, button, summary");
+    if (t && !t.closest(".case-btn, .case-more, .wfig-lead, #soundBtn")) sfx.play("click");
   });
 
   /* ------------------------------------------------------------------ Louis instances */
@@ -340,6 +437,7 @@
     $$("#chapnav a").forEach((a) => a.setAttribute("aria-current", String(a.dataset.key === key)));
     placeNavInd();
     document.body.classList.toggle("is-wild", key === "wild-louis");
+    if (key && !silent) sfx.play("whoosh");   // throttled inside (≥1.8 s), so a fast scroll doesn't stack them
     if (silent || !key || glitched.has(key) || reduced) return;
     glitched.add(key);
     const sec = document.getElementById(key);
@@ -553,7 +651,7 @@
   }
   skCard.addEventListener("click", () => { if (isMobile() || reduced) skCard.style.setProperty("--back", skCard.style.getPropertyValue("--back") === "1" ? 0 : 1); });
 
-  /* ---- 08 Xiaoyi */
+  /* ---- 07 Xiaoyi */
   const xySpreads = $$(".xy-spread"), xyLeaf = $("#xyLeaf"), xyTabs = $$("#xyTabs li");
   function xiaoyi(p) {
     if (isMobile() || reduced) { xySpreads.forEach((s) => s.style.setProperty("--rv", 1)); return; }
@@ -605,7 +703,7 @@
     ttCells.forEach((c) => c.classList.toggle("is-playing", playing.includes(c)));
   }
 
-  /* ---- 07 Wild Louis: the portrait grows in as the chapter arrives (r14: source / runtime / log panels removed) */
+  /* ---- 08 Wild Louis: the portrait grows in as the chapter arrives (r14: source / runtime / log panels removed) */
   const wlPin = $("#wild-louis .pin");
   const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
   function wild(p) {

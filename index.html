@@ -50,8 +50,8 @@
     <button class="ctl ctl-sound" id="soundBtn" type="button" aria-pressed="true">
       <span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
       <span class="sound-label"></span>
-      <span class="ph-tag" data-en="muted placeholder" data-zh="静音占位">muted placeholder</span>
     </button>
+    <button class="sound-hint mono" id="soundHint" type="button" hidden data-en="Tap anywhere for sound" data-zh="轻点任意处开启声音">Tap anywhere for sound</button>
   </div>
 </header>
 
@@ -62,7 +62,7 @@
 <aside class="narrator" id="narrator" aria-label="Louis narration">
   <button class="nar-face" id="narFace" type="button" aria-label="Replay Louis's line"></button>
   <div class="nar-body">
-    <div class="nar-meta mono"><span>LOUIS</span><span class="nar-idx" id="narIdx">00 / 08</span><span class="nar-next" id="narNext" aria-hidden="true"></span><span class="nar-state" id="narState" data-en="captions only · audio placeholder" data-zh="仅字幕 · 音频占位">captions only · audio placeholder</span></div>
+    <div class="nar-meta mono"><span>LOUIS</span><span class="nar-idx" id="narIdx">00 / 08</span><span class="nar-next" id="narNext" aria-hidden="true"></span><span class="nar-state" id="narState" data-en="captions only" data-zh="仅字幕">captions only</span></div>
     <p class="nar-sub" id="narSub"></p>
   </div>
 </aside>
@@ -82,7 +82,7 @@
       </h1>
       <div class="hero-note" data-preset="reveal-up">
         <p id="heroNote"></p>
-        <p class="hero-note-sub mono"><span class="dr-chip" data-en="Draft" data-zh="草稿">Draft</span><span data-en="Captions only for now; the voice comes once it's recorded and approved." data-zh="目前只有字幕，声音录好并确认后再加。">Captions only for now; the voice comes once it's recorded and approved.</span></p>
+        <p class="hero-note-sub mono"><span class="dr-chip" data-en="Draft" data-zh="草稿">Draft</span><span data-en="The narration is captions only for now." data-zh="旁白目前只有字幕。">The narration is captions only for now.</span></p>
       </div>
     </div>
     <figure class="louis-hero" aria-hidden="true">
@@ -440,7 +440,47 @@
   </div>
 </section>
 
-<!-- ========================= 07 WILD LOUIS — self-introduction ========================= -->
+<!-- ========================= 07 XIAOYI — a venture (brand-book layout) ========================= -->
+<section class="chapter ch-xiaoyi" id="xiaoyi" data-key="xiaoyi">
+  <div class="stage" data-stage="xiaoyi">
+    <div class="pin">
+      <div class="cut" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="xy-light" aria-hidden="true"></div>
+      <header class="slots xy-slots">
+        <span class="slot-index mono" data-slot="index"></span>
+        <h2 class="slot-title" data-slot="title"></h2>
+        <p class="slot-tagline" data-slot="tagline"></p>
+        <p class="slot-blurb" data-slot="blurb"></p>
+        <div class="slot-row"><span class="slot-status mono is-pending" data-slot="status"></span></div>
+      </header>
+      <div class="xy-book-wrap" data-preset="depth-rise">
+        <div class="xy-book" id="xyBook">
+          <div class="xy-spread" style="--s:0">
+            <div class="xy-page xy-l"><span class="xy-no">01</span><b data-en="The name" data-zh="起名">The name</b><p data-en="Like dinner at a relative’s." data-zh="像去亲戚家吃饭。">Like dinner at a relative’s.</p></div>
+            <div class="xy-page xy-r"><div class="xy-ph xy-ph-mark"><span class="xy-seal" lang="zh-CN">小姨家</span></div><small data-en="photos to come" data-zh="照片待补">photos to come</small></div>
+          </div>
+          <div class="xy-spread" style="--s:1">
+            <div class="xy-page xy-l"><span class="xy-no">02</span><b data-en="The idea" data-zh="想法">The idea</b><p data-en="A taste of home." data-zh="家的味道。">A taste of home.</p></div>
+            <div class="xy-page xy-r"><div class="xy-ph xy-ph-kv"><i></i><i></i><i></i></div><small data-en="photos to come" data-zh="照片待补">photos to come</small></div>
+          </div>
+          <div class="xy-spread" style="--s:2">
+            <div class="xy-page xy-l"><span class="xy-no">03</span><b data-en="To go" data-zh="带走">To go</b><p data-en="What you carry home." data-zh="带回家的那一份。">What you carry home.</p></div>
+            <div class="xy-page xy-r"><div class="xy-ph xy-ph-box"><span class="box-a"></span><span class="box-b"></span></div><small data-en="photos to come" data-zh="照片待补">photos to come</small></div>
+          </div>
+          <div class="xy-spread" style="--s:3">
+            <div class="xy-page xy-l"><span class="xy-no">04</span><b data-en="Menu" data-zh="菜单">Menu</b><p data-en="What's on the table today." data-zh="今天桌上有什么。">What's on the table today.</p></div>
+            <div class="xy-page xy-r"><div class="xy-ph xy-ph-menu"><i></i><i></i><i></i><i></i><i></i></div><small data-en="photos to come" data-zh="照片待补">photos to come</small></div>
+          </div>
+          <div class="xy-leaf" id="xyLeaf" aria-hidden="true"></div>
+          <div class="xy-spine" aria-hidden="true"></div>
+        </div>
+        <ol class="xy-tabs mono" id="xyTabs" aria-hidden="true"><li>01</li><li>02</li><li>03</li><li>04</li></ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= 08 WILD LOUIS — self-introduction ========================= -->
 <!-- r14: Wild Louis introducing himself (first person) and his channels; the site's build notes live in the footer -->
 <section class="chapter ch-wild" id="wild-louis" data-key="wild-louis">
   <div class="stage" data-stage="wild-louis">
@@ -458,52 +498,12 @@
   </div>
 </section>
 
-<!-- ========================= 08 XIAOYI — brand book ========================= -->
-<section class="chapter ch-xiaoyi" id="xiaoyi" data-key="xiaoyi">
-  <div class="stage" data-stage="xiaoyi">
-    <div class="pin">
-      <div class="cut" aria-hidden="true"><i></i><i></i><i></i></div>
-      <div class="xy-light" aria-hidden="true"></div>
-      <header class="slots xy-slots">
-        <span class="slot-index mono" data-slot="index"></span>
-        <h2 class="slot-title" data-slot="title"></h2>
-        <p class="slot-tagline" data-slot="tagline"></p>
-        <p class="slot-blurb" data-slot="blurb"></p>
-        <div class="slot-row"><span class="slot-status mono is-pending" data-slot="status"></span></div>
-      </header>
-      <div class="xy-book-wrap" data-preset="depth-rise">
-        <div class="xy-book" id="xyBook">
-          <div class="xy-spread" style="--s:0">
-            <div class="xy-page xy-l"><span class="xy-no">01</span><b data-en="Mark" data-zh="标志">Mark</b><p data-en="The sign on the door." data-zh="门上的那个记号。">The sign on the door.</p></div>
-            <div class="xy-page xy-r"><div class="xy-ph xy-ph-mark"><span class="xy-seal" lang="zh-CN">小姨家</span></div><small data-en="awaiting: logo source file" data-zh="待提供：标志源文件">awaiting: logo source file</small></div>
-          </div>
-          <div class="xy-spread" style="--s:1">
-            <div class="xy-page xy-l"><span class="xy-no">02</span><b data-en="Key visual" data-zh="主视觉">Key visual</b><p data-en="The picture people remember." data-zh="让人记住的那一张。">The picture people remember.</p></div>
-            <div class="xy-page xy-r"><div class="xy-ph xy-ph-kv"><i></i><i></i><i></i></div><small data-en="awaiting: main-visual (hi-res)" data-zh="待提供：主视觉高清图">awaiting: main-visual (hi-res)</small></div>
-          </div>
-          <div class="xy-spread" style="--s:2">
-            <div class="xy-page xy-l"><span class="xy-no">03</span><b data-en="Packaging" data-zh="包装">Packaging</b><p data-en="What you carry home." data-zh="带回家的那一份。">What you carry home.</p></div>
-            <div class="xy-page xy-r"><div class="xy-ph xy-ph-box"><span class="box-a"></span><span class="box-b"></span></div><small data-en="awaiting: packaging files" data-zh="待提供：包装文件">awaiting: packaging files</small></div>
-          </div>
-          <div class="xy-spread" style="--s:3">
-            <div class="xy-page xy-l"><span class="xy-no">04</span><b data-en="Menu" data-zh="菜单">Menu</b><p data-en="What's on the table today." data-zh="今天桌上有什么。">What's on the table today.</p></div>
-            <div class="xy-page xy-r"><div class="xy-ph xy-ph-menu"><i></i><i></i><i></i><i></i><i></i></div><small data-en="awaiting: menu text & photos" data-zh="待提供：菜单原文与照片">awaiting: menu text &amp; photos</small></div>
-          </div>
-          <div class="xy-leaf" id="xyLeaf" aria-hidden="true"></div>
-          <div class="xy-spine" aria-hidden="true"></div>
-        </div>
-        <ol class="xy-tabs mono" id="xyTabs" aria-hidden="true"><li>01</li><li>02</li><li>03</li><li>04</li></ol>
-      </div>
-    </div>
-  </div>
-</section>
-
 <!-- ======================= ABOUT / CONTACT ======================= -->
 <section class="about" id="about" aria-labelledby="about-h">
   <div class="wrap about-grid">
     <h2 class="display about-h" id="about-h" data-preset="reveal-up"><span data-en="Design by day," data-zh="本职做设计，">Design by day,</span> <span data-en="and on the side I make things: code, paper, songs, pictures." data-zh="业余自己动手做：代码、纸、歌、画面。">and on the side I make things: code, paper, songs, pictures.</span></h2>
     <div class="about-p" data-preset="reveal-up">
-      <p data-en="Chapter 03, Design Work, is my day job: B2B and AI product design. The rest I made on my own time: a browser extension, a print site, calculators, a mini program, a kids' song channel, a brand, and Wild Louis." data-zh="第 03 章「设计作品」是我的本职：B 端与 AI 产品设计。其余是我业余做的：浏览器插件、打印网站、计算器、小程序、儿歌频道、一个品牌，还有野生路易斯。">Chapter 03, Design Work, is my day job: B2B and AI product design. The rest I made on my own time: a browser extension, a print site, calculators, a mini program, a kids' song channel, a brand, and Wild Louis.</p>
+      <p data-en="Chapter 03, Design Work, is my day job: B2B and AI product design. The rest I did on my own time: a browser extension, a print site, calculators, a mini program, a kids' song channel, a restaurant venture, and Wild Louis." data-zh="第 03 章「设计作品」是我的本职：B 端与 AI 产品设计。其余是我业余做的：浏览器插件、打印网站、计算器、小程序、儿歌频道、一次餐饮创业，还有野生路易斯。">Chapter 03, Design Work, is my day job: B2B and AI product design. The rest I did on my own time: a browser extension, a print site, calculators, a mini program, a kids' song channel, a restaurant venture, and Wild Louis.</p>
       <p class="about-sub mono"><span class="dr-chip" data-en="Draft" data-zh="草稿">Draft</span><span data-en="Wording not final yet." data-zh="措辞尚未定稿。">Wording not final yet.</span></p>
     </div>
   </div>
@@ -522,7 +522,7 @@
   <div class="wrap foot-made">
     <div class="made-copy">
       <p class="kicker mono" data-en="How this site is made" data-zh="这个网站是怎么做的">How this site is made</p>
-      <p class="made-p" data-en="I build this site together with AI. It's a plain static page: Louis is a scanline portrait drawn on a canvas, and the home background is a live WebGL field. It keeps changing, and every change adds a line to the log." data-zh="这个网站是我和 AI 一起搭的。它是纯静态页面：Louis 是在 Canvas 上逐行画出的扫描线画像，首页背景是 WebGL 实时渲染的地形。网站还在持续更新，每改一次，日志就多一行。">I build this site together with AI. It's a plain static page: Louis is a scanline portrait drawn on a canvas, and the home background is a live WebGL field. It keeps changing, and every change adds a line to the log.</p>
+      <p class="made-p" data-en="I build this site together with AI. It's a plain static page: Louis is a scanline portrait drawn on a canvas, the home background is a live WebGL field, and the music and sound effects were generated with AI. It keeps changing, and every change adds a line to the log." data-zh="这个网站是我和 AI 一起搭的。它是纯静态页面：Louis 是在 Canvas 上逐行画出的扫描线画像，首页背景是 WebGL 实时渲染的地形，背景音乐和音效用 AI 生成。网站还在持续更新，每改一次，日志就多一行。">I build this site together with AI. It's a plain static page: Louis is a scanline portrait drawn on a canvas, the home background is a live WebGL field, and the music and sound effects were generated with AI. It keeps changing, and every change adds a line to the log.</p>
     </div>
     <details class="made-log" id="madeLog">
       <summary class="mono"><span data-en="Build log" data-zh="制作日志">Build log</span><span class="made-n" id="madeLogCount"></span></summary>
@@ -531,7 +531,7 @@
   </div>
   <div class="wrap foot-meta mono">
     <span>© 2026 ailiu.online</span>
-    <span class="foot-ai" data-en="AI-generated: Louis's voice, and the content of TaoTao House and Wild Louis." data-zh="AI 生成：Louis 的声音，桃桃屋和野生路易斯的内容。">AI-generated: Louis's voice, and the content of TaoTao House and Wild Louis.</span>
+    <span class="foot-ai" data-en="TaoTao House content is made with AI assistance." data-zh="桃桃屋的内容由 AI 辅助生成。">TaoTao House content is made with AI assistance.</span>
     <a href="#top" data-en="Back to top ↑" data-zh="回到顶部 ↑">Back to top ↑</a>
   </div>
   <details class="wrap transcript">

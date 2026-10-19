@@ -7,6 +7,8 @@
    r10: Design Work is chapter 03 (key "work", order 30): Aviso, PrintPlay, Design Work, Steam, Suikou, TaoTao, Wild Louis, Xiaoyi (08).
    r12: all copy is ailiu speaking in the first person; no chapter counts, one self-introduction (the hero title).
    Its slots come from the project entry; the capabilities / cases / background below stay in `work`.
+   r14B: order is Aviso, PrintPlay, Design Work, Steam, Suikou, TaoTao, Xiaoyi (07, a restaurant venture), Wild Louis (08).
+   Copy pass: each entry says why I made it, what it is and where it stands now; no persona set-up for Louis.
    Link states: ok = real link · confirm = known but awaiting the owner's OK (not linked) · tbd = does not exist yet · text = shown as text. */
 window.MANIFEST = {
   version: 1,
@@ -20,13 +22,14 @@ window.MANIFEST = {
   buildLog: [
     { date: "2026-10-15", zh: "写下这份说明书", en: "Wrote the build spec", model: null, costUsd: 0 },
     { date: "2026-10-17", zh: "做出第二版静态样片（无 AI 素材）", en: "Built preview v2, a static sample with no AI assets", model: null, costUsd: 0 },
-    { date: "2026-10-18", zh: "写清 Louis 的身份，接入内容草稿和联系方式", en: "Spelled out who Louis is; wired in draft copy and contacts", model: null, costUsd: 0 },
+    { date: "2026-10-18", zh: "接入内容草稿和联系方式", en: "Wired in draft copy and contacts", model: null, costUsd: 0 },
     { date: "2026-10-18", zh: "统一左对齐，调整章节顺序，加入「设计作品」", en: "Aligned every left edge, reordered chapters, added Design Work", model: null, costUsd: 0 },
     { date: "2026-10-18", zh: "「设计作品」成为第 03 章", en: "Made Design Work chapter 03", model: null, costUsd: 0 },
     { date: "2026-10-18", zh: "修好手机上不显示的头像，重写首页文案", en: "Fixed the portrait on phones; rewrote the home page copy", model: null, costUsd: 0 },
     { date: "2026-10-19", zh: "「设计作品」改成完整案例，配上原来的界面图", en: "Rebuilt Design Work as full case studies with the original screens", model: null, costUsd: 0 },
     { date: "2026-10-19", zh: "首页背景换成实时 3D 扫描线地形", en: "Gave the home page a live 3D scanline field", model: null, costUsd: 0 },
-    { date: "2026-10-19", zh: "野生路易斯一章改为自我介绍，搭建记录移到页脚", en: "Wild Louis became a self-introduction; the build notes moved to the footer", model: null, costUsd: 0 }
+      { date: "2026-10-19", zh: "野生路易斯一章改为自我介绍，搭建记录移到页脚", en: "Wild Louis became a self-introduction; the build notes moved to the footer", model: null, costUsd: 0 },
+    { date: "2026-10-19", zh: "设计作品的案例默认收起；章节换序；加入背景音乐和音效", en: "Design Work cases start folded; chapters reordered; background music and sound effects added", model: null, costUsd: 0 }
   ],
   persona: {
     draft: true,
@@ -34,8 +37,8 @@ window.MANIFEST = {
     // r13: the line no longer says where Louis's image comes from (that sentence was removed on request).
     // The one self-introduction is the hero title; nothing else re-introduces.
     line: {
-      zh: "下面是我做过的东西：工作里的设计案例，也有业余做的小产品、儿歌频道和品牌。",
-      en: "Below is what I’ve made: design work from my day job, and things I build on the side, from small products to a kids’ song channel and a brand."
+      zh: "下面是我做过的东西：工作里的设计案例，也有业余做的小产品、儿歌频道，和一次餐饮创业。",
+      en: "Below is what I’ve made: design work from my day job, and things I do on the side, from small products to a kids’ song channel and a restaurant venture."
     }
   },
   contact: [
@@ -226,8 +229,8 @@ window.MANIFEST = {
       draft: {
         label: { zh: "草稿", en: "Draft" },
         blurb: {
-          zh: "我做的 Chrome 扩展。划词或右键，AI 就在原页面里解释、翻译、润色、总结，也能说明图片；用的是你自己的模型 API Key。",
-          en: "A Chrome extension I built. Select text or right-click, and AI explains, translates, polishes or summarizes it right on the page, or describes an image, using your own model API key."
+          zh: "为了不离开当前页面就能问 AI，我做了这个 Chrome 扩展。划词或右键，就在原页面里解释、翻译、润色、总结，也能说明图片；用你自己的模型 API Key。",
+          en: "I built this Chrome extension so I could ask AI without leaving the page. Select text or right-click to explain, translate, polish or summarize it in place, or describe an image, with your own model API key."
         },
         statusLabel: { zh: "开发中 · 精简版待发布", en: "In development · lite build coming" },
         statusClass: "is-dev",
@@ -259,8 +262,8 @@ window.MANIFEST = {
       draft: {
         label: { zh: "草稿", en: "Draft" },
         blurb: {
-          zh: "我做的可打印英文词卡网站，用在课堂比划猜词和家庭游戏。选主题和年龄段，预览后直接打印或下载 PDF，不用注册。",
-          en: "My site for printable English word cards, used for classroom charades and family guessing games. Pick a theme and an age range, preview, then print or download a PDF. No sign-up."
+          zh: "我给课堂比划猜词和家里的猜词游戏做了这个网站：选主题和年龄段，预览后直接打印或下载 PDF，不用注册。已上线，主题和打印件还在陆续加。",
+          en: "I made this site for classroom charades and family guessing games: pick a theme and an age range, preview, then print or download a PDF. No sign-up. It’s live, and I keep adding themes and printables."
         },
         statusLabel: { zh: "已上线", en: "Live" },
         links: [{ label: { zh: "访问 printplay.asia", en: "Visit printplay.asia" }, href: "https://printplay.asia", state: "ok" }]
@@ -273,8 +276,8 @@ window.MANIFEST = {
       title: { zh: "设计作品", en: "Design Work" },
       tagline: { zh: "把复杂系统做得好懂、好用", en: "Making complex systems easy to read and use" },
       blurb: {
-        zh: "我的本职：B 端与 AI 产品的体验设计。案例来自某云平台的内部产品，名称和数据已隐去。",
-        en: "My day job: UX for B2B and AI products. The cases come from a cloud platform’s internal tools, with names and figures left out."
+        zh: "我的本职：B 端与 AI 产品的体验设计。下面的案例来自某云平台的内部产品，名称和数据已隐去；点开看问题、做法和结果。",
+        en: "My day job: UX for B2B and AI products. The cases below come from a cloud platform’s internal tools, with names and figures left out. Open one for the problem, the moves and the outcome."
       },
       statusLabel: { zh: "本行 · 案例已脱敏", en: "Day job · anonymized" },
       treatment: { id: "work-case-studies", choreographyId: "work.case-studies.v1" },
@@ -312,8 +315,8 @@ window.MANIFEST = {
       draft: {
         label: { zh: "草稿", en: "Draft" },
         blurb: {
-          zh: "我做的单管蒸汽采暖在线计算器：排气阀选型、散热器排气、室外温度补偿曲线、注入混水。每条公式都注明公开来源；结果只是估算，不能代替专业设计。",
-          en: "My online calculators for one-pipe steam heat: main and radiator vent sizing, outdoor reset curves, injection mixing. Every formula cites a public source; results are estimates, not a substitute for professional design."
+          zh: "我把单管蒸汽采暖的几类计算做成了在线工具：排气阀选型、散热器排气、室外温度补偿曲线、注入混水。为了能核对，每条公式都注明公开来源；结果只是估算，不能代替专业设计。",
+          en: "I turned the core sums of one-pipe steam heat into online tools: main and radiator vent sizing, outdoor reset curves, injection mixing. So you can check them, every formula cites a public source; results are estimates, not a substitute for professional design."
         },
         statusLabel: { zh: "已上线 · 限量维护", en: "Live · light upkeep" },
         links: [
@@ -343,8 +346,8 @@ window.MANIFEST = {
       draft: {
         label: { zh: "草稿", en: "Draft" },
         blurb: {
-          zh: "我在做的微信小程序。把刷牙、吃饭、出门这些日常场景做成卡片，家长随口就能带孩子说英语。首版面向 3–5 岁，还没上线。",
-          en: "A WeChat mini program I’m building. Everyday moments like brushing teeth or heading out become cards a parent can use to slip into English. The first version is for ages 3–5 and isn’t out yet."
+          zh: "想让家长在日常里随口带孩子说英语，我在做这个微信小程序：把刷牙、吃饭、出门这些场景做成卡片。首版面向 3–5 岁，还在开发，没有上线。",
+          en: "I want parents to slip into English with their kids during the day, so I’m building this WeChat mini program: brushing teeth, mealtime and heading out become cards. The first version is for ages 3–5; it’s still in development."
         },
         statusLabel: { zh: "开发中", en: "In development" },
         statusClass: "is-dev",
@@ -366,14 +369,14 @@ window.MANIFEST = {
       stageHeightVh: 140,
       accent: "#FF8FA3",
       narration: [{ id: "taotao-1", subtitle: {
-        zh: "桃桃屋会唱歌。不过现在，声音得请你先自己想象。",
-        en: "TaoTao House sings. For now, you'll have to imagine the sound." } }],
+        zh: "桃桃屋把刷牙、洗手这些小事编成歌，一首教三个英文词。",
+        en: "TaoTao House turns brushing teeth and washing hands into songs, three English words each." } }],
       links: [],
       draft: {
         label: { zh: "草稿", en: "Draft" },
         blurb: {
-          zh: "我做的中英双语儿歌频道，给 2–4 岁的孩子。刷牙、洗手、吃饭、睡觉都编成能跟着唱的歌，每首教三个英文词。在 YouTube 和抖音更新。",
-          en: "My Chinese–English song channel for ages 2–4. Brushing teeth, washing hands, mealtime and bedtime each become a sing-along, and each song teaches three English words. On YouTube and Douyin."
+          zh: "我给 2–4 岁的孩子做的中英双语儿歌频道：把刷牙、洗手、吃饭、睡觉编成能跟着唱的歌，每首教三个英文词。在 YouTube 和抖音持续更新。",
+          en: "My Chinese–English song channel for ages 2–4: brushing teeth, washing hands, mealtime and bedtime become sing-alongs, and each song teaches three English words. Still updating on YouTube and Douyin."
         },
         statusLabel: { zh: "运营中", en: "Running" },
         links: [
@@ -383,11 +386,43 @@ window.MANIFEST = {
         ]
       },
       aiGenerated: true,
-      disclosure: { zh: "内容为 AI 生成", en: "AI-generated content" },
+      disclosure: { zh: "内容由 AI 辅助生成", en: "Made with AI assistance" },
       mobileFallback: "grid-2x2"
     },
     {
-      key: "wild-louis", order: 70, type: "virtual", status: "self",
+      // r14B: chapter 07. A venture, not a design case: I started a restaurant brand from scratch (2024, ended).
+      // Facts only from CONTENT-DRAFT.md and the old site (ailiu-peek content.ts): "从 0 到 1 的餐饮品牌创业项目", 家的味道, 2024, ended,
+      // and I also did the naming and the visuals. No figures, no store count, no duration.
+      key: "xiaoyi", order: 70, type: "venture", status: "ended",
+      title: { zh: "小姨家", en: "Aunt’s Home" },
+      tagline: { zh: "我的一次餐饮创业", en: "A restaurant venture I started from scratch" },
+      blurb: {
+        zh: "2024 年我从零做起的一个餐饮品牌，想做出家的味道。现在已经结束。",
+        en: "A food business I started from scratch in 2024, built around a taste of home. It has since ended."
+      },
+      statusLabel: { zh: "已结束 · 2024", en: "Ended · 2024" },
+      treatment: { id: "xiaoyi-venture-book", choreographyId: "xiaoyi.venture-book.v1" },
+      transition: { enter: "depth-rise", exit: "fade-through" },
+      stageHeightVh: 160,
+      accent: "#C98A5B",
+      narration: [{ id: "xiaoyi-1", subtitle: {
+        zh: "小姨家是我 2024 年的一次餐饮创业，从零做起，现在已经结束。",
+        en: "Aunt’s Home was my restaurant venture in 2024. I started it from scratch, and it has since ended." } }],
+      links: [],
+      draft: {
+        label: { zh: "草稿", en: "Draft" },
+        blurb: {
+          zh: "2024 年，我从零做起一个餐饮品牌，想让人吃到家的味道：像去亲戚家吃饭那样，自在、热乎。这首先是一段创业；名字、标志、菜单、包装和门店导视也是我自己做的。",
+          en: "In 2024 I started a food business from scratch, built around a taste of home: easy and warm, like dinner at a relative’s. It was a venture first; I also made the name, the mark, the menus, the packaging and the shop’s signage myself."
+        },
+        statusLabel: { zh: "已结束 · 2024", en: "Ended · 2024" },
+        statusClass: "is-pending",
+        links: []
+      },
+      aiGenerated: false, disclosure: null, mobileFallback: "single-pages"
+    },
+    {
+      key: "wild-louis", order: 80, type: "virtual", status: "self",
       title: { zh: "野生路易斯", en: "Wild Louis" },
       // r14: Wild Louis and this site are two separate projects (the site's content comes from Wild Louis).
       // The chapter is Wild Louis introducing himself, first person, plus his social channels; the build log lives in the footer.
@@ -426,37 +461,7 @@ window.MANIFEST = {
       aiGenerated: true,
       disclosure: null,
       mobileFallback: "portrait-stack"
-    },
-    {
-      key: "xiaoyi", order: 80, type: "design", status: "pending",
-      title: { zh: "小姨家", en: "Xiaoyi's Home" },
-      tagline: { zh: "一个餐饮品牌，从名字到店里的指示牌", en: "A restaurant brand, from its name to its signage" },
-      blurb: {
-        zh: "一套视觉设计：标志、主视觉、包装、菜单。项目背景与源文件待补充。",
-        en: "A visual identity: mark, key visual, packaging, menu. Background and source files to come."
-      },
-      statusLabel: { zh: "资料待补", en: "Details pending" },
-      treatment: { id: "xiaoyi-brand-book", choreographyId: "xiaoyi.brand-book.v1" },
-      transition: { enter: "depth-rise", exit: "fade-through" },
-      stageHeightVh: 160,
-      accent: "#C98A5B",
-      narration: [{ id: "xiaoyi-1", subtitle: {
-        zh: "最后一章，小姨家：一本还没印完的品牌册，我还在补它的每一页。",
-        en: "Last chapter: Aunt’s Home, a brand book still at the printer. I’m still collecting its pages." } }],
-      links: [],
-      draft: {
-        label: { zh: "草稿", en: "Draft" },
-        title: { zh: "小姨家", en: "Aunt’s Home" },
-        blurb: {
-          zh: "一个从零做起的餐饮品牌，围绕「像回家吃饭」的感觉做成一整套：命名、标志、色彩与字体、菜单、包装和空间导视。",
-          en: "A restaurant brand built from scratch around the feeling of eating at home: naming, bilingual marks, color and type, menus, packaging and wayfinding, as one system."
-        },
-        statusLabel: { zh: "已结束 · 2024", en: "Ended · 2024" },
-        statusClass: "is-pending",
-        note: { zh: "角色：品牌 / 视觉设计。更多说明待补。", en: "Role: brand / visual design. More to come." },
-        links: []
-      },
-      aiGenerated: false, disclosure: null, mobileFallback: "single-pages"
     }
+
   ]
 };

@@ -102,8 +102,8 @@ packed = (zg.astype(np.uint8) << 4) | q16
 # feature anchors, measured on the reference (normalized x, y)
 anchors = {
     "mouth": [0.465, 0.585, 0.115, 0.016],      # cx, cy, half-width, half-height of the lip line
-    "scar": [0.618, 0.301, 0.609, 0.340],       # x0, y0, x1, y1 of the slanted scar through his left brow
-    "dots": [[0.615, 0.287], [0.579, 0.617], [0.633, 0.689]],  # small dark marks: forehead by the scar, lower cheek, neck
+    "scar": [0.618, 0.301, 0.609, 0.340],       # x0, y0, x1, y1 of the slanted scar through his left brow (r14B: no longer drawn)
+    "dots": [[0.615, 0.287], [0.579, 0.617], [0.633, 0.689]],  # small dark marks: forehead by the scar (r14B: skipped), lower cheek, neck
     "eyes": [[0.34, 0.385], [0.565, 0.38]],
 }
 data = {"cols": COLS, "rows": ROWS, "aspect": W0 / H0, "anchors": anchors,

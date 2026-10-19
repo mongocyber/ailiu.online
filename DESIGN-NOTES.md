@@ -626,3 +626,165 @@ CONTENT-DRAFT.md 的 9 个待确认项都还在，页面上对应位置已经标
 - 页脚「Louis 的声音」由 AI 生成的说明保留（同 13.10）。
 - r13 的遗留（13.6、13.10）不变。
 - 上生产前请先由星野 / 幕僚长和用户确认。
+
+## 14B / 14C. r14 第 5–6 项（设计作品案例默认收起 · 小姨家改为创业经历 · 章节换序 · 全站文案 · 眉毛 · 声音，2026-10-19）
+
+在 e3b4acd（r14 第 1–4 项）之上，一次提交。声音只用 /workspace/deliverables/ailiu-audio/ 里现成的 Suno 素材（只读），没有调用任何生成服务，没有本地合成。没有 push，没有部署。
+
+### 14.6 设计作品（03）：案例默认收起（第 5 项）
+- 5 个案例默认收起，只显示：编号与领域、标题、一句话概述、一张缩略图（主图的上部，桌面高 `clamp(170px, 26vh, 250px)`，手机 168px）。
+- **开关**：标题本身是 `<h3><button>`（原生 button，Enter / Space 可用），带 `aria-expanded` 和 `aria-controls`。展开区有两块，都是 `role=region`，用 `aria-labelledby` 指向案例标题：
+  - 左栏文字区（问题、我的做法、结果）；
+  - 右栏图组（主图说明 + 其余界面图；第二个区域的名称是「标题 + 界面图」，避免两个同名 landmark）。
+  - 「展开：问题、做法、结果 +」一行和缩略图本身是同一开关的大号点击目标（`aria-hidden`，不进 Tab 顺序，避免读屏重复）。
+- **动效**：展开区用 `grid-template-rows: 0fr → 1fr` 过渡高度，内容淡入；缩略图的 `max-height` 同时放开到整图。收起时展开区为 `visibility: hidden`（不可聚焦、不读出）。`prefers-reduced-motion` 下全部无过渡。
+- **索引 01–05**：点击后先展开对应案例，再滚到索引条下方。展开状态在切换语言后保留。
+- **图片**：仍是 `loading="lazy"`。注意：Chrome 的懒加载距离很大，用户滚到最后几个案例附近时，收起中的图组也可能被提前取回。
+- **手机**：同样收起。文字栏和图栏用 `display: contents` 拆开重排，顺序为缩略图 → 标题与概述 → 展开的文字 → 展开的图组（左右滑动）。这样展开的内容总在开关下方，不会把开关推出屏幕。
+- 收起状态下本章高度（chromium 实测，章高 ÷ 视口高）：
+
+| 视口 | 中文 | English | 全部展开时（参考） |
+|---|---|---|---|
+| 1440×900 | 2247px = **2.5 屏** | 2440px = **2.7 屏** | 5.6 / 5.8 屏 |
+| 390×844 | 2421px = **2.9 屏** | 2688px = **3.2 屏** | 7.0 / 8.3 屏 |
+
+- 章首说明里加了一句「点开看问题、做法和结果」/「Open one for the problem, the moves and the outcome」。
+- 截图：`r14-desktop-work-collapsed.png`、`r14-mobile-work-collapsed.png`。
+
+### 14.7 小姨家改为创业经历（6b）
+事实只用 CONTENT-DRAFT.md 和旧站（ailiu-peek `src/content.ts`：「一个从 0 到 1 的餐饮品牌创业项目」「家的味道」「像去亲戚家吃饭那样，自在、热乎」、2024、已结束、角色含品牌 / 视觉、门店空间与导视）。没有写营业额、门店数、经营时长等任何数字或细节。
+
+| 位置 | 中文 | English |
+|---|---|---|
+| 标题 | 小姨家 | Aunt’s Home |
+| tagline | 我的一次餐饮创业 | A restaurant venture I started from scratch |
+| blurb | 2024 年，我从零做起一个餐饮品牌，想让人吃到家的味道：像去亲戚家吃饭那样，自在、热乎。这首先是一段创业；名字、标志、菜单、包装和门店导视也是我自己做的。 | In 2024 I started a food business from scratch, built around a taste of home: easy and warm, like dinner at a relative’s. It was a venture first; I also made the name, the mark, the menus, the packaging and the shop’s signage myself. |
+| 状态 | 已结束 · 2024 | Ended · 2024 |
+| 旁白 | 小姨家是我 2024 年的一次餐饮创业，从零做起，现在已经结束。 | Aunt’s Home was my restaurant venture in 2024. I started it from scratch, and it has since ended. |
+
+- 删掉了「角色：品牌 / 视觉设计。更多说明待补。」这条 note，以及旧旁白「一本还没印完的品牌册」。
+- 版式保留（翻页的书），但标签改成创业口吻：
+
+| 页 | 原 | 新（中 / 英） |
+|---|---|---|
+| 01 | 标志 · 门上的那个记号 | 起名 · 像去亲戚家吃饭。/ The name · Like dinner at a relative’s. |
+| 02 | 主视觉 · 让人记住的那一张 | 想法 · 家的味道。/ The idea · A taste of home. |
+| 03 | 包装 · 带回家的那一份 | 带走 · 带回家的那一份。/ To go · What you carry home. |
+| 04 | 菜单 · 今天桌上有什么 | 不变 |
+
+  各页的「待提供：标志源文件 / 主视觉高清图 / …」统一改为「照片待补 / photos to come」。
+- manifest：`type: "venture"`，treatment 改名 `xiaoyi-venture-book`；英文标题统一为 Aunt’s Home（原来 base 是 Xiaoyi's Home，draft 是 Aunt’s Home）。
+- 首页 hero 说明和「关于」里的「品牌」改为「一次餐饮创业 / a restaurant venture」。
+
+### 14.8 章节顺序（6c）
+01 Aviso · 02 PrintPlay · 03 设计作品 · 04 蒸汽站 · 05 随口英语 · 06 桃桃屋 · **07 小姨家 · 08 野生路易斯**。
+
+- manifest 的 `order`（小姨家 70、野生路易斯 80）和数组顺序都已调整；index.html 两个 section 对调。
+- 导航、首页索引、章号、`--of`、字幕队列、字幕全文、底部进度条都由 `order` 生成，会自动跟着变。
+- `shoot.py` 的 KEYS 已改。`align.py` 按 DOM 遍历，不需要改。
+- 「关于」的列举顺序本来就和新顺序一致（野生路易斯在最后）。
+
+### 14.9 全站文案（6d）
+每章 blurb 都改为设计师第一人称，讲为什么做、做了什么、现在怎样。事实只用 CONTENT-DRAFT.md 和旧站，没有加数字。
+
+| 章 | 中文 | English |
+|---|---|---|
+| Aviso | 为了不离开当前页面就能问 AI，我做了这个 Chrome 扩展。划词或右键，就在原页面里解释、翻译、润色、总结，也能说明图片；用你自己的模型 API Key。 | I built this Chrome extension so I could ask AI without leaving the page. Select text or right-click to explain, translate, polish or summarize it in place, or describe an image, with your own model API key. |
+| PrintPlay | 我给课堂比划猜词和家里的猜词游戏做了这个网站：选主题和年龄段，预览后直接打印或下载 PDF，不用注册。已上线，主题和打印件还在陆续加。 | I made this site for classroom charades and family guessing games: pick a theme and an age range, preview, then print or download a PDF. No sign-up. It’s live, and I keep adding themes and printables. |
+| 设计作品 | 我的本职：B 端与 AI 产品的体验设计。下面的案例来自某云平台的内部产品，名称和数据已隐去；点开看问题、做法和结果。 | My day job: UX for B2B and AI products. The cases below come from a cloud platform’s internal tools, with names and figures left out. Open one for the problem, the moves and the outcome. |
+| 蒸汽站 | 我把单管蒸汽采暖的几类计算做成了在线工具：排气阀选型、散热器排气、室外温度补偿曲线、注入混水。为了能核对，每条公式都注明公开来源；结果只是估算，不能代替专业设计。 | I turned the core sums of one-pipe steam heat into online tools: main and radiator vent sizing, outdoor reset curves, injection mixing. So you can check them, every formula cites a public source; results are estimates, not a substitute for professional design. |
+| 随口英语 | 想让家长在日常里随口带孩子说英语，我在做这个微信小程序：把刷牙、吃饭、出门这些场景做成卡片。首版面向 3–5 岁，还在开发，没有上线。 | I want parents to slip into English with their kids during the day, so I’m building this WeChat mini program: brushing teeth, mealtime and heading out become cards. The first version is for ages 3–5; it’s still in development. |
+| 桃桃屋 | 我给 2–4 岁的孩子做的中英双语儿歌频道：把刷牙、洗手、吃饭、睡觉编成能跟着唱的歌，每首教三个英文词。在 YouTube 和抖音持续更新。 | My Chinese–English song channel for ages 2–4: brushing teeth, washing hands, mealtime and bedtime become sing-alongs, and each song teaches three English words. Still updating on YouTube and Douyin. |
+
+- 桃桃屋旁白原来是「声音得请你先自己想象」，改为「桃桃屋把刷牙、洗手这些小事编成歌，一首教三个英文词。」/ "TaoTao House turns brushing teeth and washing hands into songs, three English words each."
+- 野生路易斯沿用 14.1 的文案（已是第一人称自我介绍）。
+- 去掉了所有和 Louis 设定或声音有关的说法：
+  - 页脚 AI 说明从「AI 生成：Louis 的声音，桃桃屋和野生路易斯的内容。」改为「**桃桃屋的内容由 AI 辅助生成。**」/「**TaoTao House content is made with AI assistance.**」；
+  - 桃桃屋章内的标签从「内容为 AI 生成」改为「内容由 AI 辅助生成」/「Made with AI assistance」；
+  - hero 小字从「目前只有字幕，声音录好并确认后再加」改为「旁白目前只有字幕。」/「The narration is captions only for now.」；
+  - 声音按钮的「静音占位」标签和「Louis 的声音尚未录制」提示已删；字幕条状态从「仅字幕 · 音频占位」改为「仅字幕」；
+  - 制作日志里的「写清 Louis 的身份，……」改为「接入内容草稿和联系方式」。
+- 页脚「这个网站是怎么做的」加了半句：「背景音乐和音效用 AI 生成」/ "and the music and sound effects were generated with AI"。
+- 新增日志一条：2026-10-19「设计作品的案例默认收起；章节换序；加入背景音乐和音效」（共 10 条）。
+
+### 14.10 Louis 眉毛（6a）
+- 原因：r13 截图里右侧眉附近那条亮斜线是 louis.js 画的「疤痕」笔画（`A.scar`），旁边额头上还有一个挖空的小点（`A.dots[0]`），两者一起把右眉显示成断开的样子。
+- 改法：
+  - 删掉疤痕笔画；
+  - 跳过眉旁那个点（`y < 0.4` 的点不画），脸颊和颈部的点保留；
+  - 眉毛只由扫描线从明暗场里自然画出，左右都是柔和、连续的暗带。
+- `louis-data.js` 没有改，`louis_extract.py` 只在注释里标明 scar 已不再绘制；其余画像不变。
+- `louis-fallback.png` 已用 `scripts/louis_fallback.py` 重新生成（28952 B）。
+- 前后对比（hero，DPR 2，脸部特写）：`r14-louis-brow-before.png` / `r14-louis-brow-after.png`。
+
+### 14.11 声音（6e）
+- **处理脚本** `scripts/audio_prep.sh [源目录]`，可重复运行，只读源文件，输出到 `assets/audio/`。
+  - 每个文件出两种编码：AAC `.m4a`（`+faststart`）和 Opus `.webm`。
+  - app.js 用 `canPlayType` 选择：AAC 为 "probably" 或不支持 Opus 时用 m4a（Safari / iOS），否则用 webm（例如没有 AAC 的 Firefox）。
+- **音效**：
+  1. 先对整段源文件做两遍 loudnorm（线性，目标 -16 LUFS，TP -1.5）；
+  2. 再用 `silenceremove` 去掉开头静音；
+  3. 截短，开头 4ms 淡入、结尾淡出。
+  - click 源文件里是一串连续的敲击声，只取第一下。
+  - expand 源文件开头约 0.3s 是很轻的起音，起点阈值设为 -24dB，截在主体上。
+- **背景音乐**：分析了两条，结果如下（ebur128 + 5 秒窗的 RMS、频谱质心、4kHz 以上占比、起音密度）：
+
+| | 时长 | 整体响度 | LRA | 5s RMS 标准差 | 平均质心 | 起音 / 5s |
+|---|---|---|---|---|---|---|
+| bg-1 | 3:14 | -15.1 LUFS | 3.7 LU | 1.6 dB | 683 Hz | 8.0 |
+| bg-2 | 2:53 | -16.2 LUFS | 6.0 LU | 2.5 dB | 806 Hz | 8.9 |
+
+  - **主用 bg-1**：动态起伏更小，音色更暗、更柔，起音更稀，适合压在很低的音量下当氛围；bg-2 在 2:05–2:20 有明显变亮的一段，结尾也起伏较大。
+  - 两条速度都约 92 bpm（一小节 2.6s）。
+  - 截取：
+    - 主用 bg-1 **14.5s–84.7s**，70.2s，27 小节，选在开头之后、1:30 变亮之前的平稳段；
+    - 备选 bg-2 **43.0s–105.4s**，62.4s，24 小节。
+    - 截点用频谱相似度搜索：段头和段尾各取 2s 窗口，找最接近的一对。
+  - 循环拼接：取 [s+3, e+3]，把它最后 3s 和 [s, s+3] 做 `acrossfade`（qsin / qsin）。这样文件结尾正好接上文件开头，实测接缝处采样差 0.0005。
+  - 响度：loudnorm -18 LUFS，96 kbps AAC 和 64 kbps Opus，立体声。
+- **文件与大小**（`assets/audio/`）：
+
+| 文件 | 时长 | m4a | webm |
+|---|---|---|---|
+| bg-loop（主用，会加载） | 70.2s | 865,776 B | 664,263 B |
+| bg-loop-alt（备选，不加载） | 62.4s | 772,025 B | 586,556 B |
+| click | 0.22s | 3,627 B | 2,917 B |
+| expand | 0.5s | 7,486 B | 5,814 B |
+| collapse | 0.5s | 7,327 B | 5,622 B |
+| whoosh | 1.0s | 13,142 B | 8,985 B |
+
+- **播放**（app.js `sfx`，Web Audio）：
+  - 默认开启，选择记在 `localStorage ailiu.sound`。
+  - 载入时创建 AudioContext。如果浏览器让它保持 suspended（还没有用户激活），右上角显示「轻点任意处开启声音 / Tap anywhere for sound」。首次 pointerdown / pointerup / click / keydown / touchend 时 `resume()`，提示随即消失。
+  - 在 AudioContext 真正运行之前不下载任何音频；运行后才取音效和背景音乐（约 0.66–0.87 MB）。
+  - 背景音乐用 `AudioBufferSourceNode` 无缝循环，增益 0.14，2.5s 淡入、0.5s 淡出。音效增益：click 0.45、expand / collapse 0.5、whoosh 0.28，背景明显低于音效。
+  - 标签页隐藏时，背景音乐淡出并 suspend；回到页面时恢复。
+  - `<html data-sound="on|off|blocked">` 可在 devtools 里查看当前状态。
+- **接入点**：
+  - 链接、按钮、summary 点击 → click（设计作品的开关除外）；
+  - 当前章节变化 → whoosh，最短间隔 1.8s，快速滚动时不会连响；
+  - 案例展开 / 收起 → expand / collapse。
+- **部署**：`build-ailiu-preview-deploy.sh` 会整个复制 `assets/`，`files.json` 和 `b64/assets/audio/*.b64` 里都有这 12 个文件（共 41 个二进制文件）。
+
+### 14.12 自检
+- `align.py r14b`：chromium / webkit / firefox × 1440 / 390 × en / zh × **收起 / 展开一个案例**，共 24 次，全部 **0 处不齐、0 溢出、0 错误**。新增检查：「展开」行与案例文字对齐，主图说明与主图对齐。
+- `shoot.py r14b`（zh、en）：控制台 0 错误，横向溢出 0；新增设计作品展开后的两帧（`03-work-open-0/1`）。看了两轮：
+  - 第一轮：设计作品桌面版收起和展开两种状态。发现缩略图被 `max-height` 通过 aspect-ratio 压窄了，改成主图框不设比例、高度由图片决定。另外看了 hero、小姨家、野生路易斯和页脚日志。小姨家的 blurb 与状态里的「已结束」重复，删掉了 blurb 里那句；日志里有一句写 Louis 身份，改掉了。
+  - 第二轮：手机上的桃桃屋、小姨家、设计作品收起与展开，以及英文版设计作品，没有发现问题。
+- **声音**（真实鼠标点击，`scripts` 之外的临时测试）：
+  - chromium 和 webkit 中，载入时为 blocked 并显示提示，点击前没有任何音频请求；点击后状态变为 on，提示消失，取回 bg-loop.m4a 和 4 个音效；关闭和再打开都正常，选择会被记住。
+  - 用部署目录单独起服务，结果相同。
+  - firefox：这个容器里的无头 Firefox 没有音频设备，即使放开自动播放，AudioContext 也一直是 suspended。页面会停在「显示提示、不出声」的状态，没有报错。真机 Firefox 未验证。
+- **键盘与无障碍**：Enter 展开、Space 收起；`aria-expanded`、`aria-controls`（两个区域）、`role=region`、`aria-labelledby` 都已核对；reduced-motion 下切换没有过渡。
+- **全站检索**：「野生路易斯就是 / is ailiu.online itself / 分身 / 虚拟形象 / avatar / digital twin / virtual persona / 我是路易斯 / 八章 / 品牌册 / brand book / 静音占位 / 音频占位 / Louis 的声音 / Louis's voice / Louis 的身份」均无残留。
+- **部署脚本**：`node --check` 通过；bundle 含 `LOUIS_DATA` 和 `webgl-high`（fx3d）；`files.json` 含 `assets/audio`。
+
+### 14.13 遗留（请确认）
+- **桃桃屋的 AI 标注**：章内标签「内容由 AI 辅助生成」和页脚「桃桃屋的内容由 AI 辅助生成。」两处都保留了。只要一处的话，告诉我留哪一处。
+- **页脚「背景音乐和音效用 AI 生成」**：如实说明了素材来源（Suno）。如果不想写，可以删掉这半句。
+- **小姨家**：blurb 写了「名字、标志、菜单、包装和门店导视也是我自己做的」，依据是旧站的交付清单。请确认这些确实都是你自己做的，以及是否真的有门店（旧站写了「门店空间与导视」）。
+- **背景音乐默认开启**：浏览器通常会先拦住，所以多数首次访问会看到右上角的提示。提示在桌面上会短暂盖住设计作品索引条的右端，手机上会盖住章首几颗方法标签，第一次点击后就消失。
+- 备选背景音乐 `bg-loop-alt.*` 也被部署脚本带进了部署包（约 1.3 MB，不加载）。不想带的话，可以在脚本里排除。
+- 手机上小姨家的书（depth-rise 渐显）刚进入本章时还没出现，下面会空一段，稍往下滚就出现。这是原有行为，这次没有改。
+- 14.5 里「页脚『Louis 的声音』由 AI 生成的说明保留」一条已作废（见 14.9）。其余 r13 / r14 遗留不变。
+- 上生产前请先由星野 / 幕僚长和用户确认。
