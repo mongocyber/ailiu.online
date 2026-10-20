@@ -3,7 +3,8 @@ then quantize it to a small PNG (louis-fallback.png, < 40KB). r18: rendered with
 r20: the background scanlines ended in a hard rectangle (most visible at the top); alpha is now feathered on all four sides.
 r20C: rendered from the 3D wireframe bust (WebGL, software GL in headless chromium) on a transparent background; the bust's
 own outline and bottom fade give the shape, so only the safety edge ramp is kept. Not the reference photo.
-r22: rendered from the procedural 3D bust (scripts/louis_bust.py); the box follows its 40 × 50 framing.
+r22: rendered from the procedural 3D bust; the box follows its 40 × 50 framing.
+r23: rendered from the Hunyuan3D-2.1 model (scripts/louis_glb.py); the box follows its 30 × 37.5 framing (same aspect).
 Usage: python3 scripts/louis_fallback.py   (no server needed)"""
 import base64, io, pathlib
 from playwright.sync_api import sync_playwright
@@ -38,7 +39,7 @@ edge = np.outer(ss(yy[:, 0] / (.06 * h)) * ss((h - 1 - yy[:, 0]) / (.06 * h)), s
 av = np.asarray(a, dtype=np.float32) * edge
 av[av < 8] = 0
 im.putalpha(Image.fromarray(av.round().astype(np.uint8)))
-q = im.quantize(colors=32, method=Image.FASTOCTREE)
+q = im.quantize(colors=20, method=Image.FASTOCTREE)   # r23: 20 (the triangle mesh compresses worse than r22's grid)
 out = ROOT / "louis-fallback.png"
 q.save(out, optimize=True)
 print(out.name, out.stat().st_size, "bytes", im.size)

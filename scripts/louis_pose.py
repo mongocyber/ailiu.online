@@ -1,5 +1,5 @@
-"""r22: renders the bust alone (louis.js + louis-data.js, WebGL via SwiftShader) at fixed poses, side by side, over the
-scene's black → shots/r22-louis-poses[-tag].png. Default poses: yaw -25°, -12°, 0°, +12°, +25° (pitch 4°).
+"""r22 (r23: r23- names): renders the bust alone (louis.js + louis-data.js, WebGL via SwiftShader) at fixed poses, side by side, over the
+scene's black → shots/r23-louis-poses[-tag].png. Default poses: yaw -25°, -12°, 0°, +12°, +25° (pitch 4°).
 Usage: python3 scripts/louis_pose.py [tag] [--low]   (no server needed)"""
 import pathlib, sys
 from playwright.sync_api import sync_playwright
@@ -21,6 +21,6 @@ with sync_playwright() as pw:
     errs = []; pg.on("pageerror", lambda e: errs.append(str(e))); pg.on("console", lambda m: errs.append(m.text) if m.type == "error" else None)
     pg.set_content(HTML); pg.wait_for_timeout(1500)
     print("live:", pg.evaluate(f"[{','.join(f'L{k}.live' for k in range(len(YAWS)))}]"), "count:", pg.evaluate("L0.count"), "errors:", errs)
-    out = ROOT / f"shots/r22-louis-poses{'-' + TAG if TAG else ''}{'-low' if LOW else ''}.png"
+    out = ROOT / f"shots/r23-louis-poses{'-' + TAG if TAG else ''}{'-low' if LOW else ''}.png"
     pg.screenshot(path=str(out)); print(out)
     b.close()

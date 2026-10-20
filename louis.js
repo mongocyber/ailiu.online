@@ -1,11 +1,13 @@
-/* Louis — r22: a real 3D bust (raw WebGL 1). scripts/louis_bust.py sculpts a procedural signed-distance model (skull, brow,
-   eyes, nose, cheekbones, jaw, lips, ears, short crop with a blunt fringe, neck, crew-neck knit, shoulders) to the approved
-   front reference's proportions and meshes it as a latitude / longitude grid (louis-data.js: guide rings + one 16-bit
-   offset / zone word per vertex). Here the grid is rebuilt (high 176×216, low every second row / column at 30fps) and drawn
-   as hairlines plus a share of the vertices as points, with hidden lines removed (depth-only surface pass), brightness
-   from a view-space key light × zone albedo, a cool rim on the edges turned away and depth fog, in the scene's cool white;
-   every 6th line is drawn again as the heavier layer. It turns up to ±25° toward the cursor and breathes slowly; reduced
-   motion → one static frame. r20C's height-field relief (it gave itself away beyond ±6°) is gone.
+/* Louis — r23: a real 3D model (raw WebGL 1). The approved Midjourney front image was turned into a white model by
+   Hunyuan3D-2.1 (free Hugging Face Space); scripts/louis_glb.py keeps its largest piece, normalises it to cm, decimates it
+   into two tiers (high ~12k faces, low ~3.5k at 30fps, the face given most of the budget) and packs them into louis-data.js
+   (quantised vertices + varint indices). Here every mesh edge is drawn as a hairline, with hidden lines removed (a dark
+   depth-writing surface pass), brightness from a wrapped view-space key light × cavity (sockets, lid creases and mouth
+   corners sink, nose, brow and lips lift) × a darker albedo for the crop, the dihedral (feature) angle lifting the edges
+   that carry the eyes, nostrils, lips and ear rims, a cool rim on the edges turned away, back-facing lines faded and depth
+   fog, in the scene's cool white; the feature edges are drawn again as the heavier layer, a share of the vertices as points.
+   It turns up to ±25° toward the cursor and breathes slowly; reduced motion → one static frame.
+   r22's procedural signed-distance bust (louis_bust.py) is gone.
    WebGL missing / failing / context lost → .is-fallback (louis-fallback.png, rendered from this model).
    History: r11 scanline portrait (INSTRUCTIONS §4.2 option A).
    r17: the old voice-level motion (mouth bar, level sweep) is gone. The hero portrait now moves in the same wave
@@ -68,84 +70,86 @@
     W.subs.forEach((fn) => { try { fn(now); } catch (e) { W.subs.delete(fn); } });
   }
 
-  // ---- r22: the bust — a procedural 3D model (scripts/louis_bust.py → louis-data.js), rebuilt here as a lat / long grid ----
-  // Each data row is one superellipse ring of a smooth guide surface [y, centre z, half-width, half-depth, n] (cm); its
-  // columns sit at equal arc length around the ring (the same 1024-step table as the script). A vertex lies on the guide
-  // normal at the stored offset (13 bits) and carries a zone (3 bits): 1 skin · 2 hair · 3 knit · 4 rib · 5 brow · 6 lips · 7 eye.
-  // The grid is always rebuilt at full resolution (normals and offsets are defined on it); the low tier keeps every second
-  // row and column.
-  let GRID = null;
-  function grid() {
-    if (GRID) return GRID;
-    const D = window.LOUIS_DATA, NC = D.nc, NR = D.nr, NT = D.nt, raw = atob(D.d), n = NC * NR;
-    const G = new Float32Array(n * 3), P = new Float32Array(n * 3), zone = new Uint8Array(n), off = new Float32Array(n);
-    for (let k = 0; k < n; k++) { const w = raw.charCodeAt(k * 2) | (raw.charCodeAt(k * 2 + 1) << 8); zone[k] = w & 7; off[k] = (w >> 3) / 8191 * (D.out + D.in) - D.in; }
-    const ring = (r, t, o) => { const s = Math.sin(t), c = Math.cos(t), e = 2 / r[4];
-      o[0] = r[2] * Math.sign(s) * Math.pow(Math.abs(s), e); o[1] = r[0]; o[2] = r[1] + r[3] * Math.sign(c) * Math.pow(Math.abs(c), e); };
-    const L = new Float64Array(NT + 1), T = new Float64Array(NT + 1), a = [0, 0, 0], b = [0, 0, 0];
-    for (let j = 0; j < NR; j++) {
-      const r = D.rows[j];
-      ring(r, 0, a); L[0] = 0; T[0] = 0;
-      for (let k = 1; k <= NT; k++) { T[k] = k * 2 * Math.PI / NT; ring(r, T[k], b); L[k] = L[k - 1] + Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]); a[0] = b[0]; a[1] = b[1]; a[2] = b[2]; }
-      let k = 0;
-      for (let i = 0; i < NC; i++) {
-        let t = i * 2 * Math.PI / NC;
-        if (L[NT] > 1e-6) { const want = i * L[NT] / NC; while (k < NT - 1 && L[k + 1] < want) k++; const f = (want - L[k]) / Math.max(1e-12, L[k + 1] - L[k]); t = T[k] + (T[k + 1] - T[k]) * Math.min(1, Math.max(0, f)); }
-        ring(r, t, b); G.set(b, (j * NC + i) * 3);
-      }
-    }
-    const g = (j, i, c) => G[(j * NC + ((i + NC) % NC)) * 3 + c];
-    for (let j = 0; j < NR; j++) for (let i = 0; i < NC; i++) {
-      const k = j * NC + i;
-      let nx = 0, ny = 1, nz = 0;
-      if (j > 0) {
-        const j0 = Math.max(0, j - 1), j1 = Math.min(NR - 1, j + 1);
-        const tx = g(j, i + 1, 0) - g(j, i - 1, 0), ty = g(j, i + 1, 1) - g(j, i - 1, 1), tz = g(j, i + 1, 2) - g(j, i - 1, 2);
-        const vx = g(j1, i, 0) - g(j0, i, 0), vy = g(j1, i, 1) - g(j0, i, 1), vz = g(j1, i, 2) - g(j0, i, 2);
-        nx = vy * tz - vz * ty; ny = vz * tx - vx * tz; nz = vx * ty - vy * tx;
-        const l = Math.hypot(nx, ny, nz) || 1; nx /= l; ny /= l; nz /= l;
-      }
-      P[k * 3] = G[k * 3] + nx * off[k]; P[k * 3 + 1] = G[k * 3 + 1] + ny * off[k]; P[k * 3 + 2] = G[k * 3 + 2] + nz * off[k];
-    }
-    GRID = { NC, NR, P, zone, ycut: D.ycut, pivot: D.pivot };
-    return GRID;
-  }
+  // ---- r23: the bust — a real 3D model (Hunyuan3D-2.1 white model → scripts/louis_glb.py → louis-data.js) ----
+  // Per tier: vertices quantised in the model's box (one 32-bit word: x 11 · y 11 · z 10 bits), faces as varints of
+  // (vertices seen so far − index). Decoded here into positions (cm), area-weighted vertex normals, and the unique edges
+  // with their dihedral angle (the feature value that lifts the eyes, lids, nostrils, lips and ear rims).
+  const b64 = (s) => { const r = atob(s), u = new Uint8Array(r.length); for (let k = 0; k < r.length; k++) u[k] = r.charCodeAt(k); return u; };
   const hash = (n) => { const s = Math.sin(n * 127.1) * 43758.5453; return s - Math.floor(s); };
-
-  // the tier's grid (every step-th row / column): position (cm), normal from the grid itself, zone / random / height.
-  // Index lists: triangles (depth only, for hidden lines), the grid lines, every 6th line again (the heavier layer),
-  // and a share of the vertices as points.
-  function mesh(step) {
-    const gd = grid(), C = gd.NC / step | 0, rows = [];
-    for (let j = 0; j < gd.NR; j += step) rows.push(j);
-    if (rows[rows.length - 1] !== gd.NR - 1) rows.push(gd.NR - 1);
-    const R = rows.length, n = C * R, V = new Float32Array(n * 9);
-    const pos = (j, i) => (rows[j] * gd.NC + ((i + C) % C) * step) * 3;
-    for (let j = 0; j < R; j++) for (let i = 0; i < C; i++) {
-      const k = j * C + i, p = pos(j, i), P = gd.P;
-      const a = pos(j, i + 1), b = pos(j, i - 1), c = pos(Math.min(R - 1, j + 1), i), d = pos(Math.max(0, j - 1), i);
-      const tx = P[a] - P[b], ty = P[a + 1] - P[b + 1], tz = P[a + 2] - P[b + 2];
-      const vx = P[c] - P[d], vy = P[c + 1] - P[d + 1], vz = P[c + 2] - P[d + 2];
-      let nx = vy * tz - vz * ty, ny = vz * tx - vx * tz, nz = vx * ty - vy * tx;
-      const l = Math.hypot(nx, ny, nz);
-      if (j === 0 || l < 1e-9) { nx = 0; ny = 1; nz = 0; } else { nx /= l; ny /= l; nz /= l; }
-      V.set([P[p], P[p + 1], P[p + 2], nx, ny, nz, gd.zone[p / 3], hash(k * 0.37 + 1.3), P[p + 1]], k * 9);
+  const MESH = {};
+  function mesh(tier) {
+    if (MESH[tier]) return MESH[tier];
+    const D = window.LOUIS_DATA, T = D[tier], nv = T.nv, nf = T.nf, lo = D.lo, hi = D.hi;
+    const vb = b64(T.v), fb = b64(T.f), P = new Float32Array(nv * 3), F = new Uint16Array(nf * 3);
+    const dv = new DataView(vb.buffer);
+    for (let i = 0; i < nv; i++) {
+      const w = dv.getUint32(i * 4, true);
+      P[i * 3] = lo[0] + (w & 2047) / 2047 * (hi[0] - lo[0]);
+      P[i * 3 + 1] = lo[1] + ((w >>> 11) & 2047) / 2047 * (hi[1] - lo[1]);
+      P[i * 3 + 2] = lo[2] + (w >>> 22) / 1023 * (hi[2] - lo[2]);
     }
-    const T = [], Ln = [], Mj = [], Pt = [], every = 6 / step | 0 || 1;
-    for (let j = 0; j < R; j++) for (let i = 0; i < C; i++) {
-      const k = j * C + i, i1 = j * C + (i + 1) % C;
-      Ln.push(k, i1); if (j % every === 0) Mj.push(k, i1);
-      if (j < R - 1) { Ln.push(k, k + C); if (i % every === 0) Mj.push(k, k + C); T.push(k, i1, k + C, i1, i1 + C, k + C); }
-      if (V[k * 9 + 7] > 0.86 && j > 0) Pt.push(k);
+    for (let k = 0, o = 0, hw = 0; k < nf * 3; k++) {
+      let d = 0, sh = 0, c;
+      do { c = fb[o++]; d |= (c & 127) << sh; sh += 7; } while (c & 128);
+      F[k] = hw - d; if (d === 0) hw++;
     }
-    return { V, T: new Uint16Array(T), L: new Uint16Array(Ln), M: new Uint16Array(Mj), P: new Uint16Array(Pt), ycut: gd.ycut, pivot: gd.pivot, grid: [C, R] };
+    // face normals → vertex normals (area weighted); edges keyed by their vertex pair, with the two faces' normals
+    const FN = new Float32Array(nf * 3), N = new Float32Array(nv * 3), E = new Map();
+    for (let f = 0; f < nf; f++) {
+      const a = F[f * 3] * 3, b = F[f * 3 + 1] * 3, c = F[f * 3 + 2] * 3;
+      const ux = P[b] - P[a], uy = P[b + 1] - P[a + 1], uz = P[b + 2] - P[a + 2], vx = P[c] - P[a], vy = P[c + 1] - P[a + 1], vz = P[c + 2] - P[a + 2];
+      const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx, l = Math.hypot(nx, ny, nz) || 1;
+      FN[f * 3] = nx / l; FN[f * 3 + 1] = ny / l; FN[f * 3 + 2] = nz / l;
+      for (const q of [a, b, c]) { N[q] += nx; N[q + 1] += ny; N[q + 2] += nz; }
+      for (let e = 0; e < 3; e++) {
+        const i = F[f * 3 + e], j = F[f * 3 + (e + 1) % 3], key = i < j ? i * 65536 + j : j * 65536 + i, h = E.get(key);
+        if (h) h.push(f); else E.set(key, [f]);
+      }
+    }
+    for (let i = 0; i < nv; i++) { const l = Math.hypot(N[i * 3], N[i * 3 + 1], N[i * 3 + 2]) || 1; N[i * 3] /= l; N[i * 3 + 1] /= l; N[i * 3 + 2] /= l; }
+    // cavity: how far the ring of neighbours sits above (+, a hollow: eye sockets, lid creases, mouth corners, nostrils)
+    // or below (−, a ridge: brow, nose, lips, ear rims) the vertex, along its normal, in units of the ring's edge length
+    const S = new Float32Array(nv * 4), cav = new Float32Array(nv);
+    E.forEach((fs, key) => {
+      const i = Math.floor(key / 65536), j = key % 65536, l = Math.hypot(P[j * 3] - P[i * 3], P[j * 3 + 1] - P[i * 3 + 1], P[j * 3 + 2] - P[i * 3 + 2]);
+      for (const [a, b] of [[i, j], [j, i]]) { for (let c = 0; c < 3; c++) S[a * 4 + c] += P[b * 3 + c]; S[a * 4 + 3] += l; }
+    });
+    const deg = new Uint16Array(nv);
+    E.forEach((fs, key) => { deg[Math.floor(key / 65536)]++; deg[key % 65536]++; });
+    for (let i = 0; i < nv; i++) {
+      const d = deg[i] || 1, el = S[i * 4 + 3] / d || 1;
+      cav[i] = ((S[i * 4] / d - P[i * 3]) * N[i * 3] + (S[i * 4 + 1] / d - P[i * 3 + 1]) * N[i * 3 + 1] + (S[i * 4 + 2] / d - P[i * 3 + 2]) * N[i * 3 + 2]) / el;
+    }
+    // vertex buffer (fill pass, points): position · normal · [feature, random, height, cavity]
+    const V = new Float32Array(nv * 10), Pt = [];
+    for (let i = 0; i < nv; i++) {
+      V.set([P[i * 3], P[i * 3 + 1], P[i * 3 + 2], N[i * 3], N[i * 3 + 1], N[i * 3 + 2], 0, hash(i * 0.37 + 1.3), P[i * 3 + 1], cav[i]], i * 10);
+      if (V[i * 10 + 7] > 0.8) Pt.push(i);
+    }
+    // line buffer: two vertices per edge, each with its vertex normal; feature = 1 − cos(dihedral), open edges count as 1.
+    // Edges above the feature threshold are drawn again as the heavier layer (the scene's main members).
+    const L = new Float32Array(E.size * 20), M = [];
+    let k = 0;
+    E.forEach((fs, key) => {
+      const i = Math.floor(key / 65536), j = key % 65536;
+      let feat = 1;
+      if (fs.length === 2) { const p = fs[0] * 3, q = fs[1] * 3; feat = Math.min(1, Math.max(0, 1 - (FN[p] * FN[q] + FN[p + 1] * FN[q + 1] + FN[p + 2] * FN[q + 2]))); }
+      feat = smooth(0.04, 0.36, feat);                // a soft knee: the generator's small lumps stay quiet
+      const r = hash(key * 0.013 + 7.1);
+      for (const v of [i, j]) { L.set([P[v * 3], P[v * 3 + 1], P[v * 3 + 2], N[v * 3], N[v * 3 + 1], N[v * 3 + 2], feat, r, P[v * 3 + 1], cav[v]], k * 10); k++; }
+      if (feat > 0.55) M.push(k - 2, k - 1);
+    });
+    MESH[tier] = { V, F, L, M: new Uint16Array(M), P: new Uint16Array(Pt), ybot: D.ybot, pivot: D.pivot, nf, nv, ne: E.size };
+    return MESH[tier];
   }
 
   // framing (cm): the portrait box spans x ±BW/2 and y Y0 .. Y0 + BH; the bust is bottom-aligned in the host
-  const BW = 40, Y0 = -20, BH = 50, AY = BH / BW;
+  const BW = 30, Y0 = -7.5, BH = 37.5, AY = BH / BW;
+  // the hairline at the front, in cm above the base (the crop is 9 cm deeper at the back of the head, down to the nape)
+  const HAIR = 28.4;
   const VS = [
-    "attribute vec3 aP, aN; attribute vec3 aM;",
-    "uniform mat4 uM, uP; uniform mat3 uR; uniform vec4 uW, uWP, uBox; uniform vec2 uWS; uniform float uWave, uPS, uPt, uT, uFill, uYc, uXf;",
+    "attribute vec3 aP, aN; attribute vec4 aM;",
+    "uniform mat4 uM, uP; uniform mat3 uR; uniform vec4 uW, uWP, uBox; uniform vec2 uWS; uniform float uWave, uPS, uPt, uT, uFill, uYc, uXf, uYb, uLn;",
     "varying float vA, vP;",
     // FX_WAVE.at(x, u), as in fx3d.js — uW = freq, phase, bend, t · uWP = pointer x, u, k, aspect · uWS = scale × amp, scroll
     "float wave(vec2 p){ float s = 0.5 + 0.5 * sin(6.2832 * uW.x * p.y - uW.y + uW.z * sin(p.x * 5.0 + uW.w * 0.4));",
@@ -157,23 +161,29 @@
     "  if (uWave > 0.5 && c.w > 0.0) { vec2 s = vec2(0.5 + 0.5 * c.x / c.w, 0.5 - 0.5 * c.y / c.w); w = wave(vec2(uBox.x + s.x * uBox.y, uBox.z + s.y * uBox.w)); }",
     "  gl_Position = uP * (uM * vec4(aP + aN * w * 0.22, 1.0));",
     // light in view space: a key from the upper left front, a soft fill, and a cool rim on the edges turned away
-    "  vec3 vd = normalize(-e.xyz);",
-    "  float key = max(dot(n, normalize(vec3(-0.72, 0.5, 0.48))), 0.0), fill = max(dot(n, normalize(vec3(0.7, -0.1, 0.7))), 0.0);",
-    "  float edge = 1.0 - abs(dot(n, vd));",
+    "  vec3 vd = normalize(-e.xyz); float nv = dot(n, vd);",
+    "  float kd = dot(n, normalize(vec3(-0.5, 0.32, 0.8))), key = max(kd, 0.0), fill = max(dot(n, normalize(vec3(0.7, -0.1, 0.7))), 0.0);",
+    "  float edge = 1.0 - abs(nv);",
     "  float rim = pow(edge, 2.2) * (0.45 + 0.55 * max(dot(n.xy, normalize(vec2(0.75, 0.45))), 0.0));",
-    "  float z = aM.x;",
-    // albedo per zone: skin · hair (dark, denser texture reads as a crop) · knit · rib · brow · lips · eye
-    "  float alb = z < 1.5 ? 1.0 : z < 2.5 ? 0.5 : z < 3.5 ? 0.5 : z < 4.5 ? 0.85 : z < 5.5 ? 0.18 : z < 6.5 ? 0.8 : 0.12;",
-    "  float lit = 0.04 + 1.3 * pow(key, 1.6) + 0.14 * fill;",
+    "  float lit = 0.02 + 1.25 * pow(0.5 + 0.5 * kd, 3.0) + 0.12 * fill;",   // wrapped key: the face front stays lit, the far cheek falls off,
+    // features (eyes, lids, nostrils, lips, ear rims) read brighter, even in shadow
+    "  float feat = uLn * aM.x;",
+    // cavity shading: hollows (sockets, lid creases, mouth corners, nostrils) sink, ridges (brow, nose, lips, ear rims) lift
+    "  float cav = clamp(1.0 - 3.4 * aM.w, 0.22, 1.6);",
+    // albedo: the short crop (above the hairline, and the back of the head above the nape) reads darker than the skin
+    "  float hair = smoothstep(-0.8, 0.8, aM.z - uYb - " + HAIR.toFixed(1) + " + 9.0 * smoothstep(1.0, -4.0, aP.z));",
+    "  float alb = mix(1.0, 0.55, hair);",
     // depth fog: the far side of the head and the shoulders behind the face dim, like the scene's distance fog
-    "  float fog = mix(1.0, 0.45, smoothstep(-6.0, 12.0, -(e.z - uYc)));",
-    "  float a = (lit * alb + 1.15 * rim) * fog;",
+    "  float fog = mix(1.0, 0.42, smoothstep(-6.0, 12.0, -(e.z - uYc)));",
+    // back-facing lines (seen through at the silhouette) fade out
+    "  float face = smoothstep(-0.25, 0.2, nv);",
+    "  float sh = lit * cav * alb; float a = (pow(sh, 1.35) * (0.8 + 1.1 * feat) + 0.12 * feat + 0.9 * rim) * fog * face;",
     "  a *= 1.0 + w * 0.7;",
-    // the bust ends in a fade below the chest and toward the box's sides (shoulders), never at a hard edge
-    "  float base = smoothstep(" + "-22.0, -11.0, aM.z);",
-    "  float side = 1.0 - smoothstep(uXf * 0.72, uXf, abs(c.x / max(c.w, 1e-4)));",
+    // the bust ends in a fade at the base and toward the box's sides, never at a hard edge
+    "  float base = smoothstep(uYb + 0.5, uYb + 8.0, aM.z);",
+    "  float side = 1.0 - smoothstep(uXf * 0.8, uXf, abs(c.x / max(c.w, 1e-4)));",
     "  a *= base * side;",
-    "  if (uPt > 0.5) a *= step(0.5, lit * alb + rim) * (0.55 + 0.45 * sin(uT * (0.7 + aM.y * 1.4) + aM.y * 60.0));",
+    "  if (uPt > 0.5) a *= step(0.3, lit + rim) * (0.55 + 0.45 * sin(uT * (0.7 + aM.y * 1.4) + aM.y * 60.0));",
     // pass 1 (uFill): the surface as a near-black body (alpha only), so the scene behind is hidden as by a solid
     "  if (uFill > 0.5) a = 0.94 * base * side;",
     "  vA = a; vP = uPt + 2.0 * uFill;",
@@ -218,7 +228,7 @@
         const gl = this.gl = this.c.getContext("webgl", { alpha: true, antialias: !low, depth: true, stencil: false, premultipliedAlpha: true,
           preserveDrawingBuffer: !!this.o.keep, powerPreference: "low-power" });
         if (!gl) throw new Error("no webgl");
-        this.setup(low ? 2 : 1);
+        this.setup(low ? "low" : "high");
       } catch (e) { this.fail(); return this; }
       this.c.addEventListener("webglcontextlost", (e) => { e.preventDefault(); this.fail(); });
       if (window.ResizeObserver) { this.ro = new ResizeObserver(this.resize); this.ro.observe(el); }
@@ -252,17 +262,16 @@
       if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) throw new Error("link");
       gl.useProgram(pr);
       const M = mesh(step);
-      this.AY = AY; this.grid = M.grid;
-      const vb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, vb); gl.bufferData(gl.ARRAY_BUFFER, M.V, gl.STATIC_DRAW);
-      [["aP", 3, 0], ["aN", 3, 12], ["aM", 3, 24]].forEach(([n, k, off]) => {
-        const l = gl.getAttribLocation(pr, n); gl.enableVertexAttribArray(l); gl.vertexAttribPointer(l, k, gl.FLOAT, false, 36, off);
-      });
+      this.AY = AY; this.tier = step;
+      const buf = (a) => { const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, a, gl.STATIC_DRAW); return b; };
+      this.vb = buf(M.V); this.eb = buf(M.L);
+      this.loc = ["aP", "aN", "aM"].map((n) => { const l = gl.getAttribLocation(pr, n); gl.enableVertexAttribArray(l); return l; });
       const ib = (a) => { const b = gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, b); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, a, gl.STATIC_DRAW); return [b, a.length]; };
-      this.tb = ib(M.T); this.lb = ib(M.L); this.mb = ib(M.M); this.pb = ib(M.P);
-      this.pivot = M.pivot;
-      this.count = { verts: M.V.length / 9, lines: M.L.length / 2, major: M.M.length / 2, tris: M.T.length / 3, points: M.P.length };
+      this.tb = ib(M.F); this.mb = ib(M.M); this.pb = ib(M.P); this.ne = M.ne;
+      this.pivot = M.pivot; this.ybot = M.ybot;
+      this.count = { verts: M.nv, tris: M.nf, lines: M.ne, major: M.M.length / 2, points: M.P.length };
       this.U = {};
-      ["uM", "uP", "uR", "uW", "uWP", "uBox", "uWS", "uWave", "uPS", "uPt", "uT", "uK", "uFill", "uYc", "uXf"].forEach((n) => { this.U[n] = gl.getUniformLocation(pr, n); });
+      ["uM", "uP", "uR", "uW", "uWP", "uBox", "uWS", "uWave", "uPS", "uPt", "uT", "uK", "uFill", "uYc", "uXf", "uYb", "uLn"].forEach((n) => { this.U[n] = gl.getUniformLocation(pr, n); });
       gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL);
       gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE);
       gl.clearColor(0, 0, 0, 0);
@@ -348,22 +357,24 @@
         gl.uniform4f(U.uW, W.freq, W.phase, W.bend, W.t); gl.uniform4f(U.uWP, W.pointer.x, W.pointer.y, W.pointer.k, W.aspect);
         gl.uniform2f(U.uWS, W.scale * W.amp, W.scroll);
       }
-      gl.uniform1f(U.uT, t); gl.uniform1f(U.uPS, this.dpr);
+      gl.uniform1f(U.uT, t); gl.uniform1f(U.uPS, this.dpr); gl.uniform1f(U.uYb, this.ybot);
+      const attrs = (b) => { gl.bindBuffer(gl.ARRAY_BUFFER, b); this.loc.forEach((l, k) => gl.vertexAttribPointer(l, k < 2 ? 3 : 4, gl.FLOAT, false, 40, k * 12)); };
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       // 1 · the surface as a dark body (hides the scene behind) and into the depth buffer, pushed back a little,
       //     so lines behind the nose, jaw, ear or the far side of the head are hidden
+      attrs(this.vb);
       gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(1, 2); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-      gl.uniform1f(U.uPt, 0); gl.uniform1f(U.uFill, 1);
+      gl.uniform1f(U.uPt, 0); gl.uniform1f(U.uFill, 1); gl.uniform1f(U.uLn, 0);
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.tb[0]); gl.drawElements(gl.TRIANGLES, this.tb[1], gl.UNSIGNED_SHORT, 0);
       gl.disable(gl.POLYGON_OFFSET_FILL); gl.depthMask(false); gl.blendFunc(gl.ONE, gl.ONE); gl.uniform1f(U.uFill, 0);
-      // 2 · the grid lines, 2b · every 6th row / column again (the heavier layer, as the scene's main members),
-      // 3 · a share of the vertices as small points
-      const g = o.gain * (this.grid[0] > 120 ? 0.5 : 0.48);
-      gl.uniform1f(U.uK, g);
-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.lb[0]); gl.drawElements(gl.LINES, this.lb[1], gl.UNSIGNED_SHORT, 0);
-      gl.uniform1f(U.uK, g * 0.45);
+      // 2 · every mesh edge (feature angle lifts it), 2b · the feature edges again (the heavier layer, as the scene's
+      // main members), 3 · a share of the vertices as small points
+      const g = o.gain * (this.tier === "high" ? 0.55 : 0.5);
+      attrs(this.eb); gl.uniform1f(U.uLn, 1); gl.uniform1f(U.uK, g);
+      gl.drawArrays(gl.LINES, 0, this.ne * 2);
+      gl.uniform1f(U.uK, g * 0.5);
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.mb[0]); gl.drawElements(gl.LINES, this.mb[1], gl.UNSIGNED_SHORT, 0);
-      gl.uniform1f(U.uPt, 1); gl.uniform1f(U.uK, o.gain * 0.9);
+      attrs(this.vb); gl.uniform1f(U.uLn, 0); gl.uniform1f(U.uPt, 1); gl.uniform1f(U.uK, o.gain * 0.9);
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.pb[0]); gl.drawElements(gl.POINTS, this.pb[1], gl.UNSIGNED_SHORT, 0);
       gl.depthMask(true);
     }
