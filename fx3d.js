@@ -79,7 +79,8 @@
 
     // column: plinth, base mouldings, a fluted shaft with entasis (arrises bright, grooves dim), echinus and abacus
     function column(x, z, y0, r, h, b) {
-      var nf = lo ? 8 : 16, ns = lo ? 2 : 4, rs = lo ? 12 : 24, ys = y0 + r, yt = y0 + h - r, j, s, P, P2;
+      var nf = lo ? 8 : 24, ns = lo ? 2 : 6, rs = lo ? 12 : 24,   // r20B: 16 → 24 flutes, 4 → 6 divisions (high)
+         ys = y0 + r, yt = y0 + h - r, j, s, P, P2;
       box(x - 1.4 * r, y0, z - 1.4 * r, x + 1.4 * r, y0 + 0.28 * r, z + 1.4 * r, b * 0.7, lo ? 0 : 0.5);
       (lo ? [[0.5, 1.22], [0.86, 1.1]] : [[0.4, 1.28], [0.58, 1.18], [0.72, 1.06], [0.88, 1.12]]).forEach(function (m) { ring(x, y0 + m[0] * r, z, m[1] * r, rs, b * 0.55); });
       for (j = 0; j < nf; j++) {
@@ -92,7 +93,8 @@
         line(P, b); if (!lo) line(P2, b * 0.32);
       }
       ring(x, ys, z, r * 1.02, rs, b * 0.6); ring(x, yt - 0.12 * r, z, r * 0.95, rs, b * 0.6);
-      if (!lo) for (s = 1; s < 4; s++) ring(x, ys + (yt - ys) * s / 4, z, r * (1 - 0.14 * s / 4 + 0.03), rs, b * 0.18);
+      if (!lo) for (s = 1; s < 6; s++) ring(x, ys + (yt - ys) * s / 6, z, r * (1 - 0.14 * s / 6 + 0.03), rs, b * 0.16);
+      if (!lo) { ring(x, yt - 0.34 * r, z, r * 0.9, rs, b * 0.45); ring(x, yt - 0.22 * r, z, r * 0.9, rs, b * 0.3); }   // r20B: necking astragal
       (lo ? [[0.05, 0.94], [0.45, 1.3]] : [[0.05, 0.94], [0.22, 1.06], [0.36, 1.2], [0.47, 1.32]]).forEach(function (m) { ring(x, yt + m[0] * r, z, m[1] * r, rs, b * 0.7); });
       box(x - 1.45 * r, yt + 0.5 * r, z - 1.45 * r, x + 1.45 * r, yt + r, z + 1.45 * r, b * 0.9, 0.9);
     }
@@ -110,10 +112,11 @@
           var f = j / n, X = p[0] + (q2[0] - p[0]) * f + nn[0] * 0.13, Z = p[1] + (q2[1] - p[1]) * f + nn[1] * 0.13;
           L([X, y + 1.3, Z], [X, y + 1.92, Z], b * 0.3);
         }
-        n = Math.floor(len / 0.42);
-        for (j = 1; j < n; j++) {                      // dentils
+        n = Math.floor(len / 0.3);
+        var tx = (q2[0] - p[0]) / len * 0.07, tz = (q2[1] - p[1]) / len * 0.07;
+        for (j = 1; j < n; j++) {                      // dentils (r20B: small blocks — two sides and a soffit — every 0.3)
           var g = j / n, X2 = p[0] + (q2[0] - p[0]) * g + nn[0] * 0.32, Z2 = p[1] + (q2[1] - p[1]) * g + nn[1] * 0.32;
-          L([X2, y + 2.16, Z2], [X2, y + 2.36, Z2], b * 0.28);
+          line([[X2 - tx, y + 2.36, Z2 - tz], [X2 - tx, y + 2.16, Z2 - tz], [X2 + tx, y + 2.16, Z2 + tz], [X2 + tx, y + 2.36, Z2 + tz]], b * 0.26);
         }
       });
       [[x0, z0], [x1, z0], [x1, z1], [x0, z1]].forEach(function (p) { pt([p[0] + (p[0] === x0 ? -0.78 : 0.78), y + 2.8, p[1] + (p[1] === z0 ? -0.78 : 0.78)], 1); });
@@ -150,6 +153,7 @@
       for (var j = 0; j < n; j++) {
         var yb = y0 + j * rise, yt = yb + rise, zf = z0 - j * run, zb = zf - run;
         seg([x0, yt, zf], [x1, yt, zf], b, 3); seg([x0, yb, zf], [x1, yb, zf], b * 0.3, 3);
+        if (!lo) { seg([x0, yt - 0.07, zf + 0.06], [x1, yt - 0.07, zf + 0.06], b * 0.35, 3); seg([x0, yt - 0.13, zf], [x1, yt - 0.13, zf], b * 0.2, 3); }   // r20B: nosing moulding
         [x0, x1].forEach(function (X) { L([X, yb, zf], [X, yt, zf], b * 0.7); L([X, yt, zf], [X, yt, zb], b * 0.7); });
         if (!lo) for (var X = x0 + 2.25; X < x1 - 0.5; X += 2.25) L([X + (j & 1) * 1.1, yb, zf], [X + (j & 1) * 1.1, yt, zf], b * 0.2);
         pt([x0, yt, zf], 0.8); pt([x1, yt, zf], 0.8);
@@ -170,6 +174,15 @@
         if (l % 3 === 0) for (j = 0; j < nl; j += 4) { a = j / nl * TAU; pt([cx + rr * Math.cos(a), yy, cz + rr * Math.sin(a)], 0.8); }
       }
       ring(cx, y0, cz, R, nl * 2, b);
+      // r20B: coffers — an inset frame in every cell between two meridians and two parallels (high)
+      if (!lo) for (l = 0; l < nr - 2; l++) {
+        var f0 = l / nr * PI / 2 * 0.94, f1 = (l + 1) / nr * PI / 2 * 0.94, df = (f1 - f0) * 0.2, R3 = R * 0.988;
+        for (j = 0; j < nl; j++) {
+          var a0 = j / nl * TAU, a1 = (j + 1) / nl * TAU, da = (a1 - a0) * 0.2;
+          var cp = function (aa, ff) { return [cx + R3 * Math.cos(ff) * Math.cos(aa), y0 + R3 * Math.sin(ff), cz + R3 * Math.cos(ff) * Math.sin(aa)]; };
+          line([cp(a0 + da, f0 + df), cp(a1 - da, f0 + df), cp(a1 - da, f1 - df), cp(a0 + da, f1 - df)], b * 0.17, true);
+        }
+      }
     }
     // a cypress: a spindle of meridians and parallels
     function cypress(x, y0, z, hg, r, b) {
@@ -178,6 +191,27 @@
       for (j = 0; j < nl; j++) { a = j / nl * TAU; P = []; for (l = 0; l <= nr; l++) { var f = l / nr; P.push([x + rad(f) * Math.cos(a), y0 + 0.6 + f * hg, z + rad(f) * Math.sin(a)]); } line(P, b); }
       for (l = 1; l < nr; l++) ring(x, y0 + 0.6 + l / nr * hg, z, rad(l / nr), nl, b * 0.7);
       L([x, y0, z], [x, y0 + 0.6, z], b); pt([x, y0 + 0.6 + hg, z], 0.8);
+    }
+
+    // r20B: paving — a grid of square slabs (every fourth joint a little brighter), skipping cells where skip(x, z)
+    function pave(x0, z0, x1, z1, y, st, b, skip) {
+      for (var xx = x0; xx < x1 - 1e-6; xx += st) for (var zz = z0; zz < z1 - 1e-6; zz += st) {
+        if (skip && skip(xx + st / 2, zz + st / 2)) continue;
+        var ix = Math.round((xx - x0) / st), iz = Math.round((zz - z0) / st);
+        L([xx, y, zz], [Math.min(x1, xx + st), y, zz], b * (iz % 4 ? 1 : 1.8)); L([xx, y, zz], [xx, y, Math.min(z1, zz + st)], b * (ix % 4 ? 1 : 1.8));
+      }
+    }
+    // r20B: a balustrade from p to q: plinth and rail, vase balusters (two profiles each) every st
+    function balustrade(p, q2, y, hgt, st, b) {
+      var len = Math.hypot(q2[0] - p[0], q2[2] - p[2]), ux = (q2[0] - p[0]) / len, uz = (q2[2] - p[2]) / len, n = Math.floor(len / st), j, k2, w;
+      seg([p[0], y + 0.12, p[2]], [q2[0], y + 0.12, q2[2]], b * 0.7); seg([p[0], y + hgt, p[2]], [q2[0], y + hgt, q2[2]], b); seg([p[0], y + hgt - 0.1, p[2]], [q2[0], y + hgt - 0.1, q2[2]], b * 0.5);
+      for (j = 1; j < n; j++) {
+        var cx2 = p[0] + ux * len * j / n, cz2 = p[2] + uz * len * j / n;
+        for (k2 = -1; k2 <= 1; k2 += 2) {
+          w = [0.06, 0.06, 0.13, 0.05, 0.08, 0.07];
+          line(w.map(function (ww, i2) { var yy = y + 0.12 + (hgt - 0.22) * [0, 0.08, 0.32, 0.62, 0.84, 1][i2]; return [cx2 + k2 * ux * ww, yy, cz2 + k2 * uz * ww]; }), b * 0.55);
+        }
+      }
     }
 
     var Y0 = 4.8;   // the podium the complex stands on
@@ -241,6 +275,7 @@
     for (z = SZ0; z >= SZ1; z -= 4) { seg([-6.5, Y0 + 7.5 + 1.1, z], [6.5, Y0 + 7.5 + 1.1, z], 0.45, 3); }
     for (x = -6.5; x <= 6.5; x += lo ? 6.5 : 13 / 6) seg([x, Y0 + 7.5 + 1.1, SZ0], [x, Y0 + 7.5 + 1.1, SZ1], 0.25, 4);
     for (z = SZ0; z > SZ1; z -= 4) rect(-6.5, z - 4, 6.5, z, Y0 + 0.02, 0.22);
+    if (!lo) pave(-6.5, SZ1, 6.5, SZ0, Y0 + 0.015, 13 / 12, 0.07);                      // r20B: paving
 
     // 3 · Design Work: the atrium, two-storey arcades on both long sides (piers and arches below, small columns above)
     var AZ0 = -128, AZ1 = -196, BAY = 6.8, NB = 10;
@@ -262,6 +297,11 @@
       seg([Xb, Y0 + 14, AZ0], [Xb, Y0 + 14, AZ1], 0.3); seg([Xb, Y0 + 9, AZ0], [Xb, Y0 + 9, AZ1], 0.22);
       for (k = 0; k <= NB; k++) seg([X, Y0 + 14.6, AZ0 - k * BAY], [Xb, Y0 + 14, AZ0 - k * BAY], 0.2);   // roof rafters
     });
+    if (!lo) {
+      // r20B: paving round the inlaid ellipse, and a balustrade along the upper gallery between the small columns
+      pave(-22.8, AZ1, 22.8, AZ0, Y0 + 0.012, 1.9, 0.06, function (x2, z2) { var ex = x2 / 17.5, ez = (z2 + 162) / 29; return ex * ex + ez * ez < 1; });
+      [-1, 1].forEach(function (s) { for (k = 0; k < NB * 2; k++) { var za = AZ0 - k * BAY / 2 - 0.45, zb = AZ0 - (k + 1) * BAY / 2 + 0.45; balustrade([s * 24.2, 0, za], [s * 24.2, 0, zb], Y0 + 9.2, 1.0, 0.42, 0.42); } });
+    }
     // the court floor: an inlaid ellipse and its rays
     for (k = 1; k <= 4; k++) { var P0 = []; for (i = 0; i < 64; i++) { a = i / 64 * TAU; P0.push([k * 4.2 * Math.cos(a), Y0 + 0.02, -162 + k * 7 * Math.sin(a)]); } line(P0, 0.38 - k * 0.04, true); }
     for (i = 0; i < 24; i++) { a = i / 24 * TAU; L([4.2 * Math.cos(a), Y0 + 0.02, -162 + 7 * Math.sin(a)], [16.8 * Math.cos(a), Y0 + 0.02, -162 + 28 * Math.sin(a)], 0.22); }
@@ -319,6 +359,8 @@
       line(CP, 0.6 - k * 0.02, true);
     }
     seg([CX, Y0 + 0.02, CZ + 8.6], [CX, Y0 + 0.02, CZ + 22], 0.3); seg([CX, Y0 + 0.02, CZ - 8.6], [CX, Y0 + 0.02, CZ - 22], 0.3);
+    if (!lo) pave(CX - 18, CZ - 22, CX + 18, CZ + 22, Y0 + 0.012, 2, 0.06, function (x2, z2) {      // r20B: paving, not under the pool or the mound
+      return (Math.abs(x2 - CX) < 13 && Math.abs(z2 - CZ) < 9) || Math.hypot(x2 - CX + 13, z2 - CZ + 15) < 8; });
 
     // 7 · Xiaoyi: a round temple past the court (stepped base, twelve fluted columns, ring entablature, dome)
     var RX = 94, RZ = -266, RR = 7;
@@ -342,8 +384,14 @@
     FL = TYH;
     rect(TX0, TZ1, TX1, TZ0, TYH + 0.15, 0.5); rect(TX0, TZ1, TX1, TZ0, TYH + 1.1, 0.75);
     var BS = lo ? 2.4 : 0.6;
-    for (x = TX0; x <= TX1; x += BS) { L([x, TYH + 0.15, TZ0], [x, TYH + 1.1, TZ0], 0.3); L([x, TYH + 0.15, TZ1], [x, TYH + 1.1, TZ1], 0.3); }
-    for (z = TZ0; z >= TZ1; z -= BS) { L([TX0, TYH + 0.15, z], [TX0, TYH + 1.1, z], 0.3); if (z > -261 || z < -271) L([TX1, TYH + 0.15, z], [TX1, TYH + 1.1, z], 0.3); }
+    if (lo) {
+      for (x = TX0; x <= TX1; x += BS) { L([x, TYH + 0.15, TZ0], [x, TYH + 1.1, TZ0], 0.3); L([x, TYH + 0.15, TZ1], [x, TYH + 1.1, TZ1], 0.3); }
+      for (z = TZ0; z >= TZ1; z -= BS) { L([TX0, TYH + 0.15, z], [TX0, TYH + 1.1, z], 0.3); if (z > -261 || z < -271) L([TX1, TYH + 0.15, z], [TX1, TYH + 1.1, z], 0.3); }
+    } else {                                                        // r20B: vase balusters, the stair head left open
+      balustrade([TX0, 0, TZ0], [TX1, 0, TZ0], TYH, 1.1, BS, 0.55); balustrade([TX0, 0, TZ1], [TX1, 0, TZ1], TYH, 1.1, BS, 0.55);
+      balustrade([TX0, 0, TZ0], [TX0, 0, TZ1], TYH, 1.1, BS, 0.55);
+      balustrade([TX1, 0, TZ0], [TX1, 0, -261], TYH, 1.1, BS, 0.55); balustrade([TX1, 0, -271], [TX1, 0, TZ1], TYH, 1.1, BS, 0.55);
+    }
     for (x = TX0; x <= TX1; x += 3) seg([x, TYH, TZ0], [x, TYH, TZ1], 0.14, 6);
     for (z = TZ0; z >= TZ1; z -= 3) seg([TX0, TYH, z], [TX1, TYH, z], 0.14, 6);
     [[42, -256], [50, -256], [42, -264], [50, -264]].forEach(function (p) { column(p[0], p[1], TYH, 0.36, 4.6, 0.7); });
