@@ -358,7 +358,7 @@
       gl.disable(gl.POLYGON_OFFSET_FILL); gl.depthMask(false); gl.blendFunc(gl.ONE, gl.ONE); gl.uniform1f(U.uFill, 0);
       // 2 · the grid lines, 2b · every 6th row / column again (the heavier layer, as the scene's main members),
       // 3 · a share of the vertices as small points
-      const g = o.gain * (this.grid[0] > 120 ? 0.5 : 0.62);
+      const g = o.gain * (this.grid[0] > 120 ? 0.5 : 0.48);
       gl.uniform1f(U.uK, g);
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.lb[0]); gl.drawElements(gl.LINES, this.lb[1], gl.UNSIGNED_SHORT, 0);
       gl.uniform1f(U.uK, g * 0.45);
