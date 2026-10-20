@@ -505,7 +505,6 @@ html:lang(zh) .slot-blurb { height: auto; max-height: 8em; }
 .xy-spine { position: absolute; left: 50%; top: 0; bottom: 0; width: 4cqw; margin-left: -2cqw; background: linear-gradient(90deg, transparent, rgba(60, 40, 20, .22) 45%, rgba(255, 255, 255, .08) 52%, transparent); pointer-events: none; }
 .xy-tabs { position: absolute; right: -44px; top: 8%; list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; color: var(--ink-3); }
 .xy-tabs li { padding: 6px 8px; border-left: 1px solid var(--line-2); transition: color var(--dur-fast), border-color var(--dur-fast); }
-.xy-tabs li.on { color: #e9c9a8; border-color: #C98A5B; }
 
 /* =========================================================================
    06 TAOTAO — a wall of looping clips, at most 2 playing (§7.8)
@@ -865,5 +864,14 @@ html:lang(zh) .case-pmr { grid-template-columns: 5em minmax(0, 1fr); }
   .wcase, .case-fold, .case-fold-in, .wfig-lead .wfig-frame, .case-pm::before, .case-pm::after { transition: none !important; }
 }
 
-/* ---------- 12. r18 monochrome: the product mocks keep their layout and motion but are drawn in grey ---------- */
-.av-scene, .pp-printer, .pp-stack, .st-drawing, .st-gauge, .sk-phone-wrap, .tt-wall, .xy-book-wrap { filter: grayscale(1); }
+/* ---------- 12. Product mocks: r18 drew them all in grey; r19C gives five of them back a muted version of their own colour.
+   The filter sits on the showcase container only (the chapter shell, titles, copy and buttons stay black / white / grey),
+   saturation is cut roughly in half and the brightest paper is dimmed a little so it sits on the black wireframe scene.
+   Steam Vent Calc keeps the grey drawing. ---------- */
+.st-drawing, .st-gauge { filter: grayscale(1); }
+.av-scene { filter: saturate(.75) brightness(.93); }
+.pp-printer, .pp-stack { filter: saturate(.58) brightness(.9); }
+.sk-phone-wrap { filter: saturate(.62) brightness(.92); }
+.tt-wall { filter: saturate(.42) brightness(.84); }
+.xy-book-wrap { filter: saturate(.55) brightness(.9); }
+.xy-tabs li.on { color: var(--ink); border-color: var(--sig-a); } /* the book's tab index reads as navigation: kept grey */
