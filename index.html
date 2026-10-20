@@ -453,7 +453,6 @@
 
 <!-- ======================= CONTACT ======================= -->
 <footer class="footer" id="contact">
-  <canvas class="voiceprint" id="voiceprint" aria-hidden="true"></canvas>
   <div class="wrap foot-grid">
     <h2 class="display foot-h"><span data-en="Want to make" data-zh="想一起">Want to make</span> <span data-en="something together?" data-zh="做点什么？">something together?</span></h2>
     <div class="foot-contact">
@@ -461,6 +460,8 @@
       <ul class="foot-links" id="footContact"></ul>
     </div>
   </div>
+  <!-- r20B: the voiceprint lives in its own solid strip inside the footer, so it never draws over the wireframe scene -->
+  <div class="wrap foot-signal" aria-hidden="true"><canvas class="voiceprint" id="voiceprint"></canvas></div>
   <!-- r14: how this site is made: a short note (first person = ailiu) and the build log, folded by default -->
   <div class="wrap foot-made">
     <div class="made-copy">

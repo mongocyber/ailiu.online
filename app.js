@@ -604,17 +604,17 @@
     function draw(now) {
       const t = now / 1000;
       ctx.clearRect(0, 0, w, h);
-      const x0 = w * 0.22, x1 = w * 0.78, mid = h / 2;
+      const x0 = w * 0.04, x1 = w * 0.96, mid = h / 2;   // r20B: the strip is short and wide
       ctx.lineWidth = 1;
       ctx.strokeStyle = "rgba(255,255,255,.08)"; ctx.beginPath(); ctx.moveTo(0, mid); ctx.lineTo(w, mid); ctx.stroke();
-      for (let k = 0; k < 7; k++) {
+      for (let k = 0; k < 5; k++) {
         const g = ctx.createLinearGradient(x0, 0, x1, 0);
         g.addColorStop(0, "rgba(236,235,230,0)"); g.addColorStop(0.3, "rgba(236,235,230,.6)"); g.addColorStop(0.7, "rgba(170,172,176,.6)"); g.addColorStop(1, "rgba(170,172,176,0)");
         ctx.strokeStyle = g; ctx.beginPath();
         for (let x = x0; x <= x1; x += 4) {
           const u = (x - x0) / (x1 - x0);
           const env = Math.sin(Math.PI * u) ** 1.6;
-          const y = mid + env * h * 0.18 * Math.sin(u * (3 + k * 0.7) * Math.PI + t * (0.6 + k * 0.13) + k);
+          const y = mid + env * h * 0.34 * Math.sin(u * (5 + k * 1.1) * Math.PI + t * (0.6 + k * 0.13) + k);
           x === x0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
         }
         ctx.stroke();

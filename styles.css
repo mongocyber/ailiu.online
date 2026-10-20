@@ -529,7 +529,9 @@ html:lang(zh) .sk-fig figcaption { font-size: 13px; }
 /* ---------- 8. About / footer ---------- */
 .foot-h span { display: block; text-wrap: balance; } /* r8: one line per phrase, so no stray space between Han phrases */
 .footer { position: relative; padding: 4vh 0 calc(var(--safe-b) + 20px); border-top: 1px solid var(--line); overflow: hidden; }
-.voiceprint { width: 100%; height: 34vh; min-height: 200px; }
+/* r20B: the voiceprint was a 34vh transparent canvas over the scene; now a solid 88px strip between hairlines in the footer */
+.foot-signal { margin-top: 7vh; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--bg); }
+.voiceprint { display: block; width: 100%; height: 88px; }
 .foot-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 5vw; align-items: end; margin-top: 2vh; }
 .foot-h { font-size: clamp(40px, 5.6vw, 92px); color: var(--ink); }
 /* zh: keep each phrase whole (no orphaned 「目？」) */
