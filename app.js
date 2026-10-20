@@ -41,8 +41,9 @@
     const ogl = $('meta[property="og:locale"]'); if (ogl) ogl.content = lang === "zh" ? "zh_CN" : "en_US";
     $$("[data-en]").forEach((el) => { el.textContent = el.dataset[lang] || el.dataset.en; });
     $$("[data-alt-en]").forEach((el) => { el.alt = lang === "zh" ? el.dataset.altZh : el.dataset.altEn; });
+    $$("[data-label-en]").forEach((el) => el.setAttribute("aria-label", lang === "zh" ? el.dataset.labelZh : el.dataset.labelEn));
     $$("[data-lang-opt]").forEach((el) => el.classList.toggle("on", el.dataset.langOpt === lang));
-    fillSlots(); renderWork(); buildNav(); renderSound(); renderLog();
+    fillSlots(); renderWork(); buildNav(); renderSound();
     measureAviso(); reelTxt = "";
   }
   $("#langBtn").addEventListener("click", () => {
@@ -517,14 +518,47 @@
   }
 
   /* ---- 05 Suikou */
-  // r20: three prototype screenshots; the outer two drift against the middle one while the chapter scrolls
-  const skFigs = $$("#suikou .sk-fig");
+  // r21: one phone; the three prototype screens take turns (~4s each, paused on hover / focus, never on its own under
+  // reduced motion), arrows / dots / pause button below; the phone itself tilts in and settles as before r20
+  const skCar = $("#skCar"), skPhone = $("#skPhone"), skShots = $$("#skTrack .sk-shot"), skCaps = $$("#skCaps .sk-cap"), skDots = $$("#skCar .sk-dot"), skPlay = $("#skPlay");
+  let skI = 0, skTimer = 0, skHold = false, skStopped = reduced, skSeen = false;
+  function skShow(i) {
+    skI = (i + skShots.length) % skShots.length;
+    skShots.forEach((el, j) => { el.classList.toggle("is-on", j === skI); el.setAttribute("aria-hidden", j === skI ? "false" : "true"); });
+    skCaps.forEach((el, j) => el.classList.toggle("is-on", j === skI));
+    skDots.forEach((el, j) => (j === skI ? el.setAttribute("aria-current", "true") : el.removeAttribute("aria-current")));
+  }
+  function skSync() {
+    clearInterval(skTimer); skTimer = 0;
+    const run = !skStopped && !skHold && skSeen && !document.hidden;
+    if (run) skTimer = setInterval(() => skShow(skI + 1), 4000);
+    $("#skCaps").setAttribute("aria-live", skStopped ? "polite" : "off");
+    skPlay.dataset.labelEn = skStopped ? "Start automatic rotation" : "Pause automatic rotation";
+    skPlay.dataset.labelZh = skStopped ? "开始自动轮播" : "暂停自动轮播";
+    skPlay.setAttribute("aria-label", lang === "zh" ? skPlay.dataset.labelZh : skPlay.dataset.labelEn);
+    skPlay.firstElementChild.textContent = skStopped ? "▶" : "❙❙";
+  }
+  // a click on an arrow or dot is a choice: rotation stops there until the pause button starts it again
+  const skPick = (i) => { skStopped = true; skShow(i); skSync(); };
+  $("#skPrev").addEventListener("click", () => skPick(skI - 1));
+  $("#skNext").addEventListener("click", () => skPick(skI + 1));
+  skDots.forEach((d, j) => d.addEventListener("click", () => skPick(j)));
+  skPlay.addEventListener("click", () => { skStopped = !skStopped; if (!skStopped) skShow(skI + 1); skSync(); });
+  skCar.addEventListener("keydown", (e) => { if (e.key === "ArrowLeft" || e.key === "ArrowRight") { e.preventDefault(); skPick(skI + (e.key === "ArrowLeft" ? -1 : 1)); } });
+  skCar.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") { skHold = true; skSync(); } });
+  skCar.addEventListener("pointerleave", () => { if (!skCar.contains(document.activeElement)) { skHold = false; skSync(); } });
+  skCar.addEventListener("focusin", () => { skHold = true; skSync(); });
+  skCar.addEventListener("focusout", (e) => { if (!skCar.contains(e.relatedTarget) && !skCar.matches(":hover")) { skHold = false; skSync(); } });
+  document.addEventListener("visibilitychange", skSync);
+  new IntersectionObserver((es) => { skSeen = es[0].isIntersecting; skSync(); }).observe(skCar);
+  skSync();
   function suikou(p) {
     const pin = $("#suikou .pin");
     pin.style.setProperty("--ring", p.toFixed(3));
     if (isMobile() || reduced) return;
-    const d = (p - 0.5) * 2;
-    skFigs.forEach((f, j) => f.style.setProperty("--sy", (d * [-18, 14, -26][j]).toFixed(1)));
+    const r = sstep(0, 0.2, p);
+    skPhone.style.setProperty("--prx", (10 * (1 - r)).toFixed(2) + "deg");
+    skPhone.style.setProperty("--pry", (-14 * (1 - r) + 4 * Math.sin(p * Math.PI)).toFixed(2) + "deg");
   }
 
   /* ---- 07 Xiaoyi */
@@ -585,13 +619,6 @@
   function wild(p) {
     wlPin.style.setProperty("--grow", isMobile() || reduced ? 1 : sstep(0, 0.36, p).toFixed(3));
     document.documentElement.dataset.portrait = louisHero.live ? "canvas" : "fallback";   // r12 readout, now an attribute
-  }
-
-  /* ---- footer: build log (r14: moved here from Wild Louis; folded by default) */
-  function renderLog() {
-    const log = M.buildLog;
-    $("#madeLogList").innerHTML = log.slice().reverse().map((e) => `<li><time>${e.date}</time><span>${esc(e[lang])}</span></li>`).join("");
-    $("#madeLogCount").textContent = log.length + (lang === "zh" ? " 条" : " entries");
   }
 
   /* ------------------------------------------------------------------ footer voiceprint (Atomic nod) */

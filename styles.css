@@ -409,15 +409,32 @@ html:lang(zh) .slot-blurb { height: auto; max-height: 8em; }
 .sk-rings i { position: absolute; left: 50%; top: 50%; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .07); transform: translate(-50%, -50%) scale(calc(.9 + var(--ring, 0) * .14)); }
 .sk-rings i:nth-child(1) { width: 52vh; height: 52vh; } .sk-rings i:nth-child(2) { width: 74vh; height: 74vh; opacity: .75; }
 .sk-rings i:nth-child(3) { width: 98vh; height: 98vh; opacity: .5; } .sk-rings i:nth-child(4) { width: 124vh; height: 124vh; opacity: .3; }
-/* r20: three real prototype screens in thin phone frames, staggered; each drifts a little with scroll (--sy, set in app.js) */
-.sk-phones { --pw: min(15vw, calc((100vh - var(--top-h) - var(--safe-b) - 190px) * .4619), 250px); position: absolute; left: 30%; top: calc(50% + 14px); translate: -50% -50%; display: flex; align-items: flex-start; gap: clamp(18px, 2vw, 32px); }
-.sk-phones.is-in { clip-path: none; } /* the staggered phones and captions overhang the row box; the preset's inset(0) would cut them */
-.sk-fig { margin: 0; width: calc(var(--pw) * 1.07); transform: translateY(calc(var(--off, 0px) + var(--sy, 0) * 1px)); }
-.sk-fig:nth-child(1) { --off: 26px; } .sk-fig:nth-child(2) { --off: -22px; } .sk-fig:nth-child(3) { --off: 40px; }
-.sk-frame { padding: calc(var(--pw) * .035); border-radius: calc(var(--pw) * .15); background: linear-gradient(145deg, #3a3d42, #16171a 40%, #2a2c30); box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .14), 0 30px 70px rgba(0, 0, 0, .6), 0 0 0 1px #000; }
-.sk-frame img { display: block; width: 100%; height: auto; border-radius: calc(var(--pw) * .118); background: #2a2c30; }
-.sk-fig figcaption { margin-top: 14px; font-size: 12.5px; line-height: 1.5; color: var(--ink-2); }
-html:lang(zh) .sk-fig figcaption { font-size: 13px; }
+/* r21: back to one real-sized phone (as before r20); the three prototype screens take turns inside it, with arrows, dots
+   and a pause button below, then the caption of the screen on show. Auto-rotation and fading are in app.js. */
+.sk-phone-wrap { position: absolute; left: 34%; top: calc(50% + 10px); translate: -50% -50%; transform-origin: 50% 100%; }
+.sk-car { display: flex; flex-direction: column; align-items: center; }
+.sk-phone { --ph: min(calc(100vh - var(--top-h) - var(--safe-b) - 150px), 620px); --pb: calc(var(--ph) * .018); position: relative; height: var(--ph); width: calc(var(--ph) * .4815); border-radius: calc(var(--ph) * .085); background: linear-gradient(145deg, #3a3d42, #16171a 40%, #2a2c30); box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .14), 0 40px 90px rgba(0, 0, 0, .6), 0 0 0 1px #000;
+  transform: perspective(var(--persp)) rotateY(var(--pry, 0deg)) rotateX(var(--prx, 0deg)); }
+.sk-island { position: absolute; z-index: 3; left: 50%; top: calc(var(--ph) * .03); width: calc(var(--ph) * .13); height: calc(var(--ph) * .034); translate: -50% 0; border-radius: 99px; background: #000; }
+.sk-track { position: absolute; inset: var(--pb); border-radius: calc(var(--ph) * .07); overflow: hidden; background: #2a2c30; }
+.sk-shot { position: absolute; inset: 0; opacity: 0; visibility: hidden; transition: opacity 280ms linear, visibility 0s 280ms; }
+.sk-shot.is-on { opacity: 1; visibility: visible; transition: opacity 280ms linear; }
+.sk-shot img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.sk-ctl { display: flex; align-items: center; gap: 6px; margin-top: 18px; }
+.sk-ctl button { appearance: none; border: 0; background: none; color: var(--ink-2); cursor: pointer; }
+.sk-arrow { width: 32px; height: 32px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(246, 239, 226, .22); font-size: 18px; line-height: 1; transition: color var(--dur-fast), box-shadow var(--dur-fast); }
+.sk-arrow:hover { color: var(--ink); box-shadow: inset 0 0 0 1px rgba(246, 239, 226, .5); }
+.sk-dots { display: flex; margin: 0 4px; }
+.sk-dot { position: relative; width: 22px; height: 32px; padding: 0; }
+.sk-dot::before { content: ""; position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; translate: -50% -50%; border-radius: 99px; background: rgba(246, 239, 226, .3); transition: width var(--dur-base) var(--ease-out), background var(--dur-fast); }
+.sk-dot[aria-current="true"]::before { width: 16px; background: var(--ink); }
+.sk-dot:hover::before { background: rgba(246, 239, 226, .7); }
+.sk-play { width: 32px; height: 32px; margin-left: 4px; font-size: 10px; letter-spacing: -.1em; }
+.sk-play:hover { color: var(--ink); }
+.sk-caps { display: grid; width: min(300px, 80vw); margin-top: 10px; text-align: center; }
+.sk-cap { grid-area: 1 / 1; margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--ink-2); opacity: 0; visibility: hidden; transition: opacity 280ms linear, visibility 0s 280ms; }
+.sk-cap.is-on { opacity: 1; visibility: visible; transition: opacity 280ms linear; }
+html:lang(zh) .sk-cap { font-size: 13px; }
 .sk-slots { left: 58%; top: 50%; transform: translateY(-50%); width: min(34vw, 480px); }
 .ch-suikou .slot-title { color: var(--ink); }
 .slot-noqr { color: var(--ink-3); font-size: 10px; }
@@ -524,12 +541,12 @@ html:lang(zh) .sk-fig figcaption { font-size: 13px; }
 /* r20B: no panels behind the chapter copy (the wireframe dims only softly behind it, fx3d.js). A dark text-shadow,
    inherited by everything inside the reading blocks, keeps it legible where a bright line passes; mock product UIs
    (Aviso, PrintPlay, Xiaoyi …) sit outside these blocks and are not touched. */
-.slots, .wk-head, .wk-side, .wcase-text, .st-block, .sk-fig figcaption, .tt-note, .hero-copy { text-shadow: 0 0 10px rgba(0, 0, 0, .92), 0 1px 3px rgba(0, 0, 0, .85); }
+.slots, .wk-head, .wk-side, .wcase-text, .st-block, .sk-cap, .tt-note, .hero-copy { text-shadow: 0 0 10px rgba(0, 0, 0, .92), 0 1px 3px rgba(0, 0, 0, .85); }
 
 /* ---------- 8. About / footer ---------- */
-/* r20B: the footer redone on one twelve-column grid. A display line, then numbered rows between hairlines: a mono label
-   (index + name) in columns 1–3, the content in 4–12. Contact links are the large type; notes and log are quiet.
-   Black / white / grey only; no panels behind the text (the voiceprint strip is the one solid band). */
+/* r20B: the footer on one twelve-column grid. r21: "How this site is made" and the build log are gone, so it is now a
+   display line, the contact row between hairlines (mono label in columns 1–3, the large handles in 4–12), the voiceprint
+   strip, and the © / back-to-top line right under it. Black / white / grey only; the voiceprint strip is the one solid band. */
 .footer { position: relative; padding: 14vh 0 calc(var(--safe-b) + 20px); overflow: hidden; }
 .foot-h { font-size: clamp(40px, 5.6vw, 92px); color: var(--ink); margin: 0 0 7vh; }
 .foot-h span { display: block; text-wrap: balance; } /* r8: one line per phrase, so no stray space between Han phrases */
@@ -539,7 +556,7 @@ html:lang(zh) .foot-h span { word-break: keep-all; overflow-wrap: anywhere; } /*
 .foot-k { grid-column: 1 / 4; display: flex; gap: 14px; margin: 0; color: var(--ink-2); }
 .foot-k b { font-weight: 500; color: var(--ink-3); font-variant-numeric: tabular-nums; }
 /* the voiceprint was a 34vh transparent canvas over the scene; now a solid 88px strip between hairlines */
-.foot-signal { margin-top: 5vh; margin-bottom: 5vh; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--bg); }
+.foot-signal { margin-top: 5vh; margin-bottom: 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--bg); }
 .voiceprint { display: block; width: 100%; height: 88px; }
 /* contact: two cells side by side, label above, handle large, an arrow that moves on hover */
 .foot-links { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15em), 1fr)); gap: 18px 24px; }
@@ -549,21 +566,7 @@ html:lang(zh) .foot-h span { word-break: keep-all; overflow-wrap: anywhere; } /*
 .foot-links a::after { content: "↗"; font-size: .7em; color: var(--ink-3); transition: transform var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out); }
 .foot-links a:hover { border-color: var(--ink); }
 .foot-links a:hover::after, .foot-links a:focus-visible::after { color: var(--ink); transform: translate(2px, -2px); }
-/* how this site is made */
-.made-p { grid-column: 4 / 10 !important; margin: 0; max-width: 40em; color: var(--ink-2); font-size: 14.5px; line-height: 1.65; text-wrap: pretty; text-shadow: 0 1px 10px rgba(0, 0, 0, .9); }
-/* build log: folded; the summary is a single quiet line (count · show / hide) */
-.made-log summary { display: flex; justify-content: space-between; gap: 12px; cursor: pointer; color: var(--ink-3); list-style: none; }
-.made-log summary::-webkit-details-marker { display: none; }
-.made-log summary::after { content: "+"; color: var(--ink-2); margin-left: 10px; }
-.made-log[open] summary::after { content: "−"; }
-.made-log[open] .made-t { visibility: hidden; }
-.made-t { flex: 1; text-align: right; }
-.made-log summary:hover, .made-log summary:focus-visible { color: var(--ink); }
-.made-log ol { list-style: none; margin: 0; padding: 18px 0 0; display: grid; gap: 10px; text-transform: none; letter-spacing: 0; font-size: 11.5px; }
-.made-log li { display: grid; grid-template-columns: 6.6em minmax(0, 1fr); gap: 12px; line-height: 1.5; padding-top: 10px; border-top: 1px solid var(--line); }
-.made-log time { color: var(--ink-3); font-variant-numeric: tabular-nums; }
-.made-log li span { color: var(--ink-2); font-family: var(--f-sans); font-size: 13px; text-shadow: 0 1px 8px rgba(0, 0, 0, .9); }
-.foot-meta { display: flex; flex-wrap: wrap; gap: 10px 28px; justify-content: space-between; padding-top: 18px; border-top: 1px solid var(--line); color: var(--ink-3); }
+.foot-meta { display: flex; flex-wrap: wrap; gap: 10px 28px; justify-content: space-between; padding-top: 18px; color: var(--ink-3); } /* r21: sits right under the strip's bottom hairline */
 .foot-meta a { text-decoration: none; }
 .foot-meta a:hover { color: var(--ink); }
 
@@ -758,12 +761,11 @@ html:lang(zh) .case-pmr { grid-template-columns: 5em minmax(0, 1fr); }
 
   /* suikou: swipe screens */
   .sk-rings { left: 50%; top: 66%; }
-  .sk-phones { --pw: 58vw; position: relative; left: auto; top: auto; translate: none; margin: 30px -20px 0; padding: 0 19vw 6px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; gap: 16px; }
-  .sk-phones::-webkit-scrollbar { display: none; }
-  .sk-fig { flex: none; transform: none !important; scroll-snap-align: center; }
+  .sk-phone-wrap { position: relative; left: auto; top: auto; translate: none; margin: 30px auto 0; width: max-content; }
+  .sk-phone { --ph: min(132vw, 600px); transform: none !important; }
   .sk-slots { margin-top: 0; }
   .ch-suikou .pin { display: flex; flex-direction: column; }
-  .sk-phones { order: 2; } .sk-note { order: 3; text-align: center; }
+  .sk-phone-wrap { order: 2; } .sk-note { order: 3; text-align: center; }
 
   /* xiaoyi: single pages, no turning */
   .xy-book-wrap { position: relative; left: auto; right: auto; top: auto; bottom: auto; translate: none; margin-top: 28px; }
@@ -782,7 +784,7 @@ html:lang(zh) .case-pmr { grid-template-columns: 5em minmax(0, 1fr); }
   .wl-louis { position: relative; left: auto; right: auto; top: auto; bottom: auto; width: 100%; height: 56vh; transform: none; opacity: 1; margin: 18px 0 0; }
 
   .foot-row { grid-template-columns: 1fr; row-gap: 14px; }
-  .foot-row > *, .made-p { grid-column: 1 / -1 !important; }
+  .foot-row > * { grid-column: 1 / -1 !important; }
   /* design work: one column, screens above the text, full width; the smaller screens swipe sideways */
   .wk-head { display: block; padding: 72px 20px 40px; background: none; }
   .wk-side { margin-top: 34px; }
@@ -828,7 +830,8 @@ html:lang(zh) .case-pmr { grid-template-columns: 5em minmax(0, 1fr); }
   .slot-title.glitching { animation: none; }
   .tt-art * { animation: none !important; }
   .av-window { transform: none !important; }
-  .sk-fig { transform: translateY(var(--off, 0px)) !important; }
+  .sk-phone { transform: none !important; }
+  .sk-shot, .sk-cap, .sk-dot::before { transition: none !important; }
   .chapnav .nav-ind { transition: opacity var(--dur-fast) linear; }
   .st-flow, .av-cursor { display: none; }
   .wfig-lead img { transform: none; }
@@ -843,7 +846,7 @@ html:lang(zh) .case-pmr { grid-template-columns: 5em minmax(0, 1fr); }
 .st-drawing, .st-gauge { filter: grayscale(1); }
 .av-scene { filter: saturate(.75) brightness(.93); }
 .pp-printer, .pp-stack { filter: saturate(.58) brightness(.9); }
-.sk-frame img { filter: saturate(.62) brightness(.88); } /* r20: real prototype screens, same muted treatment */
+.sk-shot img { filter: saturate(.62) brightness(.88); } /* r20: real prototype screens, same muted treatment */
 .tt-wall { filter: saturate(.42) brightness(.84); }
 .xy-book-wrap { filter: saturate(.55) brightness(.9); }
 .xy-tabs li.on { color: var(--ink); border-color: var(--sig-a); } /* the book's tab index reads as navigation: kept grey */

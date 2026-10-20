@@ -1,4 +1,4 @@
-"""r8 alignment check (r10: Design Work is chapter 03, its slots join the chapter groups; r11: console groups work-left / case; r13: case-study groups work-side / case-<id> / media-<id>; r14B: folded and one-open states; r17: hero note row removed): every heading / subtitle / paragraph / status row inside one text block must share a left edge (±1px).
+"""r8 alignment check (r10: Design Work is chapter 03, its slots join the chapter groups; r11: console groups work-left / case; r13: case-study groups work-side / case-<id> / media-<id>; r14B: folded and one-open states; r17: hero note row removed; r21: footer notes / log removed): every heading / subtitle / paragraph / status row inside one text block must share a left edge (±1px).
 Usage: python3 scripts/align.py [tag]   (server: python3 -m http.server 8801). Runs chromium, webkit, firefox × desktop/mobile × en/zh."""
 import sys, json
 from playwright.sync_api import sync_playwright
@@ -17,7 +17,7 @@ JS = r"""() => {
   const groups = {};
   // text blocks: first rendered glyph; containers (grids / boxes holding SVG): content-box edge
   const C = (el) => { const b = el.getBoundingClientRect(), cs = getComputedStyle(el); return b.left + parseFloat(cs.paddingLeft) + parseFloat(cs.borderLeftWidth); };
-  const BOX = /wk-caps|wk-method|case-pmr|wfig|foot-meta|foot-links|made-log|slot-row|draft-row/;
+  const BOX = /wk-caps|wk-method|case-pmr|wfig|foot-meta|foot-links|slot-row|draft-row/;
   const add = (g, sel, root = document) => root.querySelectorAll(sel).forEach((el) => { if (vis(el)) (groups[g] = groups[g] || []).push([sel + (el.id ? "#" + el.id : ""), BOX.test(sel) ? C(el) : L(el)]); });
   add("hero", ".hero-copy .kicker"); add("hero", ".hero-h > span"); add("hero", "#heroNote");
   document.querySelectorAll(".chapter").forEach((sec) => {
@@ -34,9 +34,9 @@ JS = r"""() => {
     if (innerWidth > 760) add("media-" + c.id, ":scope .wfig-row > .wfig:first-child", c);
   });
   add("footer", ".foot-h > span:first-child"); add("footer", ".foot-meta");
-  // r20B: the footer grid — the row labels share the heading's left edge; the row contents (contact, note, log) share column 4
+  // r20B: the footer grid — the row label shares the heading's left edge. r21: notes and log are gone, so the contact
+  // handles are the only thing in column 4 and the "foot-col" group is dropped
   add("footer", ".foot-row > .foot-k");
-  add("foot-col", ".foot-links"); add("foot-col", ".made-p"); add("foot-col", ".made-log > summary");
   return groups;
 }"""
 bad = 0

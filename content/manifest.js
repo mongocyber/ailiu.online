@@ -18,21 +18,6 @@ window.MANIFEST = {
     zh: { title: "ailiu.online · 做软件和 AI 工具的体验设计", description: "软件 UX 体验设计，眼下主要做 AI 工具：我工作里的设计案例，和业余做的东西。" },
     en: { title: "ailiu.online · UX designer for software and AI tools", description: "UX design for software, these days mostly AI tools: my design work, and the things I build on the side." }
   },
-  // r14: the build log moved from the Wild Louis chapter to the footer ("How this site is made")
-  buildLog: [
-    { date: "2026-10-15", zh: "写下这份说明书", en: "Wrote the build spec", model: null, costUsd: 0 },
-    { date: "2026-10-17", zh: "做出第二版静态样片", en: "Built preview v2, a static sample", model: null, costUsd: 0 },
-    { date: "2026-10-18", zh: "接入内容草稿和联系方式", en: "Wired in draft copy and contacts", model: null, costUsd: 0 },
-    { date: "2026-10-18", zh: "统一左对齐，调整章节顺序，加入「设计作品」", en: "Aligned every left edge, reordered chapters, added Design Work", model: null, costUsd: 0 },
-    { date: "2026-10-18", zh: "「设计作品」成为第 03 章", en: "Made Design Work chapter 03", model: null, costUsd: 0 },
-    { date: "2026-10-18", zh: "修好手机上不显示的头像，重写首页文案", en: "Fixed the portrait on phones; rewrote the home page copy", model: null, costUsd: 0 },
-    { date: "2026-10-19", zh: "「设计作品」改成完整案例，配上原来的界面图", en: "Rebuilt Design Work as full case studies with the original screens", model: null, costUsd: 0 },
-    { date: "2026-10-19", zh: "首页背景换成实时 3D 扫描线地形", en: "Gave the home page a live 3D scanline field", model: null, costUsd: 0 },
-      { date: "2026-10-19", zh: "野生路易斯一章改为自我介绍，搭建记录移到页脚", en: "Wild Louis became a self-introduction; the build notes moved to the footer", model: null, costUsd: 0 },
-    { date: "2026-10-19", zh: "设计作品的案例默认收起；章节换序；加入背景音乐和音效", en: "Design Work cases start folded; chapters reordered; background music and sound effects added", model: null, costUsd: 0 },
-    { date: "2026-10-19", zh: "首屏改为全屏，放大画像，画像与背景地形同步起伏", en: "Made the first screen full height with a larger portrait that moves with the field", model: null, costUsd: 0 },
-    { date: "2026-10-20", zh: "全站背景换成黑底白线的 3D 线框场景，镜头随滚动穿过每一章；界面改为黑白灰", en: "Put one 3D wireframe scene behind the whole site, white lines on black, with the camera moving through it chapter by chapter; the interface is now black, white and grey", model: null, costUsd: 0 }
-  ],
   persona: {
     draft: true,
     // r12: every line on the site is ailiu speaking (first person); Louis is just the face on the page.
