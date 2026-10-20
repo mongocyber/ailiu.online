@@ -1323,3 +1323,21 @@ CONTENT-DRAFT.md 的 9 个待确认项都还在，页面上对应位置已经标
 | webgl-low | 设计作品 | 16.7ms | 16.7ms |
 
   软件 GL 的耗时大致和线段数成正比。真机 GPU 画 27.7 万个线顶点压力不大，高配 GPU 偏慢时还有 r19B 的自动降为 lite。没有在真机上测。
+
+### 20.10 r20C / r20B 自检与交付
+- **进度**：上一次运行在 r20C（Louis 3D 线框雕塑）进行中撞额度中断，r20B（第 3 项）也没有开始。本轮接着完成，分 5 个提交：r20C、r20B-a（结尾正弦线）、r20B-b（页脚）、r20B-c（去底色）、r20B-d（背景加密），外加这一个收尾提交。本轮没有撞额度。
+- **`align.py r20c`**：chromium / webkit / firefox × 1440 / 390 × 中英 × 收起 / 展开，24 组全部 **0 处不齐、0 溢出、0 错误**。
+  - 页脚分组按新网格更新：行标签与标题左对齐，联系方式、说明和日志的左边都对齐在第 4 栏（手机上都在第 1 栏）。
+  - 第一轮还是旧分组（要求说明段与标题左对齐），桌面 12 组各报 1 处，所以改了分组。
+- **`scripts/deliver_r20c.py`**（chromium + SwiftShader，WebGL 开启）：桌面 `webgl-high`、Pixel 7 `webgl-low`，画像都是 `is-live`，0 错误。另外检查了：
+  - reduced-motion：只画一帧静态，仍是 `is-live`；
+  - 强制无 canvas：`is-fallback`，显示新的透明背景回退图。
+- **交付截图**（`/workspace/deliverables/ailiu-preview-v2-shots/`）：
+  - `r20-desktop-hero.png`、`r20-mobile-hero.png`、`r20-louis-closeup.png`；
+  - `r20-footer.png`（桌面，日志展开）、`r20-desktop-footer.png`、`r20-mobile-footer.png`；
+  - `r20-desktop-ending.png`、`r20-desktop-mid.png`（蒸汽站，没有底色）。
+- **部署构建**：已跑 `/workspace/scripts/build-ailiu-preview-deploy.sh`。`bundle.js` 217KB，通过 `node --check`；files.json 共 47 个二进制文件，`louis-fallback.png` 为 52,868 字节。没有 push、没有部署、没有动正式站。
+- **遗留**：
+  - 所有帧时间都是软件 GL 下的相对值，Louis 网格和背景加密都没有在真机 GPU 上测过。
+  - Louis 的高度场是程序化雕刻加照片轮廓，侧面转到 ±6° 以外会露出“浮雕”感。现在转角已限制在这个范围内。
+  - 野生路易斯一章画像随滚动渐显（不透明度 < 1）的过程中，实体填充也是半透明的，背景会透出来，滚到位后正常。
