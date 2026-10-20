@@ -519,19 +519,52 @@
 
   /* ---- 05 Suikou */
   // r21: one phone; the three prototype screens take turns (~4s each, paused on hover / focus, never on its own under
-  // reduced motion), arrows / dots / pause button below; the phone itself tilts in and settles as before r20
-  const skCar = $("#skCar"), skPhone = $("#skPhone"), skShots = $$("#skTrack .sk-shot"), skCaps = $$("#skCaps .sk-cap"), skDots = $$("#skCar .sk-dot"), skPlay = $("#skPlay");
-  let skI = 0, skTimer = 0, skHold = false, skStopped = reduced, skSeen = false;
-  function skShow(i) {
-    skI = (i + skShots.length) % skShots.length;
-    skShots.forEach((el, j) => { el.classList.toggle("is-on", j === skI); el.setAttribute("aria-hidden", j === skI ? "false" : "true"); });
+  // reduced motion), arrows / dots / pause button below; the phone itself tilts in and settles as before r20.
+  // r22: no flashes, no misplaced frames — all three screens are fetched and decoded as the chapter approaches and a
+  // switch waits for the incoming image to be decoded; the incoming screen fades in *over* the outgoing one, which stays
+  // opaque underneath until the fade is done (a plain cross-fade dipped to ~50% and let the bezel show through);
+  // rotation only starts once the phone is mostly on screen and its rise-in has settled, and the first turn comes a
+  // full interval after that (re-armed on every entry).
+  const skCar = $("#skCar"), skPhone = $("#skPhone"), skWrap = $("#suikou .sk-phone-wrap"), skShots = $$("#skTrack .sk-shot"), skCaps = $$("#skCaps .sk-cap"), skDots = $$("#skCar .sk-dot"), skPlay = $("#skPlay");
+  const skImgs = skShots.map((el) => $("img", el));
+  let skI = 0, skTimer = 0, skHold = false, skStopped = reduced, skSeen = false, skSettled = reduced, skPrevT = 0, skWant = -1;
+  const SK_MS = 4000, SK_FADE = 280;
+  const skReady = skImgs.map(() => null);
+  function skLoad(j) {                      // fetch + decode once; resolves even on failure so the carousel never stalls
+    if (!skReady[j]) {
+      const im = skImgs[j]; im.loading = "eager";
+      skReady[j] = (im.complete && im.naturalWidth ? Promise.resolve() : new Promise((r) => { im.addEventListener("load", r, { once: true }); im.addEventListener("error", r, { once: true }); }))
+        .then(() => (im.decode ? im.decode().catch(() => {}) : 0));
+    }
+    return skReady[j];
+  }
+  const skLoadAll = () => skImgs.forEach((_, j) => skLoad(j));
+  function skApply(i) {
+    const was = skI;
+    skI = i;
+    clearTimeout(skPrevT);
+    skShots.forEach((el, j) => {
+      el.classList.toggle("is-on", j === skI);
+      el.classList.toggle("is-prev", j === was && j !== skI && !reduced);   // stays opaque under the incoming screen
+      el.setAttribute("aria-hidden", j === skI ? "false" : "true");
+    });
+    if (!reduced) skPrevT = setTimeout(() => skShots.forEach((el) => el.classList.remove("is-prev")), SK_FADE + 40);
     skCaps.forEach((el, j) => el.classList.toggle("is-on", j === skI));
     skDots.forEach((el, j) => (j === skI ? el.setAttribute("aria-current", "true") : el.removeAttribute("aria-current")));
   }
+  function skShow(i) {
+    i = (i + skShots.length) % skShots.length;
+    if (i === skI) return Promise.resolve();
+    skWant = i;
+    return skLoad(i).then(() => { if (skWant === i) { skWant = -1; skApply(i); } });   // a later pick wins
+  }
+  function skArm() {
+    clearTimeout(skTimer); skTimer = 0;
+    if (!skStopped && !skHold && skSeen && skSettled && !document.hidden)
+      skTimer = setTimeout(() => skShow(skI + 1).then(skArm), SK_MS);
+  }
   function skSync() {
-    clearInterval(skTimer); skTimer = 0;
-    const run = !skStopped && !skHold && skSeen && !document.hidden;
-    if (run) skTimer = setInterval(() => skShow(skI + 1), 4000);
+    skArm();
     $("#skCaps").setAttribute("aria-live", skStopped ? "polite" : "off");
     skPlay.dataset.labelEn = skStopped ? "Start automatic rotation" : "Pause automatic rotation";
     skPlay.dataset.labelZh = skStopped ? "开始自动轮播" : "暂停自动轮播";
@@ -539,18 +572,24 @@
     skPlay.firstElementChild.textContent = skStopped ? "▶" : "❙❙";
   }
   // a click on an arrow or dot is a choice: rotation stops there until the pause button starts it again
-  const skPick = (i) => { skStopped = true; skShow(i); skSync(); };
+  const skPick = (i) => { skStopped = true; skSync(); skShow(i); };
   $("#skPrev").addEventListener("click", () => skPick(skI - 1));
   $("#skNext").addEventListener("click", () => skPick(skI + 1));
   skDots.forEach((d, j) => d.addEventListener("click", () => skPick(j)));
-  skPlay.addEventListener("click", () => { skStopped = !skStopped; if (!skStopped) skShow(skI + 1); skSync(); });
+  skPlay.addEventListener("click", () => { skStopped = !skStopped; skSync(); if (!skStopped) skShow(skI + 1).then(skArm); });
   skCar.addEventListener("keydown", (e) => { if (e.key === "ArrowLeft" || e.key === "ArrowRight") { e.preventDefault(); skPick(skI + (e.key === "ArrowLeft" ? -1 : 1)); } });
   skCar.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") { skHold = true; skSync(); } });
   skCar.addEventListener("pointerleave", () => { if (!skCar.contains(document.activeElement)) { skHold = false; skSync(); } });
   skCar.addEventListener("focusin", () => { skHold = true; skSync(); });
   skCar.addEventListener("focusout", (e) => { if (!skCar.contains(e.relatedTarget) && !skCar.matches(":hover")) { skHold = false; skSync(); } });
   document.addEventListener("visibilitychange", skSync);
-  new IntersectionObserver((es) => { skSeen = es[0].isIntersecting; skSync(); }).observe(skCar);
+  // fetch + decode a screen ahead of the chapter; count the rise-in (depth-rise preset) as settled once its transform is done
+  new IntersectionObserver((es) => { if (es[0].isIntersecting) skLoadAll(); }, { rootMargin: "100% 0px" }).observe(skCar);
+  const skSettle = () => { if (!skSettled) { skSettled = true; skSync(); } };
+  skWrap.addEventListener("transitionend", (e) => { if (e.target === skWrap && e.propertyName === "transform") skSettle(); });
+  new MutationObserver(() => { if (skWrap.classList.contains("is-in")) setTimeout(skSettle, 1200); }).observe(skWrap, { attributes: true, attributeFilter: ["class"] });
+  if (!skWrap.hasAttribute("data-preset")) skSettled = true;
+  new IntersectionObserver((es) => { skSeen = es[0].intersectionRatio >= 0.55; skSync(); }, { threshold: [0, 0.55, 1] }).observe(skPhone);
   skSync();
   function suikou(p) {
     const pin = $("#suikou .pin");

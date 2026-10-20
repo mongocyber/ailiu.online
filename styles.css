@@ -416,10 +416,15 @@ html:lang(zh) .slot-blurb { height: auto; max-height: 8em; }
 .sk-phone { --ph: min(calc(100vh - var(--top-h) - var(--safe-b) - 150px), 620px); --pb: calc(var(--ph) * .018); position: relative; height: var(--ph); width: calc(var(--ph) * .4815); border-radius: calc(var(--ph) * .085); background: linear-gradient(145deg, #3a3d42, #16171a 40%, #2a2c30); box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .14), 0 40px 90px rgba(0, 0, 0, .6), 0 0 0 1px #000;
   transform: perspective(var(--persp)) rotateY(var(--pry, 0deg)) rotateX(var(--prx, 0deg)); }
 .sk-island { position: absolute; z-index: 3; left: 50%; top: calc(var(--ph) * .03); width: calc(var(--ph) * .13); height: calc(var(--ph) * .034); translate: -50% 0; border-radius: 99px; background: #000; }
-.sk-track { position: absolute; inset: var(--pb); border-radius: calc(var(--ph) * .07); overflow: hidden; background: #2a2c30; }
-.sk-shot { position: absolute; inset: 0; opacity: 0; visibility: hidden; transition: opacity 280ms linear, visibility 0s 280ms; }
-.sk-shot.is-on { opacity: 1; visibility: visible; transition: opacity 280ms linear; }
-.sk-shot img { display: block; width: 100%; height: 100%; object-fit: cover; }
+/* r22: the screen is sized from the screenshots themselves (720 × 1558): the glass is the phone minus the bezel on each
+   side, at exactly the image's aspect ratio, so object-fit has nothing to crop or letterbox. The rounded clip is a
+   clip-path (not overflow + border-radius, which the tilted 3D phone could briefly drop while compositing), the slides
+   are their own flat layers, and the outgoing screen (.is-prev) stays opaque under the incoming one while it fades in. */
+.sk-track { position: absolute; left: var(--pb); top: var(--pb); width: calc(100% - 2 * var(--pb)); height: auto; aspect-ratio: 720 / 1558; border-radius: calc(var(--ph) * .07); clip-path: inset(0 round calc(var(--ph) * .07)); overflow: hidden; background: #1c1d20; isolation: isolate; }
+.sk-shot { position: absolute; inset: 0; z-index: 0; opacity: 0; visibility: hidden; backface-visibility: hidden; will-change: opacity; transition: opacity 280ms linear, visibility 0s 280ms; }
+.sk-shot.is-prev { z-index: 1; opacity: 1; visibility: visible; transition: none; }
+.sk-shot.is-on { z-index: 2; opacity: 1; visibility: visible; transition: opacity 280ms linear; }
+.sk-shot img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; }
 .sk-ctl { display: flex; align-items: center; gap: 6px; margin-top: 18px; }
 .sk-ctl button { appearance: none; border: 0; background: none; color: var(--ink-2); cursor: pointer; }
 .sk-arrow { width: 32px; height: 32px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(246, 239, 226, .22); font-size: 18px; line-height: 1; transition: color var(--dur-fast), box-shadow var(--dur-fast); }
