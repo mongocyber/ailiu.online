@@ -1,4 +1,4 @@
-"""r17 hero check: first-screen shots (desktop zh/en, Pixel 7, iPhone 13 webkit, reduced motion), a pair of desktop
+"""r17 hero check (r18: + context loss): first-screen shots (desktop zh/en, Pixel 7, iPhone 13 webkit, reduced motion), a pair of desktop
 frames ~0.6 s apart (portrait and field rise together), and the fallback matrix (data-fx / data-portrait, pageerrors).
 Usage: python3 scripts/hero.py [tag]   (server: python3 -m http.server 8801). Shots go to shots/<tag>-hero-*.png."""
 import sys
@@ -18,7 +18,7 @@ STATE = """() => ({ fx: document.documentElement.dataset.fx, why: document.docum
   overflow: document.documentElement.scrollWidth - innerWidth })"""
 bad = 0
 
-def shot(pw, name, browser="chromium", device=None, vp=None, lang="zh", reduced=False, init=None, query="", wait=2200, pair=False):
+def shot(pw, name, browser="chromium", device=None, vp=None, lang="zh", reduced=False, init=None, query="", wait=2200, pair=False, lose=False):
     global bad
     b = getattr(pw, browser).launch()
     kw = dict(pw.devices[device]) if device else dict(viewport=vp or {"width": 1440, "height": 900}, device_scale_factor=1)
@@ -31,6 +31,8 @@ def shot(pw, name, browser="chromium", device=None, vp=None, lang="zh", reduced=
     if init: pg.add_init_script(init)
     pg.goto(f"{URL}?lang={lang}{query}"); pg.wait_for_timeout(wait)
     if not device: pg.mouse.move(1080, 420); pg.wait_for_timeout(400)
+    if lose:   # r18: drop the WebGL context mid-run → static 2D frame, no errors
+        pg.evaluate("document.getElementById('fx3d').getContext('webgl').getExtension('WEBGL_lose_context').loseContext()"); pg.wait_for_timeout(800)
     st = pg.evaluate(STATE)
     if pair:
         pg.screenshot(path=f"shots/{TAG}-hero-{name}-a.png"); pg.wait_for_timeout(600)
@@ -58,4 +60,5 @@ with sync_playwright() as pw:
     shot(pw, "", browser="webkit", device="iPhone 13", init=NO_WEBGL)
     shot(pw, "no-canvas", init=NO_CANVAS)
     shot(pw, "no-canvas-iphone", browser="webkit", device="iPhone 13", init=NO_CANVAS)
+    shot(pw, "context-lost", lose=True)
 sys.exit(1 if bad else 0)

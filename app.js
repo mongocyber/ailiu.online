@@ -619,7 +619,7 @@
       ctx.strokeStyle = "rgba(255,255,255,.08)"; ctx.beginPath(); ctx.moveTo(0, mid); ctx.lineTo(w, mid); ctx.stroke();
       for (let k = 0; k < 7; k++) {
         const g = ctx.createLinearGradient(x0, 0, x1, 0);
-        g.addColorStop(0, "rgba(150,232,255,0)"); g.addColorStop(0.3, "rgba(150,232,255,.75)"); g.addColorStop(0.7, "rgba(185,166,255,.75)"); g.addColorStop(1, "rgba(185,166,255,0)");
+        g.addColorStop(0, "rgba(236,235,230,0)"); g.addColorStop(0.3, "rgba(236,235,230,.6)"); g.addColorStop(0.7, "rgba(170,172,176,.6)"); g.addColorStop(1, "rgba(170,172,176,0)");
         ctx.strokeStyle = g; ctx.beginPath();
         for (let x = x0; x <= x1; x += 4) {
           const u = (x - x0) / (x1 - x0);

@@ -105,7 +105,7 @@
 
     // 4 · Design Work: an arcade (stylobate, two rows of columns, entablature) the camera tracks along
     for (k = 0; k < 3; k++) box(-47 + k, k * 0.5, -153.5 + k * 0.5 - 6, 47 - k, (k + 1) * 0.5, -146 - k * 0.5, 0.55);
-    for (x = -42; x <= 42; x += 7) { column(x, -149, 0.75, 10.5, 0.85); column(x, -156, 0.75, 10.5, 0.5); }
+    for (x = -42; x <= 42; x += 7) { column(x, -149, 0.75, 10.5, 0.7); column(x, -156, 0.75, 10.5, 0.42); }
     box(-44, 11.5, -157.5, 44, 12.9, -147.6, 0.75); box(-44.5, 12.9, -158, 44.5, 13.3, -147.1, 0.55);
 
     // 5 · Steam: a grid dome on a drum, on a stepped round base
@@ -352,7 +352,7 @@
         if (r) { R[i * 4] = r[0] * dpr; R[i * 4 + 1] = (h - r[3]) * dpr; R[i * 4 + 2] = r[2] * dpr; R[i * 4 + 3] = (h - r[1]) * dpr; }
         else { R[i * 4] = R[i * 4 + 1] = R[i * 4 + 2] = R[i * 4 + 3] = -1e4; }
       }
-      gl.uniform4fv(U.uR, R); gl.uniform1f(U.uDim, mobile ? 0.12 : 0.18);
+      gl.uniform4fv(U.uR, R); gl.uniform1f(U.uDim, mobile ? 0.05 : 0.08);
       // the hero portrait's head: the lines thin out behind it; its shoulders sit on the terrain
       var hr = lh && lh.getBoundingClientRect();
       if (hr && hr.width && hr.bottom > 0) {
@@ -364,7 +364,7 @@
         var nx = Math.round(-mx * 10), ny = Math.round(Math.min(scrollY, h) * 0.12);
         if (nx !== hx || ny !== hy) { hx = nx; hy = ny; fig.style.translate = nx + "px " + ny + "px"; }
       }
-      var K = (HI ? 0.5 : 0.62) * (mobile ? 0.8 : 1);
+      var K = HI ? 0.5 : 0.62;
       gl.clear(gl.COLOR_BUFFER_BIT);
       gl.uniform2f(U.uOff, 0, 0); gl.uniform1f(U.uK, K);
       gl.drawArrays(gl.LINES, 0, NV);

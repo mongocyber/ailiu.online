@@ -30,7 +30,8 @@ window.MANIFEST = {
     { date: "2026-10-19", zh: "首页背景换成实时 3D 扫描线地形", en: "Gave the home page a live 3D scanline field", model: null, costUsd: 0 },
       { date: "2026-10-19", zh: "野生路易斯一章改为自我介绍，搭建记录移到页脚", en: "Wild Louis became a self-introduction; the build notes moved to the footer", model: null, costUsd: 0 },
     { date: "2026-10-19", zh: "设计作品的案例默认收起；章节换序；加入背景音乐和音效", en: "Design Work cases start folded; chapters reordered; background music and sound effects added", model: null, costUsd: 0 },
-    { date: "2026-10-19", zh: "首屏改为全屏，放大画像，画像与背景地形同步起伏", en: "Made the first screen full height with a larger portrait that moves with the field", model: null, costUsd: 0 }
+    { date: "2026-10-19", zh: "首屏改为全屏，放大画像，画像与背景地形同步起伏", en: "Made the first screen full height with a larger portrait that moves with the field", model: null, costUsd: 0 },
+    { date: "2026-10-20", zh: "全站背景换成黑底白线的 3D 线框场景，镜头随滚动穿过每一章；界面改为黑白灰", en: "Put one 3D wireframe scene behind the whole site, white lines on black, with the camera moving through it chapter by chapter; the interface is now black, white and grey", model: null, costUsd: 0 }
   ],
   persona: {
     draft: true,
@@ -222,7 +223,6 @@ window.MANIFEST = {
       treatment: { id: "aviso-browser-depth", choreographyId: "aviso.browser-depth.v1" },
       transition: { enter: "depth-rise", exit: "fade-through" },
       stageHeightVh: 200,
-      accent: "#8FB573",
       narration: [{ id: "aviso-1", subtitle: {
         zh: "Aviso 是我做的浏览器扩展：划一段字，答案就出现在旁边。",
         en: "Aviso is my browser extension: highlight a passage and the answer appears beside it." } }],
@@ -255,7 +255,6 @@ window.MANIFEST = {
       treatment: { id: "printplay-paper-stack", choreographyId: "printplay.paper-stack.v1" },
       transition: { enter: "mask-wipe", exit: "fade-through" },
       stageHeightVh: 180,
-      accent: "#E0573B",
       narration: [{ id: "printplay-1", subtitle: {
         zh: "PrintPlay 的终点是纸：每一页都是为了从打印机里出来。",
         en: "PrintPlay ends on paper: every page is made to come out of a printer." } }],
@@ -284,7 +283,6 @@ window.MANIFEST = {
       treatment: { id: "work-case-studies", choreographyId: "work.case-studies.v1" },
       transition: { enter: "reveal-up", exit: "fade-through" },
       stageHeightVh: null, // r13: no pinned stage — the chapter scrolls as a normal page (case studies)
-      accent: "#96E8FF",
       narration: [{ id: "work-1", subtitle: {
         zh: "这一章是我的本职：B 端和 AI 产品设计，每个案例讲问题、做法和结果。",
         en: "My day job: B2B and AI product design. Each case: the problem, the move, the result." } }],
@@ -308,7 +306,6 @@ window.MANIFEST = {
       treatment: { id: "steam-gauge-pipes", choreographyId: "steam.gauge-pipes.v1" },
       transition: { enter: "reveal-up", exit: "fade-through" },
       stageHeightVh: 180,
-      accent: "#F2A93B",
       narration: [{ id: "steam-1", subtitle: {
         zh: "在蒸汽站，公式没有出处就不上线。",
         en: "On Steam Vent Calc, no formula goes live without a source." } }],
@@ -339,7 +336,6 @@ window.MANIFEST = {
       treatment: { id: "suikou-phone-flow", choreographyId: "suikou.phone-flow.v1" },
       transition: { enter: "depth-rise", exit: "fade-through" },
       stageHeightVh: 180,
-      accent: "#7FB6F2",
       narration: [{ id: "suikou-1", subtitle: {
         zh: "随口英语还在做，你看到的是原型。",
         en: "Suikou English is still in the works. This is the prototype." } }],
@@ -368,7 +364,6 @@ window.MANIFEST = {
       treatment: { id: "taotao-video-wall", choreographyId: "taotao.video-wall.v1" },
       transition: { enter: "stack-fan", exit: "fade-through" },
       stageHeightVh: 140,
-      accent: "#FF8FA3",
       narration: [{ id: "taotao-1", subtitle: {
         zh: "桃桃屋把刷牙、洗手这些小事编成歌，一首教三个英文词。",
         en: "TaoTao House turns brushing teeth and washing hands into songs, three English words each." } }],
@@ -405,7 +400,6 @@ window.MANIFEST = {
       treatment: { id: "xiaoyi-venture-book", choreographyId: "xiaoyi.venture-book.v1" },
       transition: { enter: "depth-rise", exit: "fade-through" },
       stageHeightVh: 160,
-      accent: "#C98A5B",
       narration: [{ id: "xiaoyi-1", subtitle: {
         zh: "小姨家是我 2024 年的一次餐饮创业，从零做起，现在已经结束。",
         en: "Aunt’s Home was my restaurant venture in 2024. I started it from scratch, and it has since ended." } }],
@@ -436,7 +430,6 @@ window.MANIFEST = {
       treatment: { id: "wild-louis-portrait", choreographyId: "wildlouis.portrait.v1" },
       transition: { enter: "mask-wipe", exit: "fade-through" },
       stageHeightVh: 160,
-      accent: "#B9A6FF",
       narration: [{ id: "wild-louis-1", subtitle: {
         zh: "我爱试新鲜东西，做出来就分享。做过的都在 ailiu.online。",
         en: "I like trying new things and sharing what I make. It all lives at ailiu.online." } }],
