@@ -541,7 +541,11 @@
       "uniform float uK, uDim, uPt; uniform vec4 uR[4], uHole, uHC; varying float vA, vR;",
       "void main(){",
       "  vec2 p = gl_FragCoord.xy; float m = 1.0;",
-      "  for (int i = 0; i < 4; i++) { vec2 d = max(uR[i].xy - p, p - uR[i].zw); m = min(m, mix(uDim, 1.0, smoothstep(-16.0, 72.0, max(d.x, d.y)))); }",
+      // r20B: no rectangle any more (its edge read as a dark panel behind the copy). Each reading block is a soft
+      // superellipse (|x|^4 + |y|^4, half size + 70px), dimmed only to uDim at its centre; the thinning below does the rest
+      "  for (int i = 0; i < 4; i++) { vec2 c = 0.5 * (uR[i].xy + uR[i].zw), hs = 0.5 * (uR[i].zw - uR[i].xy) + 70.0;",
+      "    vec2 q = abs(p - c) / max(hs, vec2(1.0)); q *= q; float e = sqrt(sqrt(dot(q, q)));",
+      "    m = min(m, mix(uDim, 1.0, smoothstep(0.6, 1.1, e))); }",
       // the hero copy: a soft ellipse, no edge to see
       "  m = min(m, mix(0.1, 1.0, smoothstep(0.5, 1.3, length((p - uHC.xy) / uHC.zw))));",
       // fewer lines as well as fainter ones: a share of the lines (by their random) drops out where m is low
@@ -622,7 +626,7 @@
         if (r) { R[i * 4] = r[0] * dpr; R[i * 4 + 1] = (h - r[3]) * dpr; R[i * 4 + 2] = r[2] * dpr; R[i * 4 + 3] = (h - r[1]) * dpr; }
         else { R[i * 4] = R[i * 4 + 1] = R[i * 4 + 2] = R[i * 4 + 3] = -1e4; }
       }
-      gl.uniform4fv(U.uR, R); gl.uniform1f(U.uDim, mobile ? 0.06 : 0.1);
+      gl.uniform4fv(U.uR, R); gl.uniform1f(U.uDim, mobile ? 0.34 : 0.4);   // r20B: milder (was 0.06 / 0.1); text-shadow carries the copy
       var cr = heroCopy && heroCopy.getBoundingClientRect();
       if (cr && cr.bottom > 0 && cr.width) gl.uniform4f(U.uHC, (cr.left + cr.width / 2) * dpr, (h - (cr.top + cr.height / 2)) * dpr, (cr.width / 2 + 60) * dpr, (cr.height / 2 + 50) * dpr);
       else gl.uniform4f(U.uHC, -1e5, -1e5, 1, 1);

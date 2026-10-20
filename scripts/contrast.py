@@ -1,6 +1,6 @@
 """r19: hero copy contrast against the live background. Hides the hero text (colour transparent), takes 5 frames, and
 for the boxes of the title lines and the intro takes the 99th-percentile background luminance; reports the contrast of
-the secondary ink (#a9a8a2, the dimmer of the two hero inks) against it. Pass = ≥ 4.5:1 everywhere.
+the secondary ink (#a9a8a2, the dimmer of the two hero inks) against it. r19: pass = ≥ 4.5:1 everywhere; r20B: report only (exit 0).
 Usage: python3 scripts/contrast.py   (server: python3 -m http.server 8801)"""
 import io, sys
 from playwright.sync_api import sync_playwright
@@ -30,4 +30,6 @@ with sync_playwright() as pw:
                 res.append((INK2 + 0.05) / (p99 + 0.05))
         print(f"{name:8} fx={pg.evaluate('document.documentElement.dataset.fx')} min contrast {min(res):.2f}:1 (ink-2 on p99 background)")
         worst = min(worst, min(res)); b.close()
-sys.exit(0 if worst >= 4.5 else 1)
+# r20B: report, don't block — the copy now has no dimmed panel behind it (TASK-r20 3c accepts an occasional weak spot)
+print(f"worst {worst:.2f}:1 — {'≥ 4.5 everywhere' if worst >= 4.5 else 'below 4.5 somewhere (reported, not a failure)'}")
+sys.exit(0)

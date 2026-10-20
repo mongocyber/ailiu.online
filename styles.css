@@ -388,7 +388,7 @@ html:lang(zh) .slot-blurb { height: auto; max-height: 8em; }
 .g-needle circle { fill: #f6efe2; }
 .g-read { position: absolute; left: 0; right: 0; top: 76%; text-align: center; color: var(--ink-3); font-size: 9.5px; }
 .g-read b { display: block; font: 500 22px/1 var(--f-mono); color: var(--ink); letter-spacing: .1em; margin-bottom: 6px; }
-.st-block { position: absolute; right: var(--pad-x); bottom: 3vh; width: min(28vw, 400px); border: 1px solid rgba(246, 239, 226, .28); background: rgba(10, 9, 7, .85); font-size: 10px; color: rgba(246, 239, 226, .5); }
+.st-block { position: absolute; right: var(--pad-x); bottom: 3vh; width: min(28vw, 400px); border: 1px solid rgba(246, 239, 226, .28); font-size: 10px; color: rgba(246, 239, 226, .5); }
 .tb-row { display: block; padding: 9px 12px; border-bottom: 1px solid rgba(246, 239, 226, .16); }
 .tb-row > span, .tb-split span { display: block; margin-bottom: 3px; }
 .tb-row b { display: block; font: 500 13px/1.3 var(--f-sans); color: var(--ink); letter-spacing: 0; text-transform: none; }
@@ -520,6 +520,11 @@ html:lang(zh) .sk-fig figcaption { font-size: 13px; }
   transform: scale(calc(.8 + var(--grow, 1) * .2)); transform-origin: 50% 100%; opacity: calc(.3 + var(--grow, 1) * .7); }
 .wl-louis::after { content: ""; position: absolute; left: 6%; right: 6%; bottom: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .25), transparent); }
 .wl-louis canvas { width: 100%; height: 100%; }
+
+/* r20B: no panels behind the chapter copy (the wireframe dims only softly behind it, fx3d.js). A dark text-shadow,
+   inherited by everything inside the reading blocks, keeps it legible where a bright line passes; mock product UIs
+   (Aviso, PrintPlay, Xiaoyi …) sit outside these blocks and are not touched. */
+.slots, .wk-head, .wk-side, .wcase-text, .st-block, .sk-fig figcaption, .tt-note, .hero-copy { text-shadow: 0 0 10px rgba(0, 0, 0, .92), 0 1px 3px rgba(0, 0, 0, .85); }
 
 /* ---------- 8. About / footer ---------- */
 /* r20B: the footer redone on one twelve-column grid. A display line, then numbered rows between hairlines: a mono label
