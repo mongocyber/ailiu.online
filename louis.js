@@ -1,7 +1,9 @@
-/* Louis — scanline portrait (INSTRUCTIONS §4.2 option A). r11: drawn from a low-res light/zone field
-   extracted offline from the approved front reference (scripts/louis_extract.py → louis-data.js).
-   2D canvas only: each scanline is lifted slightly by a soft relief and occludes the rows behind it. r19: drawn as a
-   fine line model — hairline rows (light = brightness), cross lines into a mesh, small points on lit vertices, faint stars. No WebGL, no 3D models, no photo pixels.
+/* Louis — r20C: a 3D wireframe bust (raw WebGL 1). A height field fitted to the approved front reference (scripts/louis_mesh.py →
+   louis-data.js) is meshed as a regular quad grid (high 168×225, low 90×121) and drawn as hairlines plus a share of the vertices
+   as points, with hidden lines removed (depth-only surface pass), brightness from a key light × albedo, a glowing back-lit rim
+   and depth fog, in the scene's cool white. It turns ±6° toward the cursor and breathes slowly. r11–r19 drew a scanline
+   portrait on a 2D canvas; that path is gone. WebGL missing / failing / context lost → .is-fallback (louis-fallback.png).
+   History: r11 scanline portrait (INSTRUCTIONS §4.2 option A).
    r17: the old voice-level motion (mouth bar, level sweep) is gone. The hero portrait now moves in the same wave
    as the WebGL field (fx3d.js): one shared clock and wave (window.FX_WAVE, below) drive both from a single rAF,
    and a crest is computed from the same screen position, so it passes through the face and the field together.
@@ -15,9 +17,7 @@
     return t * t * (3 - 2 * t);
   };
   // cheap deterministic value noise for "signal" grain on the lines
-  const hash = (n) => { const s = Math.sin(n * 127.1) * 43758.5453; return s - Math.floor(s); };
-  const noise1 = (x) => { const i = Math.floor(x), f = x - i; const a = hash(i), b = hash(i + 1); return a + (b - a) * f * f * (3 - 2 * f); };
-
+  
   // ---- r17: shared wave clock (hero portrait + WebGL field) ----
   // One rAF advances t / phase / pointer / scroll and calls every subscriber (fx3d's draw, each running portrait).
   // The wave is measured in the frame of the field canvas (#fx3d): x 0..1 across it, u 0..1 down it. A crest band
@@ -64,80 +64,141 @@
     W.subs.forEach((fn) => { try { fn(now); } catch (e) { W.subs.delete(fn); } });
   }
 
-  // ---- field: decode once, shared by every instance ----
-  // zone 0 background · 1 skin · 2 hair · 3 sweater · 4 collar rib; lev 0..1 light; rel 0..1 soft relief
+  // ---- r20C: the bust — a height field (louis-data.js, scripts/louis_mesh.py) decoded once, meshed per tier ----
+  // zone 0 background · 1 skin · 2 hair · 3 sweater · 4 collar rib; albedo 0..1; depth in portrait-width units
   let FIELD = null;
   function field() {
     if (FIELD) return FIELD;
     const D = window.LOUIS_DATA;
     const C = D.cols, R = D.rows, n = C * R, raw = atob(D.d);
-    const zone = new Uint8Array(n), lev = new Float32Array(n), rel = new Float32Array(n);
-    for (let k = 0; k < n; k++) { const b = raw.charCodeAt(k); zone[k] = b >> 4; lev[k] = (b & 15) / 15; }
-    // relief = blurred figure mask (a soft dome) + a little blurred light, so the lines bow over the head
-    const depth = [0, 1, 0.85, 0.45, 0.6];
-    for (let k = 0; k < n; k++) rel[k] = depth[zone[k]] * (0.75 + 0.25 * lev[k]);
-    const tmp = new Float32Array(n);
-    for (let pass = 0; pass < 4; pass++) {
-      for (let y = 0; y < R; y++) for (let x = 0; x < C; x++) {
-        let s = 0, c = 0;
-        for (let d = -2; d <= 2; d++) { const xx = x + d; if (xx >= 0 && xx < C) { s += rel[y * C + xx]; c++; } }
-        tmp[y * C + x] = s / c;
-      }
-      for (let y = 0; y < R; y++) for (let x = 0; x < C; x++) {
-        let s = 0, c = 0;
-        for (let d = -2; d <= 2; d++) { const yy = y + d; if (yy >= 0 && yy < R) { s += tmp[yy * C + x]; c++; } }
-        rel[y * C + x] = s / c;
-      }
+    const dep = new Float32Array(n), alb = new Float32Array(n), zone = new Uint8Array(n);
+    for (let k = 0; k < n; k++) {
+      const a = raw.charCodeAt(k * 2), b = raw.charCodeAt(k * 2 + 1);
+      dep[k] = a / 255 * D.zmax; zone[k] = b >> 5; alb[k] = (b & 31) / 31;
     }
-    FIELD = { C, R, zone, lev, rel, aspect: D.aspect, A: D.anchors };
+    FIELD = { C, R, dep, alb, zone, aspect: D.aspect, zmax: D.zmax };
     return FIELD;
   }
-  const F = { lev: 0, rel: 0, zone: 0 };
-  function sample(fd, x, y) {                       // x, y in 0..1 over the portrait; bilinear light/relief, nearest zone
-    const { C, R } = fd;
-    if (x < 0 || x > 1 || y < 0 || y > 1) { F.lev = 0; F.rel = 0; F.zone = 0; return F; }
-    const fx = x * (C - 1), fy = y * (R - 1), x0 = fx | 0, y0 = fy | 0, x1 = Math.min(C - 1, x0 + 1), y1 = Math.min(R - 1, y0 + 1);
-    const tx = fx - x0, ty = fy - y0;
-    const a = y0 * C, b = y1 * C;
-    const bl = (arr) => (arr[a + x0] * (1 - tx) + arr[a + x1] * tx) * (1 - ty) + (arr[b + x0] * (1 - tx) + arr[b + x1] * tx) * ty;
-    F.lev = bl(fd.lev); F.rel = bl(fd.rel);
-    F.zone = fd.zone[(fy + 0.5 | 0) * C + (fx + 0.5 | 0)];
-    return F;
+  const hash = (n) => { const s = Math.sin(n * 127.1) * 43758.5453; return s - Math.floor(s); };
+
+  // a regular quad grid of NC × NR vertices over the portrait: position (x right, y up, z toward the viewer, width
+  // units, origin at the picture centre), normal from the height field, and albedo / zone / random / row per vertex.
+  // Index lists: triangles (depth only, for hidden lines), the grid lines, and a share of the vertices as points.
+  function mesh(NC, NR) {
+    const fd = field(), AY = 1 / fd.aspect, n = NC * NR;
+    if (!fd.fig) { fd.fig = new Float32Array(fd.C * fd.R); for (let k = 0; k < fd.fig.length; k++) fd.fig[k] = fd.zone[k] > 0 ? 1 : 0; }
+    const V = new Float32Array(n * 11), Z = new Float32Array(n), ok = new Uint8Array(n);
+    const at = (arr, x, y) => {                         // bilinear over the field, x / y in 0..1
+      const fx = Math.min(fd.C - 1.001, Math.max(0, x * fd.C - 0.5)), fy = Math.min(fd.R - 1.001, Math.max(0, y * fd.R - 0.5));
+      const x0 = fx | 0, y0 = fy | 0, tx = fx - x0, ty = fy - y0, a = y0 * fd.C + x0, b = a + fd.C;
+      return (arr[a] * (1 - tx) + arr[a + 1] * tx) * (1 - ty) + (arr[b] * (1 - tx) + arr[b + 1] * tx) * ty;
+    };
+    for (let j = 0; j < NR; j++) for (let i = 0; i < NC; i++) {
+      const k = j * NC + i, u = i / (NC - 1), v = j / (NR - 1);
+      const zc = fd.zone[Math.min(fd.R - 1, v * fd.R | 0) * fd.C + Math.min(fd.C - 1, u * fd.C | 0)];
+      const f = at(fd.fig, u, v);                      // smooth figure mask: the outline fades instead of stepping cell by cell
+      Z[k] = at(fd.dep, u, v); ok[k] = f > 0.02 ? 1 : 0;
+      V.set([u - 0.5, (0.5 - v) * AY, Z[k], 0, 0, 1, at(fd.alb, u, v), zc, hash(k * 0.37 + 1.3), v, f], k * 11);
+    }
+    const dx = 1 / (NC - 1), dy = AY / (NR - 1);
+    for (let j = 0; j < NR; j++) for (let i = 0; i < NC; i++) {
+      const k = j * NC + i;
+      const gx = (Z[j * NC + Math.min(NC - 1, i + 1)] - Z[j * NC + Math.max(0, i - 1)]) / (2 * dx);
+      const gy = (Z[Math.max(0, j - 1) * NC + i] - Z[Math.min(NR - 1, j + 1) * NC + i]) / (2 * dy);
+      const l = Math.hypot(gx, gy, 1);
+      V[k * 11 + 3] = -gx / l; V[k * 11 + 4] = -gy / l; V[k * 11 + 5] = 1 / l;
+    }
+    const T = [], Ln = [], Pt = [];
+    for (let j = 0; j < NR; j++) for (let i = 0; i < NC; i++) {
+      const k = j * NC + i;
+      if (!ok[k]) continue;
+      if (i < NC - 1) Ln.push(k, k + 1);
+      if (j < NR - 1) Ln.push(k, k + NC);
+      if (i < NC - 1 && j < NR - 1) T.push(k, k + 1, k + NC, k + 1, k + NC + 1, k + NC);
+      if (V[k * 11 + 8] > 0.84 && V[k * 11 + 10] > 0.5) Pt.push(k);
+    }
+    return { V, T: new Uint16Array(T), L: new Uint16Array(Ln), P: new Uint16Array(Pt), AY };
   }
+
+  const VS = [
+    "attribute vec3 aP, aN; attribute vec4 aM; attribute float aK;",
+    "uniform mat4 uM, uP; uniform mat3 uR; uniform vec4 uW, uWP, uBox; uniform vec2 uWS; uniform float uZ, uWave, uFade, uPS, uPt, uT, uFill;",
+    "varying float vA, vP;",
+    // FX_WAVE.at(x, u), as in fx3d.js — uW = freq, phase, bend, t · uWP = pointer x, u, k, aspect · uWS = scale × amp, scroll
+    "float wave(vec2 p){ float s = 0.5 + 0.5 * sin(6.2832 * uW.x * p.y - uW.y + uW.z * sin(p.x * 5.0 + uW.w * 0.4));",
+    "  vec2 d = vec2((p.x - uWP.x) * uWP.w, p.y - uWP.y); float b = uWP.z * exp(-dot(d, d) / 0.01);",
+    "  return uWS.x * ((1.0 + 0.6 * uWS.y) * s * s * s + 0.7 * b); }",
+    "void main(){",
+    "  vec3 n = normalize(uR * aN);",
+    "  vec4 c = uP * (uM * vec4(aP, 1.0)); float w = 0.0;",
+    "  if (uWave > 0.5 && c.w > 0.0) { vec2 s = vec2(0.5 + 0.5 * c.x / c.w, 0.5 - 0.5 * c.y / c.w); w = wave(vec2(uBox.x + s.x * uBox.y, uBox.z + s.y * uBox.w)); }",
+    "  gl_Position = uP * (uM * vec4(aP + aN * w * 0.012, 1.0));",
+    // light: a key from the upper left front, a cool back light that makes the turned-away edges glow, fog by depth
+    "  float key = max(dot(n, normalize(vec3(-0.5, 0.55, 0.68))), 0.0);",
+    "  float rim = pow(1.0 - clamp(n.z, 0.0, 1.0), 1.7) * (0.5 + 0.5 * max(dot(n.xy, normalize(vec2(0.6, 0.5))), 0.0));",
+    "  float z = aM.y, al = aM.x;",
+    "  float skin = step(0.5, z) * step(z, 1.5), hair = step(1.5, z) * step(z, 2.5), knit = step(2.5, z) * step(z, 3.5), rib = step(3.5, z);",
+    "  float alb = skin * mix(0.1, 1.0, al * al) + hair * (0.34 + 0.3 * al) + knit * (0.44 + 0.2 * al) + rib * 0.66;",
+    "  float fog = mix(0.42, 1.0, smoothstep(0.0, uZ, aP.z));",
+    "  float a = ((0.06 + 1.15 * pow(key, 1.5)) * alb + 1.1 * rim + 1.6 * aK * (1.0 - aK)) * fog * smoothstep(0.2, 0.7, aK);",   // + a glow along the outline
+    "  a *= 1.0 + w * 0.7;",
+    "  a *= mix(1.0 - 0.7 * smoothstep(0.86, 1.0, aM.w), 1.0 - smoothstep(0.66, 1.0, aM.w), uFade);",
+    "  if (uPt > 0.5) a *= step(0.45, key * alb + rim) * (0.6 + 0.4 * sin(uT * (0.7 + aM.z * 1.4) + aM.z * 60.0));",
+    // pass 1 (uFill): the surface as a near-black body (alpha only), so the scene behind is hidden as by a solid
+    "  if (uFill > 0.5) a = 0.94 * smoothstep(0.35, 0.7, aK) * mix(1.0 - 0.8 * smoothstep(0.86, 1.0, aM.w), 1.0 - smoothstep(0.66, 1.0, aM.w), uFade);",
+    "  vA = a; vP = uPt + 2.0 * uFill;",
+    "  gl_PointSize = uPS * (1.0 + 1.3 * key);",
+    "}"
+  ].join("\n");
+  const FS = [
+    "precision mediump float;",
+    "uniform float uK; varying float vA, vP;",      // vP, not uPt: a uniform in both stages must match precision
+    "void main(){",
+    "  if (vP > 1.5) { gl_FragColor = vec4(0.0, 0.0, 0.0, vA); return; }",
+    "  float a = vA * uK;",
+    "  if (vP > 0.5) a *= smoothstep(0.5, 0.15, length(gl_PointCoord - 0.5));",
+    "  gl_FragColor = vec4(vec3(0.93, 0.94, 0.96) * a, a);",    // the scene's cool white (fx3d.js)
+    "}"
+  ].join("\n");
+
+  // the same weak-device test as fx3d.js (low tier there → coarse mesh here)
+  const nav = navigator, mm = (s) => !!(window.matchMedia && window.matchMedia(s).matches);
+  const weak = () => /[?&]fx=low\b/.test(location.search) || document.documentElement.getAttribute("data-fx") === "webgl-low" ||
+    (!/[?&]fx=high\b/.test(location.search) && (mm("(pointer: coarse)") || (nav.hardwareConcurrency && nav.hardwareConcurrency <= 4) ||
+    (nav.deviceMemory && nav.deviceMemory <= 4) || !!(nav.connection && nav.connection.saveData)));
 
   class Louis {
     constructor(opts = {}) {
-      this.o = Object.assign({
-        lines: 150, samples: 220, bg: "#060607", fps: 60,
-        colorA: [236, 239, 244], colorB: [168, 171, 177], sweater: [118, 121, 126],   // r19: the scene's cool white / grey
-        relief: 1.4, fill: 0.98, interactive: true, glitch: true, mini: false, wave: false
-      }, opts);
-      this.state = "idle";
-      this.mouse = { x: 0, y: 0, k: 0, px: 0, py: 0 };
-      this.glitchUntil = 0; this.nextGlitch = performance.now() + 5000;
-      this.slice = null; this.running = false; this.last = 0;
-      this.reduced = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+      this.o = Object.assign({ fill: 0.98, interactive: true, wave: false, low: null, keep: false, gain: 1 }, opts);
+      this.mouse = { x: 0, y: 0, px: 0, py: 0 };
+      this.running = false; this.last = 0;
+      this.reduced = mm("(prefers-reduced-motion: reduce)");
       this.failed = false; this.live = false;
     }
     mount(el) {
       this.el = el;
       this.resize = this.resize.bind(this);
       this.tick = this.tick.bind(this);
+      const low = this.o.low == null ? weak() : this.o.low;
+      this.fps = low ? 30 : 60; this.maxDpr = this.o.dpr || 1.5;
       try {
-        this.fd = field();
         this.c = document.createElement("canvas");
         this.c.setAttribute("aria-hidden", "true");
         el.appendChild(this.c);
-        this.ctx = this.c.getContext("2d");
-        if (!this.ctx) throw new Error("no 2d context");
+        const gl = this.gl = this.c.getContext("webgl", { alpha: true, antialias: !low, depth: true, stencil: false, premultipliedAlpha: true,
+          preserveDrawingBuffer: !!this.o.keep, powerPreference: "low-power" });
+        if (!gl) throw new Error("no webgl");
+        this.setup(low ? 90 : 168, low ? 121 : 225);
       } catch (e) { this.fail(); return this; }
+      this.c.addEventListener("webglcontextlost", (e) => { e.preventDefault(); this.fail(); });
       if (window.ResizeObserver) { this.ro = new ResizeObserver(this.resize); this.ro.observe(el); }
       else window.addEventListener("resize", this.resize);
-      if (this.o.interactive) {
+      if (this.o.interactive && !this.reduced) {
         this.onMove = (e) => {
+          if (e.pointerType !== "mouse") return;
           const r = this.c.getBoundingClientRect();
-          this.mouse.x = ((e.clientX - r.left) / r.width) * 2 - 1;
-          this.mouse.y = ((e.clientY - r.top) / r.height) * 2 - 1;
+          this.mouse.x = Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width) * 2 - 1));
+          this.mouse.y = Math.max(-1, Math.min(1, ((e.clientY - r.top) / r.height) * 2 - 1));
         };
         window.addEventListener("pointermove", this.onMove, { passive: true });
       }
@@ -148,23 +209,51 @@
       this.resize();
       return this;
     }
+    setup(NC, NR) {
+      const gl = this.gl;
+      const sh = (type, src) => {
+        const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+        if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error("shader");
+        return s;
+      };
+      const pr = gl.createProgram();
+      gl.attachShader(pr, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, FS));
+      gl.linkProgram(pr);
+      if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) throw new Error("link");
+      gl.useProgram(pr);
+      const M = mesh(NC, NR);
+      this.AY = M.AY; this.grid = [NC, NR];
+      const vb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, vb); gl.bufferData(gl.ARRAY_BUFFER, M.V, gl.STATIC_DRAW);
+      [["aP", 3, 0], ["aN", 3, 12], ["aM", 4, 24], ["aK", 1, 40]].forEach(([n, k, off]) => {
+        const l = gl.getAttribLocation(pr, n); gl.enableVertexAttribArray(l); gl.vertexAttribPointer(l, k, gl.FLOAT, false, 44, off);
+      });
+      const ib = (a) => { const b = gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, b); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, a, gl.STATIC_DRAW); return [b, a.length]; };
+      this.tb = ib(M.T); this.lb = ib(M.L); this.pb = ib(M.P);
+      this.count = { verts: M.V.length / 11, lines: M.L.length / 2, tris: M.T.length / 3, points: M.P.length };
+      this.U = {};
+      ["uM", "uP", "uR", "uW", "uWP", "uBox", "uWS", "uZ", "uWave", "uFade", "uPS", "uPt", "uT", "uK", "uFill"].forEach((n) => { this.U[n] = gl.getUniformLocation(pr, n); });
+      gl.uniform1f(this.U.uZ, field().zmax * 0.8);
+      gl.uniform1f(this.U.uFade, this.o.wave ? 1 : 0);
+      gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL);
+      gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE);
+      gl.clearColor(0, 0, 0, 0);
+      if (gl.getError() !== gl.NO_ERROR) throw new Error("gl");
+    }
     resize() {
       if (this.failed) return;
       try {
         const r = this.el.getBoundingClientRect();
         this.w = Math.max(1, r.width); this.h = Math.max(1, r.height);
-        // backing store: DPR ≤ 2, and ≤ ~2.4M device pixels per canvas (phones at DPR 3 used to ask for far more)
-        let dpr = Math.min(2, window.devicePixelRatio || 1);
-        const budget = this.o.mini ? 0.2e6 : 2.4e6;
-        if (this.w * this.h * dpr * dpr > budget) dpr = Math.max(1, Math.sqrt(budget / (this.w * this.h)));
+        let dpr = Math.min(this.maxDpr, window.devicePixelRatio || 1);
+        if (this.w * this.h * dpr * dpr > 2.4e6) dpr = Math.max(1, Math.sqrt(2.4e6 / (this.w * this.h)));
         this.c.width = Math.round(this.w * dpr); this.c.height = Math.round(this.h * dpr);
         this.c.style.width = this.w + "px"; this.c.style.height = this.h + "px";
-        this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        this.gl.viewport(0, 0, this.c.width, this.c.height);
         this.dpr = dpr; this.live = false;          // re-verify after a resize (the store was reallocated)
       } catch (e) { this.fail(); return; }
       if (this.reduced || !this.running) this.paint(performance.now());
     }
-    // guarded draw: an exception, or a frame that leaves the canvas empty, switches to the static portrait
+    // guarded draw: an exception, a GL error or a frame that leaves the face empty switches to the static portrait
     paint(now) {
       if (this.failed) return;
       try {
@@ -173,229 +262,73 @@
       } catch (e) { this.fail(); }
     }
     verify() {
-      // read back a small patch over the face; an all-transparent patch means the store was refused or cleared
-      const d = this.dpr || 1, ph = Math.min(this.h * this.o.fill, this.w / this.fd.aspect);
-      const x = Math.max(0, Math.round((this.w / 2 - ph * 0.15) * d)), y = Math.max(0, Math.round((this.h - ph * 0.62) * d));
-      const sw = Math.max(1, Math.round(ph * 0.3 * d)), sh = Math.max(1, Math.round(ph * 0.3 * d));
-      const px = this.ctx.getImageData(x, y, Math.min(sw, this.c.width - x), Math.min(sh, this.c.height - y)).data;
+      const gl = this.gl, d = this.dpr, ph = Math.min(this.h * this.o.fill, this.w * this.AY);
+      const s = Math.max(4, Math.round(ph * 0.12 * d));
+      const x = Math.round((this.w / 2 - ph * 0.06) * d), y = Math.round((ph * 0.55) * d);   // GL y is up: the face, about mid-height
+      const px = new Uint8Array(s * s * 4);
+      gl.readPixels(Math.max(0, x), Math.max(0, y), s, s, gl.RGBA, gl.UNSIGNED_BYTE, px);
       let hit = 0;
-      for (let k = 3; k < px.length; k += 16) if (px[k] > 8 && ++hit > 4) break;
-      if (hit > 4) { this.live = true; this.el.classList.add("is-live"); this.el.classList.remove("is-fallback"); }
+      for (let k = 3; k < px.length; k += 4) if (px[k] > 8 && ++hit > 4) break;
+      if (hit > 4 && gl.getError() === gl.NO_ERROR) { this.live = true; this.el.classList.add("is-live"); this.el.classList.remove("is-fallback"); }
       else this.fail();
     }
     fail() {
-      this.failed = true; this.running = false;
+      this.failed = true; this.stop();
       if (this.el) { this.el.classList.remove("is-live"); this.el.classList.add("is-fallback"); }
       if (this.c) { this.c.width = this.c.height = 0; }  // hand the memory back
     }
-    setState(s) { this.state = s; if (s === "react") this.glitchUntil = performance.now() + 140; }
+    setState() {}
     dock(on) { this.el.classList.toggle("is-docked", !!on); }
-    // r17: no rAF of its own; a running portrait subscribes to the shared clock (paused off screen / tab hidden)
     start() { if (this.failed) return; if (this.running || this.reduced) { this.paint(performance.now()); return; } this.running = true; W.sub(this.tick); }
     stop() { this.running = false; W.unsub(this.tick); }
     destroy() { this.stop(); this.ro && this.ro.disconnect(); this.io && this.io.disconnect(); window.removeEventListener("pointermove", this.onMove); window.removeEventListener("resize", this.resize); this.c && this.c.remove(); }
     tick(now) {
       if (!this.running || this.failed) return;
-      if (now - this.last >= 1000 / this.o.fps - 2) { this.last = now; this.paint(now); }
+      if (now - this.last >= 1000 / Math.min(this.fps, W.fps) - 2) { this.last = now; this.paint(now); }
     }
     draw(now) {
-      const { ctx, w, h, o, fd } = this;
-      const t = this.o.wave ? W.t : now / 1000;
-      // glitch scheduler, kept quiet: one short cut every 5–11 s, small offset
-      if (o.glitch && !this.reduced && now > this.nextGlitch) {
-        this.glitchUntil = now + 70 + Math.random() * 50;
-        this.slice = { a: Math.random() * 0.8, b: 0.04 + Math.random() * 0.08, dx: (Math.random() - 0.5) * 0.035 };
-        this.nextGlitch = now + 5000 + Math.random() * 6000;
-      }
-      const glitching = now < this.glitchUntil;
-      // cursor: proximity (jitter) + eased parallax (2.5D: near layers shift more than the sweater)
+      const { gl, w, h, o, U } = this, AY = this.AY;
+      const t = this.reduced ? 0 : o.wave ? W.t : now / 1000;
+      // pose: a slight turn toward the hero copy, a slow breath, ±6° / ±4° toward the cursor, a nod as the hero scrolls away
       const m = this.mouse;
-      const near = Math.max(0, 1 - Math.hypot(m.x, m.y * 0.8) / 1.4);
-      m.k += (near - m.k) * 0.08;
-      const tx = this.reduced ? 0 : Math.max(-1, Math.min(1, m.x)), ty = this.reduced ? 0 : Math.max(-1, Math.min(1, m.y));
-      m.px += (tx - m.px) * 0.06; m.py += (ty - m.py) * 0.06;
-      if (o.interactive && this.el.parentElement) { const st = this.el.parentElement.style; st.setProperty("--lx", m.px.toFixed(3)); st.setProperty("--ly", m.py.toFixed(3)); }
-
-      ctx.clearRect(0, 0, w, h);
-      // portrait box: keep the reference aspect, fit the host height (or width on narrow hosts)
-      const ph = Math.min(h * o.fill, w / fd.aspect), pw = ph * fd.aspect;
-      const px0 = (w - pw) / 2, py0 = h - ph;
-      const N = o.lines, S = o.samples, gap = ph / N;
-      const amp = gap * o.relief;
-      const [ar, ag, ab] = o.colorA, [br, bg_, bb] = o.colorB, [sr, sg_, sb] = o.sweater;
-      const A = fd.A;
-      // r17: the shared wave, sampled at this canvas's position inside the field's frame (hero portrait only)
+      m.px += (m.x - m.px) * 0.05; m.py += (m.y - m.py) * 0.05;
+      const yaw = -0.08 + (this.reduced ? 0 : 0.105 * m.px + 0.012 * Math.sin(t * 0.25));
+      const pitch = 0.03 + (this.reduced ? 0 : 0.07 * m.py + 0.008 * Math.sin(t * 0.31 + 1) + (o.wave ? 0.06 * W.scroll : 0));
+      const cy_ = Math.cos(yaw), sy_ = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch);
+      // R = Ry(yaw) · Rx(pitch), column-major
+      const R = [cy_, 0, -sy_, sy_ * sp, cp, cy_ * sp, sy_ * cp, -sp, cy_ * cp];
+      const pv = [-0.038, 0.134, 0.2], DIST = 4.2;           // pivot: the middle of the head; camera DIST in front
+      const tr = [0, 1, 2].map((r) => pv[r] - (R[r] * pv[0] + R[3 + r] * pv[1] + R[6 + r] * pv[2]) + (r === 2 ? -DIST : 0));
+      gl.uniformMatrix4fv(U.uM, false, [R[0], R[1], R[2], 0, R[3], R[4], R[5], 0, R[6], R[7], R[8], 0, tr[0], tr[1], tr[2], 1]);
+      gl.uniformMatrix3fv(U.uR, false, R);
+      // projection: the picture plane at z = 0.2 maps onto the portrait box (reference aspect, fit to the host, bottom-aligned)
+      const ph = Math.min(h * o.fill, w * AY), f = ph / AY * (DIST - 0.2);
+      const cx = w / 2, cy = h - ph / 2, N = 1, F = 10;
+      gl.uniformMatrix4fv(U.uP, false, [2 * f / w, 0, 0, 0, 0, 2 * f / h, 0, 0, 1 - 2 * cx / w, -(1 - 2 * cy / h), -(F + N) / (F - N), -1, 0, 0, -2 * F * N / (F - N), 0]);
+      // r17: the shared wave, at this canvas's place inside the field's frame (hero portrait only)
       const waving = o.wave && W.on && !this.reduced && W.box && W.box.width > 0;
-      let wx0 = 0, wxs = 0, wu0 = 0, wus = 0;
+      gl.uniform1f(U.uWave, waving ? 1 : 0);
       if (waving) {
         const hr = this.el.getBoundingClientRect(), B = W.box;
-        wx0 = (hr.left - B.left) / B.width; wxs = 1 / B.width; wu0 = (hr.top - B.top) / B.height; wus = 1 / B.height;
+        gl.uniform4f(U.uBox, (hr.left - B.left) / B.width, hr.width / B.width, (hr.top - B.top) / B.height, hr.height / B.height);
+        gl.uniform4f(U.uW, W.freq, W.phase, W.bend, W.t); gl.uniform4f(U.uWP, W.pointer.x, W.pointer.y, W.pointer.k, W.aspect);
+        gl.uniform2f(U.uWS, W.scale * W.amp, W.scroll);
       }
-      const lift = gap * 1.4;
-      if (!this.buf || this.buf.length !== (S + 1) * 4) { this.buf = new Float32Array((S + 1) * 4); this.pz = new Uint8Array(S + 1); }
-      const P = this.buf, Z = this.pz;   // per sample: x, y, (unused), light
-      const grad = ctx.createLinearGradient(px0, 0, px0 + pw, 0);
-      grad.addColorStop(0, `rgb(${ar},${ag},${ab})`);
-      grad.addColorStop(0.5, `rgb(${(ar * 2 + br) / 3 | 0},${(ag * 2 + bg_) / 3 | 0},${(ab * 2 + bb) / 3 | 0})`);
-      grad.addColorStop(1, `rgb(${br},${bg_},${bb})`);
-      const bgGrad = ctx.createLinearGradient(0, 0, w, 0);
-      bgGrad.addColorStop(0, `rgba(${ar},${ag},${ab},0)`);
-      bgGrad.addColorStop(0.5, `rgba(${(ar + br) >> 1},${(ag + bg_) >> 1},${(ab + bb) >> 1},0.16)`);
-      bgGrad.addColorStop(1, `rgba(${br},${bg_},${bb},0)`);
-
-      // r19: a fine line model instead of engraved ribbons — hairline rows whose brightness (and a little width) carries
-      // the light, cross lines every few samples joining each row to the one above (a mesh over the relief), small bright
-      // points on a share of the mesh vertices, and a few faint stars in the background above the shoulders
-      const strokeRuns = (keep, X, Y) => {      // one path of polylines over runs of samples that pass `keep`
-        ctx.beginPath();
-        let s = 0;
-        while (s <= S) {
-          if (!keep(s)) { s++; continue; }
-          const a = Math.max(0, s - 1); let e = s;
-          while (e < S && keep(e + 1)) e++;
-          const b = Math.min(S, e + 1);
-          ctx.moveTo(X[a * 4], Y[a * 4 + 1]);
-          for (let q = a + 1; q <= b; q++) ctx.lineTo(X[q * 4], Y[q * 4 + 1]);
-          s = b + 1;
-        }
-      };
-      const CS = o.mini ? 6 : 4;                              // a cross line every CS samples
-      if (!this.prev || this.prev.length !== P.length) { this.prev = new Float32Array(P.length); this.prevZ = new Uint8Array(S + 1); }
-      const Q = this.prev, QZ = this.prevZ;
-      const tw = this.reduced ? 0 : t;
-      const passes = glitching ? [[-1, "rgba(255,255,255,0.3)"], [1, "rgba(120,122,126,0.42)"], [0, null]] : [[0, null]];
-      for (const [shift, tint] of passes) {
-        for (let i = 0; i < N; i++) {
-          const fy = (i + 0.5) / N;
-          const y0 = py0 + fy * ph;
-          let dx = 0;
-          if (glitching && this.slice && fy > this.slice.a && fy < this.slice.a + this.slice.b) dx = this.slice.dx * pw;
-          dx += shift * 2;
-          const wu = wu0 + y0 * wus;
-          let any = false, hasHair = false, hasSweater = false, wsum = 0;
-          for (let s = 0; s <= S; s++) {
-            const xs = -0.4 + (1.8 * s) / S;                   // samples run past the portrait so the background rows stay continuous
-            const f = sample(fd, xs, fy);
-            const z = f.zone;
-            // 2.5D: the head sits nearer than the sweater → shifts more with the cursor
-            const par = (z === 1 || z === 2 ? 1 : z ? 0.45 : 0.15);
-            let hv = f.rel;
-            hv += (noise1(s * 0.35 + i * 7.3 + t * 2.2) - 0.5) * 0.04 * (z ? 1 : 0.5);
-            if (z === 2) hv += (hash(s * 1.7 + i * 31) - 0.5) * 0.1;                        // crew-cut bristle
-            if (m.k > 0.01 && z) hv += 0.25 * m.k * Math.exp(-(((xs * 2 - 1) - m.x) ** 2) / 0.02 - ((fy * 2 - 1 - m.y) ** 2) / 0.006) * Math.sin(t * 9 + s * 0.6);
-            let li = f.lev;
-            P[s * 4] = px0 + xs * pw + dx + (m.px * par * gap * 1.6);
-            P[s * 4 + 1] = y0 - hv * amp + m.py * par * gap * 0.8;
-            if (waving) {
-              const wv = W.at(wx0 + P[s * 4] * wxs, wu);
-              P[s * 4 + 1] -= wv * lift; wsum += wv;
-              if (z === 1) li = Math.min(1, li + wv * 0.12);
-            }
-            P[s * 4 + 2] = 0;
-            P[s * 4 + 3] = li;
-            Z[s] = z;
-            if (z) any = true;
-            if (z === 2) hasHair = true;
-            if (z >= 3) hasSweater = true;
-          }
-          if (shift !== 0) {
-            if (!any) continue;
-            ctx.strokeStyle = tint; ctx.lineWidth = 0.8; strokeRuns((s) => Z[s] !== 0, P, P); ctx.stroke();
-            continue;
-          }
-          // occlude: erase whatever earlier rows drew below this one (keeps the canvas transparent)
-          ctx.beginPath(); ctx.moveTo(P[0], P[1] - 0.6);
-          for (let s = 1; s <= S; s++) ctx.lineTo(P[s * 4], P[s * 4 + 1] - 0.6);
-          ctx.lineTo(P[S * 4], h + 2); ctx.lineTo(P[0], h + 2); ctx.closePath();
-          ctx.globalCompositeOperation = "destination-out"; ctx.fillStyle = "#000"; ctx.fill();
-          ctx.globalCompositeOperation = "source-over";
-          // the bottom rows fade out; on the hero (r17) they dissolve fully into the WebGL field below
-          const fade = o.mini ? 1 : o.wave ? 1 - smooth(0.68, 1, fy) : 1 - 0.7 * smooth(0.86, 1, fy);
-          // background: one faint hairline per row, the scanline field the figure rises out of (brighter in a crest)
-          if (!o.mini) {
-            ctx.globalAlpha = Math.min(1, fade * (0.6 + 0.9 * wsum / (S + 1)));
-            ctx.beginPath(); ctx.moveTo(P[0], P[1]);
-            for (let s = 1; s <= S; s++) ctx.lineTo(P[s * 4], P[s * 4 + 1]);
-            ctx.strokeStyle = bgGrad; ctx.lineWidth = 0.6; ctx.stroke();
-            // a few stars in the dark above the shoulders
-            if (fy < 0.62) for (let s = 0; s <= S; s += 3) if (Z[s] === 0 && hash(s * 5.1 + i * 91.7) > 0.992) {
-              const hs = hash(s * 1.3 + i * 7.9);
-              ctx.globalAlpha = fade * (0.25 + 0.5 * hs) * (0.6 + 0.4 * Math.sin(tw * (0.6 + hs * 1.6) + hs * 40));
-              ctx.fillStyle = `rgb(${ar},${ag},${ab})`; ctx.fillRect(P[s * 4] - 0.6, P[s * 4 + 1] - gap * 0.5 - 0.6, 1.2, 1.2);
-            }
-          }
-          if (any && i > 0) {
-            // cross lines to the row above: the mesh; brighter where the light is
-            for (let tier = 0; tier < 2; tier++) {
-              ctx.beginPath();
-              for (let s = (i & 1) * (CS >> 1); s <= S; s += CS) {
-                if (!Z[s] || !QZ[s] || Z[s] === 2) continue;
-                if ((P[s * 4 + 3] > 0.5 ? 1 : 0) !== tier) continue;
-                ctx.moveTo(Q[s * 4], Q[s * 4 + 1]); ctx.lineTo(P[s * 4], P[s * 4 + 1]);
-              }
-              ctx.globalAlpha = fade * (tier ? 0.5 : 0.14); ctx.strokeStyle = grad; ctx.lineWidth = 0.6; ctx.stroke();
-            }
-          }
-          Q.set(P); QZ.set(Z);
-          if (!any) { ctx.globalAlpha = 1; continue; }
-          // skin: hairlines in four light tiers (dim and fine in shadow, bright and a touch wider in the light)
-          ctx.strokeStyle = grad;
-          for (let tier = 0; tier < 4; tier++) {
-            const lo = [-1, 0.3, 0.55, 0.78][tier], hi = [0.3, 0.55, 0.78, 2][tier];
-            strokeRuns((s) => Z[s] === 1 && P[s * 4 + 3] >= lo && P[s * 4 + 3] < hi, P, P);
-            ctx.globalAlpha = fade * [0.14, 0.42, 0.78, 1][tier]; ctx.lineWidth = o.mini ? 0.9 + tier * 0.35 : 0.6 + tier * Math.min(0.55, gap * 0.11); ctx.stroke();
-          }
-          if (hasHair) {
-            // hair: black crew cut = a dim slate line with short bristles, so the straight hairline reads against the forehead
-            const hc = `rgba(${(ar + br) * 0.3 | 0},${(ag + bg_) * 0.31 | 0},${(ab + bb) * 0.34 | 0},0.95)`;
-            ctx.globalAlpha = fade; ctx.strokeStyle = hc; ctx.lineWidth = 0.8;
-            strokeRuns((s) => Z[s] === 2, P, P); ctx.stroke();
-            if (!o.mini) {
-              ctx.beginPath();
-              for (let s = 1; s < S; s++) if (Z[s] === 2 && hash(s * 7.7 + i * 13.1) > 0.84) {
-                const lean = (hash(s * 2.3 + i) - 0.5) * gap * 0.9;
-                ctx.moveTo(P[s * 4], P[s * 4 + 1]); ctx.lineTo(P[s * 4] + lean, P[s * 4 + 1] - gap * (0.8 + hash(s + i * 5.3) * 0.9));
-              }
-              ctx.lineWidth = 0.6; ctx.globalAlpha = fade * 0.8; ctx.stroke();
-            }
-          }
-          if (hasSweater) {
-            // sweater: grey knit hairline with stitch points; the collar rib a touch brighter
-            const sa = o.mini ? 0.9 : 0.62;
-            const sw = ctx.createLinearGradient(px0, 0, px0 + pw, 0);
-            sw.addColorStop(0, `rgba(${sr},${sg_},${sb},0)`); sw.addColorStop(0.16, `rgba(${sr},${sg_},${sb},${sa})`);
-            sw.addColorStop(0.84, `rgba(${sr},${sg_},${sb},${sa})`); sw.addColorStop(1, `rgba(${sr},${sg_},${sb},0)`);
-            ctx.globalAlpha = fade; ctx.strokeStyle = sw; ctx.lineWidth = 0.8; strokeRuns((s) => Z[s] === 3, P, P); ctx.stroke();
-            ctx.strokeStyle = `rgba(${(sr * 3 + 255) / 4 | 0},${(sg_ * 3 + 255) / 4 | 0},${(sb * 3 + 255) / 4 | 0},${o.mini ? 0.9 : 0.75})`; ctx.lineWidth = 1;
-            strokeRuns((s) => Z[s] === 4, P, P); ctx.stroke();
-          }
-          // vertex points: tiny bright dots on a share of the lit mesh vertices, twinkling slowly
-          if (!o.mini) {
-            ctx.fillStyle = `rgb(${ar},${ag},${ab})`;
-            for (let s = (i & 1) * (CS >> 1); s <= S; s += CS) {
-              const z = Z[s]; if (z !== 1 && z !== 4) continue;
-              const li = P[s * 4 + 3], hs = hash(s * 3.7 + i * 17.3);
-              if (li < 0.55 || hs < 0.62) continue;
-              ctx.globalAlpha = fade * Math.min(1, li * (0.55 + 0.45 * Math.sin(tw * (0.8 + hs) + hs * 30)));
-              const r = 0.7 + li * 0.6;
-              ctx.fillRect(P[s * 4] - r, P[s * 4 + 1] - r, r * 2, r * 2);
-            }
-          }
-          ctx.globalAlpha = 1;
-        }
-      }
-      if (!o.mini) {
-        // marks from the reference, placed on the relief: the small dark points (lower cheek, neck) as holes in the ribbons.
-        // r14B: no scar stroke and no forehead point by the left brow (screen right): the brows are just what the
-        // scanlines draw from the light field, soft and unbroken
-        const at = (x, y) => {
-          const X = px0 + x * pw + m.px * gap * 1.6, Y = py0 + y * ph;
-          return [X, Y - sample(fd, x, y).rel * amp + m.py * gap * 0.8 - (waving ? W.at(wx0 + X * wxs, wu0 + Y * wus) * lift : 0)];
-        };
-        ctx.globalCompositeOperation = "destination-out"; ctx.fillStyle = "#000";
-        for (const d of A.dots) { if (d[1] < 0.4) continue; const q = at(d[0], d[1]); ctx.beginPath(); ctx.arc(q[0], q[1], Math.max(1.2, gap * 0.42), 0, Math.PI * 2); ctx.fill(); }
-        ctx.globalCompositeOperation = "source-over";
-      }
+      gl.uniform1f(U.uT, t); gl.uniform1f(U.uPS, this.dpr);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+      // 1 · the surface as a dark body (hides the scene behind) and into the depth buffer, pushed back a little,
+      //     so lines behind the nose, jaw or ear are hidden
+      gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(1, 2); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+      gl.uniform1f(U.uPt, 0); gl.uniform1f(U.uFill, 1);
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.tb[0]); gl.drawElements(gl.TRIANGLES, this.tb[1], gl.UNSIGNED_SHORT, 0);
+      gl.disable(gl.POLYGON_OFFSET_FILL); gl.depthMask(false); gl.blendFunc(gl.ONE, gl.ONE); gl.uniform1f(U.uFill, 0);
+      // 2 · the grid lines, 3 · a share of the vertices as small points
+      const g = o.gain * (this.grid[0] > 120 ? 0.56 : 0.7);
+      gl.uniform1f(U.uK, g);
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.lb[0]); gl.drawElements(gl.LINES, this.lb[1], gl.UNSIGNED_SHORT, 0);
+      gl.uniform1f(U.uPt, 1); gl.uniform1f(U.uK, o.gain * 0.9);
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.pb[0]); gl.drawElements(gl.POINTS, this.pb[1], gl.UNSIGNED_SHORT, 0);
+      gl.depthMask(true);
     }
   }
   window.Louis = Louis;
