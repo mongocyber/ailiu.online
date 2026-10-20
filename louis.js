@@ -1,7 +1,7 @@
 /* Louis — scanline portrait (INSTRUCTIONS §4.2 option A). r11: drawn from a low-res light/zone field
    extracted offline from the approved front reference (scripts/louis_extract.py → louis-data.js).
-   2D canvas only: each scanline is a ribbon whose thickness carries the light (engraving style), lifted
-   slightly by a soft relief and occluding the rows behind it. No WebGL, no 3D models, no photo pixels.
+   2D canvas only: each scanline is lifted slightly by a soft relief and occludes the rows behind it. r19: drawn as a
+   fine line model — hairline rows (light = brightness), cross lines into a mesh, small points on lit vertices, faint stars. No WebGL, no 3D models, no photo pixels.
    r17: the old voice-level motion (mouth bar, level sweep) is gone. The hero portrait now moves in the same wave
    as the WebGL field (fx3d.js): one shared clock and wave (window.FX_WAVE, below) drive both from a single rAF,
    and a crest is computed from the same screen position, so it passes through the face and the field together.
@@ -108,8 +108,8 @@
   class Louis {
     constructor(opts = {}) {
       this.o = Object.assign({
-        lines: 96, samples: 200, bg: "#060607", fps: 60,
-        colorA: [240, 240, 238], colorB: [176, 178, 182], sweater: [118, 120, 124],   // r18: white / grey, like the scene lines
+        lines: 150, samples: 220, bg: "#060607", fps: 60,
+        colorA: [236, 239, 244], colorB: [168, 171, 177], sweater: [118, 121, 126],   // r19: the scene's cool white / grey
         relief: 1.4, fill: 0.98, interactive: true, glitch: true, mini: false, wave: false
       }, opts);
       this.state = "idle";
@@ -232,26 +232,8 @@
         wx0 = (hr.left - B.left) / B.width; wxs = 1 / B.width; wu0 = (hr.top - B.top) / B.height; wus = 1 / B.height;
       }
       const lift = gap * 1.4;
-      // ribbon thickness from light: a hairline for shadow, up to ~0.8 of the row gap for highlights
-      const thin = o.mini ? 0.35 : 0.45, thick = gap * (o.mini ? 0.95 : 0.78);
       if (!this.buf || this.buf.length !== (S + 1) * 4) { this.buf = new Float32Array((S + 1) * 4); this.pz = new Uint8Array(S + 1); }
-      const P = this.buf, Z = this.pz;   // per sample: x, centre y, half thickness, light
-      // fill the ribbon over runs of samples whose zone passes `keep`
-      const ribbon = (keep, minHalf) => {
-        ctx.beginPath();
-        let s = 0;
-        while (s <= S) {
-          if (!keep(Z[s])) { s++; continue; }
-          const a = Math.max(0, s - 1); let e = s;
-          while (e < S && keep(Z[e + 1])) e++;
-          const b = Math.min(S, e + 1);
-          ctx.moveTo(P[a * 4], P[a * 4 + 1] - Math.max(minHalf, P[a * 4 + 2]));
-          for (let q = a + 1; q <= b; q++) ctx.lineTo(P[q * 4], P[q * 4 + 1] - Math.max(minHalf, P[q * 4 + 2]));
-          for (let q = b; q >= a; q--) ctx.lineTo(P[q * 4], P[q * 4 + 1] + Math.max(minHalf, P[q * 4 + 2]));
-          ctx.closePath();
-          s = b + 1;
-        }
-      };
+      const P = this.buf, Z = this.pz;   // per sample: x, y, (unused), light
       const grad = ctx.createLinearGradient(px0, 0, px0 + pw, 0);
       grad.addColorStop(0, `rgb(${ar},${ag},${ab})`);
       grad.addColorStop(0.5, `rgb(${(ar * 2 + br) / 3 | 0},${(ag * 2 + bg_) / 3 | 0},${(ab * 2 + bb) / 3 | 0})`);
@@ -261,7 +243,27 @@
       bgGrad.addColorStop(0.5, `rgba(${(ar + br) >> 1},${(ag + bg_) >> 1},${(ab + bb) >> 1},0.16)`);
       bgGrad.addColorStop(1, `rgba(${br},${bg_},${bb},0)`);
 
-      const passes = glitching ? [[-1, "rgba(255,255,255,0.32)"], [1, "rgba(120,122,126,0.45)"], [0, null]] : [[0, null]];
+      // r19: a fine line model instead of engraved ribbons — hairline rows whose brightness (and a little width) carries
+      // the light, cross lines every few samples joining each row to the one above (a mesh over the relief), small bright
+      // points on a share of the mesh vertices, and a few faint stars in the background above the shoulders
+      const strokeRuns = (keep, X, Y) => {      // one path of polylines over runs of samples that pass `keep`
+        ctx.beginPath();
+        let s = 0;
+        while (s <= S) {
+          if (!keep(s)) { s++; continue; }
+          const a = Math.max(0, s - 1); let e = s;
+          while (e < S && keep(e + 1)) e++;
+          const b = Math.min(S, e + 1);
+          ctx.moveTo(X[a * 4], Y[a * 4 + 1]);
+          for (let q = a + 1; q <= b; q++) ctx.lineTo(X[q * 4], Y[q * 4 + 1]);
+          s = b + 1;
+        }
+      };
+      const CS = o.mini ? 6 : 4;                              // a cross line every CS samples
+      if (!this.prev || this.prev.length !== P.length) { this.prev = new Float32Array(P.length); this.prevZ = new Uint8Array(S + 1); }
+      const Q = this.prev, QZ = this.prevZ;
+      const tw = this.reduced ? 0 : t;
+      const passes = glitching ? [[-1, "rgba(255,255,255,0.3)"], [1, "rgba(120,122,126,0.42)"], [0, null]] : [[0, null]];
       for (const [shift, tint] of passes) {
         for (let i = 0; i < N; i++) {
           const fy = (i + 0.5) / N;
@@ -279,7 +281,7 @@
             const par = (z === 1 || z === 2 ? 1 : z ? 0.45 : 0.15);
             let hv = f.rel;
             hv += (noise1(s * 0.35 + i * 7.3 + t * 2.2) - 0.5) * 0.04 * (z ? 1 : 0.5);
-            if (z === 2) hv += (hash(s * 1.7 + i * 31) - 0.5) * 0.12;                       // crew-cut bristle
+            if (z === 2) hv += (hash(s * 1.7 + i * 31) - 0.5) * 0.1;                        // crew-cut bristle
             if (m.k > 0.01 && z) hv += 0.25 * m.k * Math.exp(-(((xs * 2 - 1) - m.x) ** 2) / 0.02 - ((fy * 2 - 1 - m.y) ** 2) / 0.006) * Math.sin(t * 9 + s * 0.6);
             let li = f.lev;
             P[s * 4] = px0 + xs * pw + dx + (m.px * par * gap * 1.6);
@@ -289,10 +291,7 @@
               P[s * 4 + 1] -= wv * lift; wsum += wv;
               if (z === 1) li = Math.min(1, li + wv * 0.12);
             }
-            P[s * 4 + 2] = z === 2 ? (0.5 + li * thick * 0.35 * hash(s * 3.1 + i * 17)) / 2                          // hair: thin, ragged
-              : z === 3 ? (thin + (0.2 + 0.6 * li) * thick * (0.55 + 0.45 * Math.abs(Math.sin(xs * 70 + (i & 1) * 1.57)))) / 2  // knit: a chain of stitches
-              : z === 4 ? (thin + thick * (0.25 + 0.45 * Math.abs(Math.sin(xs * 150)))) / 2                                     // collar rib
-              : z ? (thin + Math.pow(li, 1.6) * (thick - thin)) / 2 : 0.3;
+            P[s * 4 + 2] = 0;
             P[s * 4 + 3] = li;
             Z[s] = z;
             if (z) any = true;
@@ -301,12 +300,12 @@
           }
           if (shift !== 0) {
             if (!any) continue;
-            ctx.fillStyle = tint; ribbon((z) => z !== 0, 0.4); ctx.fill();
+            ctx.strokeStyle = tint; ctx.lineWidth = 0.8; strokeRuns((s) => Z[s] !== 0, P, P); ctx.stroke();
             continue;
           }
           // occlude: erase whatever earlier rows drew below this one (keeps the canvas transparent)
-          ctx.beginPath(); ctx.moveTo(P[0], P[1] - P[2]);
-          for (let s = 1; s <= S; s++) ctx.lineTo(P[s * 4], P[s * 4 + 1] - P[s * 4 + 2]);
+          ctx.beginPath(); ctx.moveTo(P[0], P[1] - 0.6);
+          for (let s = 1; s <= S; s++) ctx.lineTo(P[s * 4], P[s * 4 + 1] - 0.6);
           ctx.lineTo(P[S * 4], h + 2); ctx.lineTo(P[0], h + 2); ctx.closePath();
           ctx.globalCompositeOperation = "destination-out"; ctx.fillStyle = "#000"; ctx.fill();
           ctx.globalCompositeOperation = "source-over";
@@ -314,45 +313,73 @@
           const fade = o.mini ? 1 : o.wave ? 1 - smooth(0.68, 1, fy) : 1 - 0.7 * smooth(0.86, 1, fy);
           // background: one faint hairline per row, the scanline field the figure rises out of (brighter in a crest)
           if (!o.mini) {
-            ctx.globalAlpha = Math.min(1, fade * (0.8 + 0.9 * wsum / (S + 1)));
+            ctx.globalAlpha = Math.min(1, fade * (0.6 + 0.9 * wsum / (S + 1)));
             ctx.beginPath(); ctx.moveTo(P[0], P[1]);
             for (let s = 1; s <= S; s++) ctx.lineTo(P[s * 4], P[s * 4 + 1]);
-            ctx.strokeStyle = bgGrad; ctx.lineWidth = 0.8; ctx.stroke();
+            ctx.strokeStyle = bgGrad; ctx.lineWidth = 0.6; ctx.stroke();
+            // a few stars in the dark above the shoulders
+            if (fy < 0.62) for (let s = 0; s <= S; s += 3) if (Z[s] === 0 && hash(s * 5.1 + i * 91.7) > 0.992) {
+              const hs = hash(s * 1.3 + i * 7.9);
+              ctx.globalAlpha = fade * (0.25 + 0.5 * hs) * (0.6 + 0.4 * Math.sin(tw * (0.6 + hs * 1.6) + hs * 40));
+              ctx.fillStyle = `rgb(${ar},${ag},${ab})`; ctx.fillRect(P[s * 4] - 0.6, P[s * 4 + 1] - gap * 0.5 - 0.6, 1.2, 1.2);
+            }
           }
+          if (any && i > 0) {
+            // cross lines to the row above: the mesh; brighter where the light is
+            for (let tier = 0; tier < 2; tier++) {
+              ctx.beginPath();
+              for (let s = (i & 1) * (CS >> 1); s <= S; s += CS) {
+                if (!Z[s] || !QZ[s] || Z[s] === 2) continue;
+                if ((P[s * 4 + 3] > 0.5 ? 1 : 0) !== tier) continue;
+                ctx.moveTo(Q[s * 4], Q[s * 4 + 1]); ctx.lineTo(P[s * 4], P[s * 4 + 1]);
+              }
+              ctx.globalAlpha = fade * (tier ? 0.5 : 0.14); ctx.strokeStyle = grad; ctx.lineWidth = 0.6; ctx.stroke();
+            }
+          }
+          Q.set(P); QZ.set(Z);
           if (!any) { ctx.globalAlpha = 1; continue; }
-          // skin: white → grey (r18); thickness = light, and three intensity tiers so shadows also go dim
-          ctx.fillStyle = grad;
-          for (let tier = 0; tier < 3; tier++) {
-            const lo = tier === 0 ? -1 : tier === 1 ? 0.33 : 0.66, hi = tier === 0 ? 0.33 : tier === 1 ? 0.66 : 2;
-            for (let s = 0; s <= S; s++) if (Z[s] === 1 || Z[s] === 9) Z[s] = P[s * 4 + 3] >= lo && P[s * 4 + 3] < hi ? 9 : 1;
-            ctx.globalAlpha = fade * (tier === 0 ? 0.55 : tier === 1 ? 0.82 : 1);
-            ribbon((z) => z === 9, 0.25); ctx.fill();
+          // skin: hairlines in four light tiers (dim and fine in shadow, bright and a touch wider in the light)
+          ctx.strokeStyle = grad;
+          for (let tier = 0; tier < 4; tier++) {
+            const lo = [-1, 0.3, 0.55, 0.78][tier], hi = [0.3, 0.55, 0.78, 2][tier];
+            strokeRuns((s) => Z[s] === 1 && P[s * 4 + 3] >= lo && P[s * 4 + 3] < hi, P, P);
+            ctx.globalAlpha = fade * [0.14, 0.42, 0.78, 1][tier]; ctx.lineWidth = o.mini ? 0.9 + tier * 0.35 : 0.6 + tier * Math.min(0.55, gap * 0.11); ctx.stroke();
           }
-          for (let s = 0; s <= S; s++) if (Z[s] === 9) Z[s] = 1;
-          // hair: dark crew cut = a thin, dim, bristly line so the head keeps its square silhouette
           if (hasHair) {
-            // hair: black crew cut = a darker slate line with bristle, so the straight hairline reads against the bright forehead
-            ctx.globalAlpha = fade; ctx.fillStyle = `rgba(${(ar + br) * 0.27 | 0},${(ag + bg_) * 0.28 | 0},${(ab + bb) * 0.32 | 0},${o.mini ? 0.95 : 0.9})`;
-            ribbon((z) => z === 2, 0.4); ctx.fill();
-            // bristles: short strokes standing up out of the hair rows (spiky crew-cut texture and top edge)
+            // hair: black crew cut = a dim slate line with short bristles, so the straight hairline reads against the forehead
+            const hc = `rgba(${(ar + br) * 0.3 | 0},${(ag + bg_) * 0.31 | 0},${(ab + bb) * 0.34 | 0},0.95)`;
+            ctx.globalAlpha = fade; ctx.strokeStyle = hc; ctx.lineWidth = 0.8;
+            strokeRuns((s) => Z[s] === 2, P, P); ctx.stroke();
             if (!o.mini) {
               ctx.beginPath();
               for (let s = 1; s < S; s++) if (Z[s] === 2 && hash(s * 7.7 + i * 13.1) > 0.84) {
                 const lean = (hash(s * 2.3 + i) - 0.5) * gap * 0.9;
                 ctx.moveTo(P[s * 4], P[s * 4 + 1]); ctx.lineTo(P[s * 4] + lean, P[s * 4 + 1] - gap * (0.8 + hash(s + i * 5.3) * 0.9));
               }
-              ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = 0.8; ctx.globalAlpha = fade * 0.8; ctx.stroke(); ctx.globalAlpha = fade;
+              ctx.lineWidth = 0.6; ctx.globalAlpha = fade * 0.8; ctx.stroke();
             }
-            ctx.fillStyle = grad;
           }
           if (hasSweater) {
-            // sweater: dark grey knit; the collar rib a touch brighter
-            ctx.globalAlpha = fade;
-            const sw = ctx.createLinearGradient(px0, 0, px0 + pw, 0), sa = o.mini ? 0.9 : 0.6;
+            // sweater: grey knit hairline with stitch points; the collar rib a touch brighter
+            const sa = o.mini ? 0.9 : 0.62;
+            const sw = ctx.createLinearGradient(px0, 0, px0 + pw, 0);
             sw.addColorStop(0, `rgba(${sr},${sg_},${sb},0)`); sw.addColorStop(0.16, `rgba(${sr},${sg_},${sb},${sa})`);
             sw.addColorStop(0.84, `rgba(${sr},${sg_},${sb},${sa})`); sw.addColorStop(1, `rgba(${sr},${sg_},${sb},0)`);
-            ctx.fillStyle = sw; ribbon((z) => z === 3, 0.4); ctx.fill();
-            ctx.fillStyle = `rgba(${(sr * 4 + 255) / 5 | 0},${(sg_ * 4 + 255) / 5 | 0},${(sb * 4 + 255) / 5 | 0},${o.mini ? 0.9 : 0.7})`; ribbon((z) => z === 4, 0.5); ctx.fill();
+            ctx.globalAlpha = fade; ctx.strokeStyle = sw; ctx.lineWidth = 0.8; strokeRuns((s) => Z[s] === 3, P, P); ctx.stroke();
+            ctx.strokeStyle = `rgba(${(sr * 3 + 255) / 4 | 0},${(sg_ * 3 + 255) / 4 | 0},${(sb * 3 + 255) / 4 | 0},${o.mini ? 0.9 : 0.75})`; ctx.lineWidth = 1;
+            strokeRuns((s) => Z[s] === 4, P, P); ctx.stroke();
+          }
+          // vertex points: tiny bright dots on a share of the lit mesh vertices, twinkling slowly
+          if (!o.mini) {
+            ctx.fillStyle = `rgb(${ar},${ag},${ab})`;
+            for (let s = (i & 1) * (CS >> 1); s <= S; s += CS) {
+              const z = Z[s]; if (z !== 1 && z !== 4) continue;
+              const li = P[s * 4 + 3], hs = hash(s * 3.7 + i * 17.3);
+              if (li < 0.55 || hs < 0.62) continue;
+              ctx.globalAlpha = fade * Math.min(1, li * (0.55 + 0.45 * Math.sin(tw * (0.8 + hs) + hs * 30)));
+              const r = 0.7 + li * 0.6;
+              ctx.fillRect(P[s * 4] - r, P[s * 4 + 1] - r, r * 2, r * 2);
+            }
           }
           ctx.globalAlpha = 1;
         }

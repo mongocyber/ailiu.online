@@ -313,8 +313,8 @@
     try { return new Louis(opts).mount(el); }
     catch (e) { el.classList.add("is-fallback"); return { setState() {}, dock() {}, destroy() {} }; }
   };
-  const louisHero = mountLouis({ lines: 96, samples: 200, wave: true }, $("#louisHero"));
-  mountLouis({ lines: 100, samples: 200, bg: "#050507", colorA: [206, 208, 212], colorB: [244, 244, 242], sweater: [112, 114, 118] }, $("#louisWild"));
+  const louisHero = mountLouis({ lines: matchMedia("(pointer: coarse)").matches ? 120 : 150, samples: 220, wave: true }, $("#louisHero"));
+  mountLouis({ lines: 130, samples: 220, bg: "#050507", colorA: [206, 208, 212], colorB: [244, 244, 242], sweater: [112, 114, 118] }, $("#louisWild"));
 
   /* ------------------------------------------------------------------ active chapter, glitch-cut */
   let active = null;
