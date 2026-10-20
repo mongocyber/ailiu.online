@@ -142,10 +142,10 @@
     "  float fog = mix(0.42, 1.0, smoothstep(0.0, uZ, aP.z));",
     "  float a = ((0.06 + 1.15 * pow(key, 1.5)) * alb + 1.1 * rim + 1.6 * aK * (1.0 - aK)) * fog * smoothstep(0.2, 0.7, aK);",   // + a glow along the outline
     "  a *= 1.0 + w * 0.7;",
-    "  a *= mix(1.0 - 0.7 * smoothstep(0.86, 1.0, aM.w), 1.0 - smoothstep(0.66, 1.0, aM.w), uFade);",
+    "  a *= mix(1.0 - smoothstep(0.74, 1.0, aM.w), 1.0 - smoothstep(0.66, 1.0, aM.w), uFade);",
     "  if (uPt > 0.5) a *= step(0.45, key * alb + rim) * (0.6 + 0.4 * sin(uT * (0.7 + aM.z * 1.4) + aM.z * 60.0));",
     // pass 1 (uFill): the surface as a near-black body (alpha only), so the scene behind is hidden as by a solid
-    "  if (uFill > 0.5) a = 0.94 * smoothstep(0.35, 0.7, aK) * mix(1.0 - 0.8 * smoothstep(0.86, 1.0, aM.w), 1.0 - smoothstep(0.66, 1.0, aM.w), uFade);",
+    "  if (uFill > 0.5) a = 0.94 * smoothstep(0.35, 0.7, aK) * mix(1.0 - smoothstep(0.74, 1.0, aM.w), 1.0 - smoothstep(0.66, 1.0, aM.w), uFade);",
     "  vA = a; vP = uPt + 2.0 * uFill;",
     "  gl_PointSize = uPS * (1.0 + 1.3 * key);",
     "}"

@@ -428,7 +428,7 @@
   }
   // reading blocks: the lines behind whichever of these are on screen are thinned and dimmed (up to four, largest first).
   // The hero copy is handled apart, as a soft ellipse.
-  var READ = ".slots, .wk-side, .wcase-text, .st-block, .foot-grid, .made-copy, .made-log, .foot-meta";
+  var READ = ".slots, .wk-side, .wcase-text, .st-block, .footer .foot";   // r20B: the footer is two grid blocks
   var readEls = [], heroCopy = null;
   function rects(vw, vh, pad) {
     var out = [];
