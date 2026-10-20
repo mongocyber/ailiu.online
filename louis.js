@@ -109,7 +109,7 @@
     constructor(opts = {}) {
       this.o = Object.assign({
         lines: 96, samples: 200, bg: "#060607", fps: 60,
-        colorA: [150, 232, 255], colorB: [185, 166, 255], sweater: [92, 178, 128],
+        colorA: [240, 240, 238], colorB: [176, 178, 182], sweater: [118, 120, 124],   // r18: white / grey, like the scene lines
         relief: 1.4, fill: 0.98, interactive: true, glitch: true, mini: false, wave: false
       }, opts);
       this.state = "idle";
@@ -261,7 +261,7 @@
       bgGrad.addColorStop(0.5, `rgba(${(ar + br) >> 1},${(ag + bg_) >> 1},${(ab + bb) >> 1},0.16)`);
       bgGrad.addColorStop(1, `rgba(${br},${bg_},${bb},0)`);
 
-      const passes = glitching ? [[-1, "rgba(255,70,110,0.5)"], [1, "rgba(80,200,255,0.5)"], [0, null]] : [[0, null]];
+      const passes = glitching ? [[-1, "rgba(255,255,255,0.32)"], [1, "rgba(120,122,126,0.45)"], [0, null]] : [[0, null]];
       for (const [shift, tint] of passes) {
         for (let i = 0; i < N; i++) {
           const fy = (i + 0.5) / N;
@@ -320,7 +320,7 @@
             ctx.strokeStyle = bgGrad; ctx.lineWidth = 0.8; ctx.stroke();
           }
           if (!any) { ctx.globalAlpha = 1; continue; }
-          // skin: site cyan → violet; thickness = light, and three intensity tiers so shadows also go dim
+          // skin: white → grey (r18); thickness = light, and three intensity tiers so shadows also go dim
           ctx.fillStyle = grad;
           for (let tier = 0; tier < 3; tier++) {
             const lo = tier === 0 ? -1 : tier === 1 ? 0.33 : 0.66, hi = tier === 0 ? 0.33 : tier === 1 ? 0.66 : 2;
@@ -346,7 +346,7 @@
             ctx.fillStyle = grad;
           }
           if (hasSweater) {
-            // sweater: dark green knit; the collar rib a touch brighter
+            // sweater: dark grey knit; the collar rib a touch brighter
             ctx.globalAlpha = fade;
             const sw = ctx.createLinearGradient(px0, 0, px0 + pw, 0), sa = o.mini ? 0.9 : 0.6;
             sw.addColorStop(0, `rgba(${sr},${sg_},${sb},0)`); sw.addColorStop(0.16, `rgba(${sr},${sg_},${sb},${sa})`);

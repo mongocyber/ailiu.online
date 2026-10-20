@@ -1,5 +1,5 @@
 """r12 one-off: render the static fallback portrait from louis-data.js with the real renderer (louis.js),
-then quantize it to a small PNG (louis-fallback.png, < 40KB). Stylized scanlines only; not the reference photo.
+then quantize it to a small PNG (louis-fallback.png, < 40KB). r18: rendered with the grey defaults. Stylized scanlines only; not the reference photo.
 Usage: python3 scripts/louis_fallback.py   (no server needed)"""
 import base64, io, pathlib
 from playwright.sync_api import sync_playwright
@@ -21,6 +21,8 @@ with sync_playwright() as pw:
     b.close()
 
 im = Image.open(io.BytesIO(base64.b64decode(url.split(",", 1)[1]))).convert("RGBA")
+g, a = im.convert("L"), im.getchannel("A")   # r18: strictly grey (no tint survives quantizing)
+im = Image.merge("RGBA", (g, g, g, a))
 q = im.quantize(colors=48, method=Image.FASTOCTREE)
 out = ROOT / "louis-fallback.png"
 q.save(out, optimize=True)

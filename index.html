@@ -35,6 +35,9 @@
 <body>
 <a class="skip" href="#aviso" data-en="Skip to chapters" data-zh="跳到章节">Skip to chapters</a>
 <div class="grain" aria-hidden="true"></div>
+<!-- r18: one fixed wireframe scene behind the whole site (fx3d.js); #fx2d is its static 2D fallback -->
+<canvas class="fx3d" id="fx3d" aria-hidden="true"></canvas>
+<canvas class="fx2d" id="fx2d" aria-hidden="true"></canvas>
 
 <!-- ============ GLOBAL CHROME (identical across chapters, D10) ============ -->
 <header class="topbar">
@@ -63,8 +66,6 @@
 
 <!-- ================================ HERO ================================ -->
 <section class="hero" id="top" data-index="0" aria-labelledby="hero-h">
-  <canvas class="rain" id="rain" aria-hidden="true"></canvas>
-  <canvas class="fx3d" id="fx3d" aria-hidden="true"></canvas>
   <div class="hero-inner">
     <div class="hero-copy">
       <p class="kicker mono" data-preset="reveal-up"><span class="live-dot" aria-hidden="true"></span><span data-en="ailiu.online · portfolio" data-zh="ailiu.online · 作品集">ailiu.online · portfolio</span></p>

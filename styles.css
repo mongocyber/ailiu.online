@@ -140,12 +140,11 @@ body.at-hero .letterbox { opacity: 0; }
 
 /* ---------- 6. Hero ---------- */
 .hero { position: relative; padding: 0 var(--pad-x); overflow: hidden; }
-.rain { position: absolute; top: 0; right: 0; bottom: 0; left: 0; inset: 0; width: 100%; height: 100%; opacity: .5; -webkit-mask-image: radial-gradient(70% 70% at 70% 45%, #000, transparent 75%); mask-image: radial-gradient(70% 70% at 70% 45%, #000, transparent 75%); }
-/* r13: WebGL scanline field (fx3d.js) behind the copy and the portrait; the glyph rain is its 2D fallback */
-.fx3d { display: none; position: absolute; top: 0; right: 0; left: 0; width: 100%; height: 100vh; height: 100dvh; pointer-events: none; -webkit-mask-image: linear-gradient(180deg, transparent 6%, #000 42%, #000 82%, transparent 100%); mask-image: linear-gradient(180deg, transparent 6%, #000 42%, #000 82%, transparent 100%); }
+/* r18: the wireframe scene is one fixed canvas behind every chapter (fx3d.js); #fx2d is the static 2D fallback frame.
+   main sits above it; the chapter stages are transparent so the scene shows through. */
+.fx3d, .fx2d { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100vh; height: 100lvh; z-index: 0; pointer-events: none; }
 html[data-fx^="webgl"] .fx3d { display: block; }
-@media (max-width: 760px) { .fx3d { bottom: auto; -webkit-mask-image: linear-gradient(180deg, transparent 4%, #000 30%, #000 70%, transparent 100%); mask-image: linear-gradient(180deg, transparent 4%, #000 30%, #000 70%, transparent 100%); } }
-html[data-fx^="webgl"] .rain { display: none; }
+main { position: relative; z-index: 1; }
 /* r17: the first screen is the hero alone (100vh, 100dvh where supported); the portrait fills ~86% of it on the right,
    bottom-anchored so its shoulders dissolve into the field; the copy sits a little above centre; the chapter index is below the fold */
 .hero-inner { position: relative; min-height: 100vh; min-height: 100dvh; padding-top: var(--top-h); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 3vw; }
@@ -239,7 +238,7 @@ html:lang(zh) .slot-blurb { height: auto; max-height: 8em; }
 /* =========================================================================
    01 AVISO — browser window as stage, 2.5D layers (§7.3)
    ========================================================================= */
-.ch-aviso .pin { background: radial-gradient(60% 70% at 72% 52%, rgba(111, 138, 91, .22), transparent 70%), var(--bg); }
+.ch-aviso .pin { background: none; } /* r18: transparent, the wireframe scene shows through */
 .av-glow { position: absolute; top: 0; right: 0; bottom: 0; left: 0; inset: 0; background: radial-gradient(30% 30% at 74% 48%, rgba(170, 220, 140, .12), transparent 70%); pointer-events: none; }
 .av-slots { left: var(--pad-x); top: 50%; transform: translateY(-52%); width: min(30vw, 440px); }
 .ch-aviso .slot-title { color: #f3f5ee; }
@@ -372,7 +371,7 @@ html:lang(zh) .slot-blurb { height: auto; max-height: 8em; }
 /* =========================================================================
    04 STEAM — blueprint, live pipes and a gauge (§7.5)
    ========================================================================= */
-.ch-steam .pin { background: radial-gradient(50% 60% at 80% 30%, rgba(242, 169, 59, .09), transparent 70%), #070706; }
+.ch-steam .pin { background: none; } /* r18: transparent, the wireframe scene shows through */
 .st-grid { position: absolute; top: 0; right: 0; bottom: 0; left: 0; inset: 0; opacity: .5;
   background: linear-gradient(rgba(242, 169, 59, .07) 1px, transparent 1px) 0 0 / 48px 48px, linear-gradient(90deg, rgba(242, 169, 59, .07) 1px, transparent 1px) 0 0 / 48px 48px;
   -webkit-mask-image: radial-gradient(90% 80% at 50% 50%, #000 40%, transparent); mask-image: radial-gradient(90% 80% at 50% 50%, #000 40%, transparent); }
@@ -424,7 +423,7 @@ html:lang(zh) .slot-blurb { height: auto; max-height: 8em; }
 /* =========================================================================
    05 SUIKOU — a real-sized phone, screens flowing inside (§7.6)
    ========================================================================= */
-.ch-suikou .pin { background: radial-gradient(42% 52% at 34% 54%, rgba(127, 182, 242, .2), transparent 70%), var(--bg); }
+.ch-suikou .pin { background: none; } /* r18: transparent, the wireframe scene shows through */
 .sk-rings { position: absolute; left: 34%; top: 54%; width: 0; height: 0; }
 .sk-rings i { position: absolute; left: 50%; top: 50%; border-radius: 50%; border: 1px solid rgba(127, 182, 242, .16); transform: translate(-50%, -50%) scale(calc(.9 + var(--ring, 0) * .14)); }
 .sk-rings i:nth-child(1) { width: 52vh; height: 52vh; } .sk-rings i:nth-child(2) { width: 74vh; height: 74vh; opacity: .75; }
@@ -485,7 +484,7 @@ html:lang(zh) .slot-blurb { height: auto; max-height: 8em; }
 /* =========================================================================
    07 XIAOYI — a venture shown as a book whose pages turn (§7.7, treatment A; r14B: venture labels)
    ========================================================================= */
-.ch-xiaoyi .pin { background: radial-gradient(55% 50% at 50% 0%, rgba(201, 138, 91, .2), transparent 70%), #080706; }
+.ch-xiaoyi .pin { background: none; } /* r18: transparent, the wireframe scene shows through */
 .xy-light { position: absolute; left: 50%; top: -10%; width: 70vw; height: 90vh; transform: translateX(-50%); background: conic-gradient(from 180deg at 50% 0%, transparent 160deg, rgba(255, 220, 180, .06) 175deg, rgba(255, 220, 180, .09) 180deg, rgba(255, 220, 180, .06) 185deg, transparent 200deg); pointer-events: none; }
 /* r8: one left column like every other chapter (the r5 three-column header put tagline and status on other edges) */
 .xy-slots { left: var(--pad-x); top: 50%; transform: translateY(-50%); width: min(28vw, 400px); }
@@ -525,7 +524,7 @@ html:lang(zh) .slot-blurb { height: auto; max-height: 8em; }
 /* =========================================================================
    06 TAOTAO — a wall of looping clips, at most 2 playing (§7.8)
    ========================================================================= */
-.ch-taotao .pin { background: radial-gradient(50% 50% at 70% 50%, rgba(255, 143, 163, .1), transparent 70%), var(--bg); }
+.ch-taotao .pin { background: none; } /* r18: transparent, the wireframe scene shows through */
 .tt-slots { left: var(--pad-x); top: 50%; transform: translateY(-50%); width: min(28vw, 400px); }
 .ch-taotao .slot-title { color: #fff1f3; }
 .tt-wall { position: absolute; right: var(--pad-x); top: calc(50% - 10px); transform: translateY(-50%); width: min(60vw, calc((100vh - var(--safe-b) - 170px) * 1.98)); display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
@@ -572,7 +571,7 @@ html:lang(zh) .slot-blurb { height: auto; max-height: 8em; }
    07 WILD LOUIS — self-introduction (r14): the slots sit left, vertically centred (as in TaoTao);
    the portrait fills the right half on a soft violet glow and grows in as the chapter arrives.
    ========================================================================= */
-.ch-wild .pin { background: radial-gradient(38% 62% at 70% 55%, rgba(185, 166, 255, .13), transparent 70%), #050507; }
+.ch-wild .pin { background: none; } /* r18: transparent, the wireframe scene shows through */
 .wl-slots { left: var(--pad-x); top: 50%; transform: translateY(-50%); width: min(34vw, 480px); }
 .ch-wild .slot-title { color: #f1edff; }
 .ch-wild .dr-soc { margin-top: 10px; }
@@ -870,7 +869,7 @@ html:lang(zh) .case-pmr { grid-template-columns: 5em minmax(0, 1fr); }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   [data-preset] { transform: none !important; clip-path: none !important; transition: opacity var(--dur-fast) linear !important; }
-  .cut, .rain { display: none; }
+  .cut { display: none; }
   .slot-title.glitching { animation: none; }
   .tt-art * { animation: none !important; }
   .av-window, .sk-phone { transform: none !important; }

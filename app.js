@@ -314,7 +314,7 @@
     catch (e) { el.classList.add("is-fallback"); return { setState() {}, dock() {}, destroy() {} }; }
   };
   const louisHero = mountLouis({ lines: 96, samples: 200, wave: true }, $("#louisHero"));
-  mountLouis({ lines: 100, samples: 200, bg: "#050507", colorA: [185, 166, 255], colorB: [150, 232, 255], sweater: [122, 166, 150] }, $("#louisWild"));
+  mountLouis({ lines: 100, samples: 200, bg: "#050507", colorA: [206, 208, 212], colorB: [244, 244, 242], sweater: [112, 114, 118] }, $("#louisWild"));
 
   /* ------------------------------------------------------------------ active chapter, glitch-cut */
   let active = null;
@@ -604,38 +604,6 @@
     $("#madeLogCount").textContent = log.length + (lang === "zh" ? " 条" : " entries");
   }
 
-  /* ------------------------------------------------------------------ hero glyph rain (hero only, §4.7) */
-  // r13: while the WebGL field (fx3d.js) runs, the rain stays hidden and idle
-  const fx3d = () => /^webgl/.test(document.documentElement.dataset.fx || "");
-  const rain = mod(() => {
-    const c = $("#rain"); if (!c || reduced) return { tick() {} };
-    const ctx = c.getContext("2d"); if (!ctx) return { tick() {} };
-    const glyphs = "01アイウエオカキクケコサシスセソ<>/{}[]#=+*ﾊﾐﾋｰｳｼﾅﾓﾆｻﾜﾂｵﾘｱﾎﾃﾏｹﾒｴｶｷﾑﾕﾗｾﾈｽﾀﾇﾍ".split("");
-    let cols = [], w = 0, h = 0, last = 0, on = true;
-    const fs = 14, monoFont = 'ui-monospace, Menlo, Consolas, "JetBrains Mono", "DejaVu Sans Mono", monospace';
-    function resize() {
-      const dpr = Math.min(2, devicePixelRatio || 1);
-      w = c.clientWidth; h = c.clientHeight; c.width = w * dpr; c.height = h * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      cols = Array.from({ length: Math.ceil(w / (fs * 1.6)) }, () => ({ y: Math.random() * h, v: 0.6 + Math.random() * 1.6, a: Math.random() }));
-    }
-    new IntersectionObserver(([e]) => { on = e.isIntersecting; }).observe(c);
-    addEventListener("resize", resize); resize();
-    addEventListener("fx:2d", resize);   // r13: the WebGL field dropped out (context lost) → the rain takes over
-    return {
-      tick(now) {
-        if (!on || fx3d() || now - last < 42) return; last = now;
-        ctx.fillStyle = "rgba(6,6,7,0.18)"; ctx.fillRect(0, 0, w, h);
-        ctx.font = `${fs}px ${monoFont}`;
-        cols.forEach((col, i) => {
-          const ch = glyphs[(Math.random() * glyphs.length) | 0];
-          ctx.fillStyle = `rgba(150,232,255,${0.12 + col.a * 0.25})`;
-          ctx.fillText(ch, i * fs * 1.6, col.y);
-          col.y += fs * col.v * 0.5; if (col.y > h + 20) { col.y = -20; col.a = Math.random(); }
-        });
-      }
-    };
-  }, { tick() {} });
-
   /* ------------------------------------------------------------------ footer voiceprint (Atomic nod) */
   const voice = mod(() => {
     const c = $("#voiceprint"), ctx = c && c.getContext("2d");
@@ -728,7 +696,6 @@
       }
       run("chapters", checkChapters);
       run("reel", reel);
-      run("rain", () => rain.tick(now));
       run("voice", () => voice.tick(now));
     }
   }
