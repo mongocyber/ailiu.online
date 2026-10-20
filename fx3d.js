@@ -486,6 +486,16 @@
         ctx.fillRect(X - z2 / 2, Y - z2 / 2, z2, z2);
       }
       ctx.globalAlpha = 1;
+      // fewer lines behind the hero copy here too: a soft elliptical erase where the copy sits in this (static) frame
+      var hc = document.querySelector(".hero-copy"), cr = hc && hc.getBoundingClientRect();
+      if (cr && cr.width && cr.bottom > 0) {
+        var rx = cr.width / 2 + 70, ry = cr.height / 2 + 60;
+        ctx.save(); ctx.translate(cr.left + cr.width / 2, cr.top + cr.height / 2); ctx.scale(1, ry / rx);
+        var gr = ctx.createRadialGradient(0, 0, 0, 0, 0, rx);
+        gr.addColorStop(0, "rgba(0,0,0,0.85)"); gr.addColorStop(0.55, "rgba(0,0,0,0.8)"); gr.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.globalCompositeOperation = "destination-out"; ctx.fillStyle = gr; ctx.fillRect(-rx, -rx, rx * 2, rx * 2);
+        ctx.restore(); ctx.globalCompositeOperation = "source-over";
+      }
       drawn = w;
     }
     c2.style.display = "block";
@@ -533,7 +543,7 @@
       "  vec2 p = gl_FragCoord.xy; float m = 1.0;",
       "  for (int i = 0; i < 4; i++) { vec2 d = max(uR[i].xy - p, p - uR[i].zw); m = min(m, mix(uDim, 1.0, smoothstep(-16.0, 72.0, max(d.x, d.y)))); }",
       // the hero copy: a soft ellipse, no edge to see
-      "  m = min(m, mix(0.16, 1.0, smoothstep(0.45, 1.25, length((p - uHC.xy) / uHC.zw))));",
+      "  m = min(m, mix(0.1, 1.0, smoothstep(0.5, 1.3, length((p - uHC.xy) / uHC.zw))));",
       // fewer lines as well as fainter ones: a share of the lines (by their random) drops out where m is low
       "  if (vR < (1.0 - m) * 0.8) discard;",
       "  float hd = length((p - uHole.xy) / uHole.zw); m *= mix(0.2, 1.0, smoothstep(0.55, 1.05, hd));",
@@ -580,8 +590,16 @@
     }
 
     var mx = 0, my = 0, dead = false, E = [0, 0, 0, 0, 0, 0, 0], lastMeasure = 0, hy = -1, hx = -1;
+    // a slow GPU on the high tier: if frames keep taking > 45 ms for 8 s, drop the reflection and glow passes (not when forced)
+    var lite = false, slowSince = 0, prevNow = 0, avgDt = 16;
     function frame(now) {
       if (dead) return;
+      if (HI && !lite && !q && prevNow) {
+        avgDt += (Math.min(500, now - prevNow) - avgDt) * 0.05;
+        if (avgDt > 45) { if (!slowSince) slowSince = now; else if (now - slowSince > 8000) { lite = true; root.setAttribute("data-fx-lite", "1"); } }
+        else slowSince = 0;
+      }
+      prevNow = now;
       try { draw(now || 0); } catch (e) { fail("error"); }
     }
     function draw(now) {
@@ -622,9 +640,9 @@
       var K = HI ? 0.5 : 0.6;
       gl.clear(gl.COLOR_BUFFER_BIT);
       bind(lb); gl.uniform1f(U.uPt, 0); gl.uniform1f(U.uMin, 0); gl.uniform2f(U.uOff, 0, 0);
-      if (HI) { gl.uniform1f(U.uMir, 1); gl.uniform1f(U.uK, K); gl.drawArrays(gl.LINES, 0, NV); }   // reflection
+      if (HI && !lite) { gl.uniform1f(U.uMir, 1); gl.uniform1f(U.uK, K); gl.drawArrays(gl.LINES, 0, NV); }   // reflection
       gl.uniform1f(U.uMir, 0); gl.uniform1f(U.uK, K); gl.drawArrays(gl.LINES, 0, NV);
-      if (HI) {
+      if (HI && !lite) {
         // restrained glow: only the main outlines, once more, a pixel and a bit off, faint
         gl.uniform1f(U.uMin, 0.72); gl.uniform1f(U.uK, K * 0.3);
         gl.uniform2f(U.uOff, 1.6 / c.width * dpr, -1.6 / c.height * dpr); gl.drawArrays(gl.LINES, 0, NV);
