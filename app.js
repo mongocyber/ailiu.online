@@ -40,6 +40,7 @@
     const ogt = $('meta[property="og:title"]'); if (ogt) ogt.content = meta.title;
     const ogl = $('meta[property="og:locale"]'); if (ogl) ogl.content = lang === "zh" ? "zh_CN" : "en_US";
     $$("[data-en]").forEach((el) => { el.textContent = el.dataset[lang] || el.dataset.en; });
+    $$("[data-alt-en]").forEach((el) => { el.alt = lang === "zh" ? el.dataset.altZh : el.dataset.altEn; });
     $$("[data-lang-opt]").forEach((el) => el.classList.toggle("on", el.dataset.langOpt === lang));
     fillSlots(); renderWork(); buildNav(); renderSound(); renderLog();
     measureAviso(); reelTxt = "";
@@ -515,27 +516,15 @@
   }
 
   /* ---- 05 Suikou */
-  const skTrack = $("#skTrack"), skCard = $("#skCard"), skDots = $$(".sk-dots i"), skPhone = $("#skPhone");
+  // r20: three prototype screenshots; the outer two drift against the middle one while the chapter scrolls
+  const skFigs = $$("#suikou .sk-fig");
   function suikou(p) {
     const pin = $("#suikou .pin");
     pin.style.setProperty("--ring", p.toFixed(3));
-    if (isMobile() || reduced) { skCard.style.setProperty("--cardr", "0deg"); return; }
-    const r = sstep(0, 0.2, p);
-    skPhone.style.setProperty("--prx", (10 * (1 - r)).toFixed(2) + "deg");
-    skPhone.style.setProperty("--pry", (-14 * (1 - r) + 4 * Math.sin(p * Math.PI)).toFixed(2) + "deg");
-    const raw = clamp((p - 0.22) / 0.62) * 2;
-    const i = Math.min(1, Math.floor(raw)), frac = raw - i;
-    const slide = Math.min(2, i + sstep(0.55, 0.9, frac));
-    skTrack.style.setProperty("--slide", slide.toFixed(3));
-    // pseudo-flip: tilt ≤18°, swap faces, settle (2.5D, never a 180° spin)
-    const k = clamp((raw - 1.05) / 0.35);
-    const ang = k < 0.5 ? 18 * k * 2 : -18 * (1 - k) * 2;
-    skCard.style.setProperty("--cardr", ang.toFixed(2) + "deg");
-    skCard.style.setProperty("--back", k < 0.5 ? 0 : 1);
-    const on = Math.round(slide);
-    skDots.forEach((d, j) => d.classList.toggle("on", j === on));
+    if (isMobile() || reduced) return;
+    const d = (p - 0.5) * 2;
+    skFigs.forEach((f, j) => f.style.setProperty("--sy", (d * [-18, 14, -26][j]).toFixed(1)));
   }
-  skCard.addEventListener("click", () => { if (isMobile() || reduced) skCard.style.setProperty("--back", skCard.style.getPropertyValue("--back") === "1" ? 0 : 1); });
 
   /* ---- 07 Xiaoyi */
   const xySpreads = $$(".xy-spread"), xyLeaf = $("#xyLeaf"), xyTabs = $$("#xyTabs li");
