@@ -3,6 +3,7 @@ then quantize it to a small PNG (louis-fallback.png, < 40KB). r18: rendered with
 r20: the background scanlines ended in a hard rectangle (most visible at the top); alpha is now feathered on all four sides.
 r20C: rendered from the 3D wireframe bust (WebGL, software GL in headless chromium) on a transparent background; the bust's
 own outline and bottom fade give the shape, so only the safety edge ramp is kept. Not the reference photo.
+r22: rendered from the procedural 3D bust (scripts/louis_bust.py); the box follows its 40 × 50 framing.
 Usage: python3 scripts/louis_fallback.py   (no server needed)"""
 import base64, io, pathlib
 from playwright.sync_api import sync_playwright
@@ -10,7 +11,7 @@ import numpy as np
 from PIL import Image
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-W, H = 300, 340   # css px of the host; rendered at DPR 2 and then quantized
+W, H = 300, 375   # css px of the host; rendered at DPR 2 and then quantized
 HTML = f"""<!doctype html><body style="margin:0;background:#060607">
 <div id="h" style="position:relative;width:{W}px;height:{H}px"></div>
 <script>{(ROOT / 'louis-data.js').read_text()}</script><script>{(ROOT / 'louis.js').read_text()}</script>
