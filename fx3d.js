@@ -412,6 +412,43 @@
     return { L: new Float32Array(A), P: new Float32Array(S) };
   }
 
+  /* ---------------------------------------------------------------- r24: relief (normal + convexity per line vertex) */
+  // The scene is lines only, so a surface normal is estimated from the model around each vertex: the mean of the line
+  // vertices in the 3 × 3 × 3 cells of G units around it. The offset from that mean points away from the mass (≈ the
+  // outward normal) and its length says how much of the mass lies to one side: large on an outer corner, a cornice, a
+  // column's arris or a dome's ring (convex, it stands out), small in an inner corner, a recess or between columns
+  // (concave, it sinks). Terrain (kind 1) faces up; stars and points are left alone.
+  // A = vertex array, stride floats per vertex (8) → Float32Array of nx ny nz k per vertex.
+  function relief(A, stride) {
+    var G = 1.4, n = A.length / stride, cells = new Map(), near = new Map(), out = new Float32Array(n * 4), i, o, c, dx, dy, dz;
+    var cell = function (o) { return [Math.floor(A[o] / G), Math.floor(A[o + 1] / G), Math.floor(A[o + 2] / G)]; };
+    var id = function (x, y, z) { return ((x + 1024) * 2048 + (y + 1024)) * 2048 + (z + 1024); };
+    for (i = 0; i < n; i++) {
+      o = i * stride; if (A[o + 7] !== 0) continue;
+      var g = cell(o), key = id(g[0], g[1], g[2]); c = cells.get(key);
+      if (!c) { c = [0, 0, 0, 0]; cells.set(key, c); }
+      c[0] += A[o]; c[1] += A[o + 1]; c[2] += A[o + 2]; c[3]++;
+    }
+    for (i = 0; i < n; i++) {
+      o = i * stride;
+      if (A[o + 7] !== 0) { out[i * 4 + 1] = 1; out[i * 4 + 3] = 0.5; continue; }
+      var q = cell(o), k = id(q[0], q[1], q[2]), m = near.get(k);
+      if (!m) {    // the 27-cell mean, once per occupied cell
+        m = [0, 0, 0, 0];
+        for (dx = -1; dx <= 1; dx++) for (dy = -1; dy <= 1; dy++) for (dz = -1; dz <= 1; dz++) {
+          c = cells.get(id(q[0] + dx, q[1] + dy, q[2] + dz));
+          if (c) { m[0] += c[0]; m[1] += c[1]; m[2] += c[2]; m[3] += c[3]; }
+        }
+        m = [m[0] / m[3], m[1] / m[3], m[2] / m[3]]; near.set(k, m);
+      }
+      var ox = A[o] - m[0], oy = A[o + 1] - m[1], oz = A[o + 2] - m[2], l = Math.hypot(ox, oy, oz);
+      if (l < 1e-3) { ox = 0; oy = 1; oz = 0; l = 1; }
+      out[i * 4] = ox / l; out[i * 4 + 1] = oy / l; out[i * 4 + 2] = oz / l;
+      out[i * 4 + 3] = Math.min(1, l / (0.9 * G));
+    }
+    return out;
+  }
+
   /* ---------------------------------------------------------------- camera path: one spline through the complex */
   // [eye xyz, look xyz, fog] at the start (A) and end (B) of each section: hero, 01–08, footer (route table: DESIGN-NOTES §19)
   var PATH = {
@@ -559,8 +596,8 @@
     if (!W) throw new Error("no clock");
 
     var VS = [
-      "attribute vec3 aP, aQ; attribute vec2 aM;",
-      "uniform mat4 uV, uP; uniform float uT, uFog, uMir, uMin, uPS; uniform vec4 uW, uWP; uniform vec2 uWS, uOff;",
+      "attribute vec3 aP, aQ; attribute vec2 aM; attribute vec4 aN;",
+      "uniform mat4 uV, uP; uniform float uT, uFog, uMir, uMin, uPS, uWt; uniform vec4 uW, uWP; uniform vec2 uWS, uOff;",
       "varying float vA, vR;",
       // FX_WAVE.at(x, u) — uW = freq, phase, bend, t · uWP = pointer x, u, k, aspect · uWS = scale × amp, scroll
       "float wave(vec2 p){ float s = 0.5 + 0.5 * sin(6.2832 * uW.x * p.y - uW.y + uW.z * sin(p.x * 5.0 + uW.w * 0.4));",
@@ -578,6 +615,14 @@
       "  float d = length(v.xyz);",
       "  float a = br * mix(exp(-d * uFog) * smoothstep(0.8, 4.0, d) * (1.0 - terr * smoothstep(30.0, 64.0, d)), 1.0, star);",
       "  a *= 1.0 + w * mix(0.25, 0.9, terr);",
+      // r24 relief: lines that stand out (convex: aN.w high), face the light or the camera, or are near are brighter (and,
+      // on the high tier, drawn again a pixel over: wider); recesses, inner corners and the far distance darker and finer
+      "  vec3 n = normalize(mat3(uV) * aN.xyz); float still = (1.0 - terr) * (1.0 - star) * step(k, 2.5);",
+      "  float key = 0.5 + 0.5 * dot(n, normalize(vec3(-0.45, 0.6, 0.65))), face = max(dot(n, normalize(-v.xyz)), 0.0);",
+      "  float near = smoothstep(46.0, 5.0, d);",
+      "  float pr = clamp(0.45 * aN.w + 0.3 * key + 0.15 * face + 0.35 * near - 0.25, 0.0, 1.0);",
+      "  a *= mix(1.0, mix(0.55, 1.35, pr), still);",
+      "  if (uWt > 0.5) a *= still * smoothstep(0.55, 0.85, pr) * smoothstep(0.35, 0.6, br);",
       "  a *= mix(1.0, 0.55 + 0.45 * sin(uT * (0.5 + aQ.y * 1.8) + aQ.y * 40.0), star);",
       "  a *= mix(1.0, 0.15 * exp(-h * 0.13) * step(0.02, h) * (1.0 - terr) * (1.0 - star), uMir);",
       "  vA = a * step(uMin, br); vR = aQ.y;",
@@ -617,13 +662,23 @@
     gl.useProgram(pr);
 
     var M = build(!HI), NV = M.L.length / 8, NP = M.P.length / 8;
-    var lb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, lb); gl.bufferData(gl.ARRAY_BUFFER, M.L, gl.STATIC_DRAW);
-    var pb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, pb); gl.bufferData(gl.ARRAY_BUFFER, M.P, gl.STATIC_DRAW);
-    var loc = [["aP", 3, 0], ["aQ", 3, 12], ["aM", 2, 24]].map(function (s) { var l = gl.getAttribLocation(pr, s[0]); gl.enableVertexAttribArray(l); return [l, s[1], s[2]]; });
-    function bind(buf) { gl.bindBuffer(gl.ARRAY_BUFFER, buf); loc.forEach(function (s) { gl.vertexAttribPointer(s[0], s[1], gl.FLOAT, false, 32, s[2]); }); }
+    // r24: each vertex gains its relief (normal, convexity): 8 → 12 floats; the points get a neutral one
+    var widen = function (A, R) {
+      var n = A.length / 8, B = new Float32Array(n * 12), i, j;
+      for (i = 0; i < n; i++) {
+        for (j = 0; j < 8; j++) B[i * 12 + j] = A[i * 8 + j];
+        if (R) for (j = 0; j < 4; j++) B[i * 12 + 8 + j] = R[i * 4 + j];
+        else { B[i * 12 + 9] = 1; B[i * 12 + 11] = 0.5; }
+      }
+      return B;
+    };
+    var lb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, lb); gl.bufferData(gl.ARRAY_BUFFER, widen(M.L, relief(M.L, 8)), gl.STATIC_DRAW);
+    var pb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, pb); gl.bufferData(gl.ARRAY_BUFFER, widen(M.P, null), gl.STATIC_DRAW);
+    var loc = [["aP", 3, 0], ["aQ", 3, 12], ["aM", 2, 24], ["aN", 4, 32]].map(function (s) { var l = gl.getAttribLocation(pr, s[0]); gl.enableVertexAttribArray(l); return [l, s[1], s[2]]; });
+    function bind(buf) { gl.bindBuffer(gl.ARRAY_BUFFER, buf); loc.forEach(function (s) { gl.vertexAttribPointer(s[0], s[1], gl.FLOAT, false, 48, s[2]); }); }
     root.setAttribute("data-fx-verts", String(NV + NP));
     M = null;
-    var U = {}; ["uV", "uP", "uT", "uFog", "uMir", "uMin", "uPS", "uW", "uWP", "uWS", "uOff", "uK", "uDim", "uPt", "uR", "uHole", "uHC"].forEach(function (n) { U[n] = gl.getUniformLocation(pr, n); });
+    var U = {}; ["uV", "uP", "uT", "uFog", "uMir", "uMin", "uPS", "uW", "uWP", "uWS", "uOff", "uK", "uDim", "uPt", "uR", "uHole", "uHC", "uWt"].forEach(function (n) { U[n] = gl.getUniformLocation(pr, n); });
     gl.disable(gl.DEPTH_TEST); gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE);
     gl.clearColor(0, 0, 0, 0);
 
@@ -695,10 +750,11 @@
       if (HI && !lite) { gl.uniform1f(U.uMir, 1); gl.uniform1f(U.uK, K); gl.drawArrays(gl.LINES, 0, NV); }   // reflection
       gl.uniform1f(U.uMir, 0); gl.uniform1f(U.uK, K); gl.drawArrays(gl.LINES, 0, NV);
       if (HI && !lite) {
-        // restrained glow: only the main outlines, once more, a pixel and a bit off, faint
-        gl.uniform1f(U.uMin, 0.72); gl.uniform1f(U.uK, K * 0.3);
-        gl.uniform2f(U.uOff, 1.6 / c.width * dpr, -1.6 / c.height * dpr); gl.drawArrays(gl.LINES, 0, NV);
-        gl.uniform1f(U.uMin, 0); gl.uniform2f(U.uOff, 0, 0);
+        // r24: the weight pass (was r19's glow): the prominent lines — main members that stand out, face the light and
+        // are near — once more, a pixel over, so they read wider; the recessed and far ones stay a hairline
+        gl.uniform1f(U.uWt, 1); gl.uniform1f(U.uK, K * 0.6);
+        gl.uniform2f(U.uOff, 1.1 / c.width * dpr, -1.1 / c.height * dpr); gl.drawArrays(gl.LINES, 0, NV);
+        gl.uniform1f(U.uWt, 0); gl.uniform2f(U.uOff, 0, 0);
       }
       bind(pb); gl.uniform1f(U.uPt, 1); gl.uniform1f(U.uPS, dpr); gl.uniform1f(U.uK, HI ? 0.9 : 1);
       gl.drawArrays(gl.POINTS, 0, NP);
