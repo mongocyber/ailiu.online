@@ -6,6 +6,7 @@ own outline and bottom fade give the shape, so only the safety edge ramp is kept
 r22: rendered from the procedural 3D bust; the box follows its 40 × 50 framing.
 r23: rendered from the Hunyuan3D-2.1 model (scripts/louis_glb.py); the box follows its 30 × 37.5 framing (same aspect).
 r24: rendered from the contour + meridian lines (scripts/louis_contours.py).
+r25: re-rendered from the denser face grid, with the silhouette and the bottom fade.
 Usage: python3 scripts/louis_fallback.py   (no server needed)"""
 import base64, io, pathlib
 from playwright.sync_api import sync_playwright

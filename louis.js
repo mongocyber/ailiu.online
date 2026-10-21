@@ -6,6 +6,10 @@
    stands out toward the camera, faces the key light or is a ridge (nose, brow, lips, cheekbones, the near shoulder) is
    brighter and wider; hollows (sockets, lid creases, mouth corners), the far side and the back fade darker and finer.
    No triangle edges and no vertex points any more (r23). The low tier draws every second contour and meridian at 30fps.
+   r25: likeness back (r24 read as a generic mannequin): the grid is about twice as dense across the face (contours ×4
+   between chin and brow, meridians ×3 toward the front), the per-point cavity adds a mid-scale term on the face, so the
+   lids, brows, lip line, nostrils and philtrum show in the lines' brightness, and the silhouette of the face, jaw and ears
+   is drawn from the body's edges. Below the neck the bust fades out by height (no pointed base).
    It turns up to ±25° toward the cursor and breathes slowly; reduced motion → one static frame.
    WebGL missing / failing / context lost → .is-fallback (louis-fallback.png, rendered from this model).
    History: r11 scanline portrait (INSTRUCTIONS §4.2 option A).
@@ -87,6 +91,50 @@
       do { c = fb[o++]; d |= (c & 127) << sh; sh += 7; } while (c & 128);
       BF[k] = hw - d; if (d === 0) hw++;
     }
+    // r25: vertex normals of the body; the depth-writing fill is shrunk 0.3 cm along them (so it never covers a line in a
+    // hollow), the unshrunk body gives the feature / silhouette edges
+    const FN = new Float32Array(B.nf * 3), VN = new Float32Array(B.nv * 3);
+    for (let t = 0; t < B.nf; t++) {
+      const a = BF[t * 3] * 3, b = BF[t * 3 + 1] * 3, c = BF[t * 3 + 2] * 3;
+      const ux = BP[b] - BP[a], uy = BP[b + 1] - BP[a + 1], uz = BP[b + 2] - BP[a + 2];
+      const vx = BP[c] - BP[a], vy = BP[c + 1] - BP[a + 1], vz = BP[c + 2] - BP[a + 2];
+      const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx, nl_ = Math.hypot(nx, ny, nz) || 1;
+      FN[t * 3] = nx / nl_; FN[t * 3 + 1] = ny / nl_; FN[t * 3 + 2] = nz / nl_;
+      for (const v of [a, b, c]) { VN[v] += nx; VN[v + 1] += ny; VN[v + 2] += nz; }
+    }
+    const BS = new Float32Array(B.nv * 3);
+    for (let i = 0; i < B.nv; i++) {
+      const l_ = Math.hypot(VN[i * 3], VN[i * 3 + 1], VN[i * 3 + 2]) || 1;
+      for (let k = 0; k < 3; k++) { VN[i * 3 + k] /= l_; BS[i * 3 + k] = BP[i * 3 + k] - 0.3 * VN[i * 3 + k]; }
+    }
+    // r25: the silhouette edges — every body edge around the face, jaw and ears, with its two faces' normals (the shader
+    // keeps it where one face turns toward the eye and the other away: the jaw, cheek and ear outline). Six vertices per edge
+    // as the lines' quads: P · other · vertex normal · [side, 0, y, end] · face normal 1 · face normal 2 · region weight
+    const em = new Map(), EG = [];
+    for (let t = 0; t < B.nf; t++) for (let e = 0; e < 3; e++) {
+      const i = BF[t * 3 + e], j = BF[t * 3 + (e + 1) % 3], key = i < j ? i * 65536 + j : j * 65536 + i;
+      const f = em.get(key); if (f === undefined) em.set(key, t); else if (f >= 0) { EG.push([Math.min(i, j), Math.max(i, j), f, t]); em.set(key, -1); }
+    }
+    const reg = (i) => {      // the face, jaw and ears: an ellipsoid about the face's centre, the front half, below the brow
+      const x = BP[i * 3] / 9.5, y = (BP[i * 3 + 1] - D.pivot[1] + 0.5) / 11.5, z = BP[i * 3 + 2];
+      return Math.exp(-2.2 * Math.max(0, x * x + y * y - 0.35)) * Math.min(1, Math.max(0, (z + 3) / 3)) *
+        Math.min(1, Math.max(0, (D.pivot[1] + 5 - BP[i * 3 + 1]) / 2));
+    };
+    const ED = [];
+    for (const [i, j, f1, f2] of EG) {
+      const g = Math.min(reg(i), reg(j)); if (g < 0.04 || (low && g < 0.2)) continue;
+      ED.push([i, j, f1, f2, 0, g]);
+    }
+    const E = new Float32Array(ED.length * 6 * 20);
+    let ke = 0;
+    const pe = (a, b, g, end, f1, f2, feat, rg) => {
+      E.set([BP[a * 3], BP[a * 3 + 1], BP[a * 3 + 2], BP[b * 3], BP[b * 3 + 1], BP[b * 3 + 2], VN[a * 3], VN[a * 3 + 1], VN[a * 3 + 2],
+        g * end, feat, BP[a * 3 + 1], end, FN[f1 * 3], FN[f1 * 3 + 1], FN[f1 * 3 + 2], FN[f2 * 3], FN[f2 * 3 + 1], FN[f2 * 3 + 2], rg], ke); ke += 20;
+    };
+    for (const [i, j, f1, f2, feat, g] of ED) {
+      pe(i, j, -1, 1, f1, f2, feat, g); pe(i, j, 1, 1, f1, f2, feat, g); pe(j, i, 1, -1, f1, f2, feat, g);
+      pe(i, j, -1, 1, f1, f2, feat, g); pe(j, i, 1, -1, f1, f2, feat, g); pe(j, i, -1, -1, f1, f2, feat, g);
+    }
     // the lines
     const lb = b64(D.lines), q = D.q;
     let o = 0;
@@ -133,12 +181,15 @@
       put(A, Bq, -1, 1); put(A, Bq, 1, 1); put(Bq, A, 1, -1);
       put(A, Bq, -1, 1); put(Bq, A, 1, -1); put(Bq, A, -1, -1);
     }
-    MESH[tier] = { BP, BF, L, nl, np, ns: segs.length, ybot: D.ybot, pivot: D.pivot };
+    MESH[tier] = { BP: BS, BF, L, E, ne: ED.length, nl, np, ns: segs.length, ybot: D.ybot, pivot: D.pivot };
     return MESH[tier];
   }
 
   // framing (cm): the portrait box spans x ±BW/2 and y Y0 .. Y0 + BH; the bust is bottom-aligned in the host
   const BW = 30, Y0 = -7.5, BH = 37.5, AY = BH / BW;
+  // r25: the grid's and the silhouette's gain (the denser face grid needs less than r24's 0.5; on the low tier's sparser
+  // grid a full-strength silhouette reads as a mask's outline)
+  const LK = 0.4, EK = { high: 0.5, low: 0.28 };
   // the hairline at the front, in cm above the base (the crop is 9 cm deeper at the back of the head, down to the nape)
   const HAIR = 28.4;
   const WAVE = [
@@ -147,18 +198,22 @@
     "  vec2 d = vec2((p.x - uWP.x) * uWP.w, p.y - uWP.y); float b = uWP.z * exp(-dot(d, d) / 0.01);",
     "  return uWS.x * ((1.0 + 0.6 * uWS.y) * s * s * s + 0.7 * b); }"
   ];
+  // r25: below the neck the bust fades out by height (cm, model y): whole above FADE[1] (just under the chin), gone at
+  // FADE[0] (the upper chest), eased at both ends — the shoulders and chest dissolve instead of ending in a pointed base
+  const FADE = [-1.5, 6.5];
+  const FADEF = "float fade(float y){ float t = smoothstep(" + FADE[0].toFixed(1) + ", " + FADE[1].toFixed(1) + ", y); return t * t * (2.0 - t); }";
   // the body: a near-black surface (alpha only) that writes depth and hides the scene behind, as a solid would
   const BVS = [
-    "attribute vec3 aP; uniform mat4 uM, uP; uniform float uYb, uXf; varying float vA;",
+    "attribute vec3 aP; uniform mat4 uM, uP; uniform float uYb, uXf; varying float vA;", FADEF,
     "void main(){ vec4 c = uP * (uM * vec4(aP, 1.0)); gl_Position = c;",
-    "  vA = 0.94 * smoothstep(uYb + 0.5, uYb + 8.0, aP.y) * (1.0 - smoothstep(uXf * 0.8, uXf, abs(c.x / max(c.w, 1e-4)))); }"
+    "  vA = 0.94 * fade(aP.y) * (1.0 - smoothstep(uXf * 0.8, uXf, abs(c.x / max(c.w, 1e-4)))); }"
   ].join("\n");
   const BFS = "precision mediump float; varying float vA; void main(){ gl_FragColor = vec4(0.0, 0.0, 0.0, vA); }";
   const VS = [
     "attribute vec3 aP, aO, aN; attribute vec4 aM;",
     "uniform mat4 uM, uP; uniform mat3 uR; uniform vec4 uW, uWP, uBox; uniform vec2 uWS, uPx; uniform float uWave, uYc, uXf, uYb, uDpr;",
     "varying float vA, vS, vW;"
-  ].concat(WAVE, [
+  ].concat(WAVE, FADEF, [
     "vec2 scr(vec4 c){ return c.xy / c.w * uPx; }",
     "void main(){",
     "  vec3 n = normalize(uR * aN);",
@@ -181,7 +236,7 @@
     "  float face = smoothstep(-0.2, 0.25, nv);",       // lines seen through at the silhouette fade out
     "  float a = (pow(lit * cv * alb, 1.25) * mix(0.42, 1.12, near) + 0.85 * rim * mix(0.6, 1.0, near)) * face;",
     "  a *= 1.0 + w * 0.7;",
-    "  float base = smoothstep(uYb + 0.5, uYb + 8.0, aM.z);",
+    "  float base = fade(aM.z);",
     "  float side = 1.0 - smoothstep(uXf * 0.8, uXf, abs(c.x / max(c.w, 1e-4)));",
     "  vA = a * base * side;",
     // width (css px): from depth, light and ridge, finer in hollows and toward the silhouette
@@ -192,6 +247,35 @@
     "  vec2 off = vec2(-d.y, d.x) * aM.x * gw * 0.5;",
     "  vS = aM.x * aM.w;",                                // the side across the line, the same at both ends
     "  gl_Position = p; gl_Position.xy += off / uPx * p.w;",
+    "}"
+  ]).join("\n");
+  // r25: the silhouette (body edges near the face, jaw and ears with one face toward the eye and the other away), drawn as
+  // quads like the lines: the jaw, cheek and ear outline. (Tried and dropped: a faint triangle layer and dihedral feature
+  // edges from the same body — at ~7k faces they make stray sticks at the mouth and muddy the grid; DESIGN-NOTES §25.)
+  const EVS = [
+    "attribute vec3 aP, aO, aN, aF1, aF2; attribute vec4 aM; attribute float aG;",
+    "uniform mat4 uM, uP; uniform mat3 uR; uniform vec4 uW, uWP, uBox; uniform vec2 uWS, uPx; uniform float uWave, uYc, uXf, uYb, uDpr;",
+    "varying float vA, vS, vW;"
+  ].concat(WAVE, FADEF, [
+    "vec2 scr(vec4 c){ return c.xy / c.w * uPx; }",
+    "void main(){",
+    "  vec4 e = uM * vec4(aP, 1.0), c = uP * e; float w = 0.0;",
+    "  if (uWave > 0.5 && c.w > 0.0) { vec2 s = vec2(0.5 + 0.5 * c.x / c.w, 0.5 - 0.5 * c.y / c.w); w = wave(vec2(uBox.x + s.x * uBox.y, uBox.z + s.y * uBox.w)); }",
+    "  vec4 p = uP * (uM * vec4(aP + aN * w * 0.22, 1.0)), q = uP * (uM * vec4(aO + aN * w * 0.22, 1.0));",
+    "  vec3 vd = normalize(-e.xyz), n1 = uR * aF1, n2 = uR * aF2;",
+    "  float d1 = dot(n1, vd), d2 = dot(n2, vd);",
+    "  float sil = (d1 * d2 < 0.0) ? 1.0 : 0.0;",
+    "  float near = smoothstep(-9.0, 9.0, e.z - uYc);",
+    "  float a = aG * sil * 0.9 * mix(0.5, 1.1, near);",
+    "  a *= 1.0 + w * 0.7;",
+    "  float base = fade(aM.z);",
+    "  float side = 1.0 - smoothstep(uXf * 0.8, uXf, abs(c.x / max(c.w, 1e-4)));",
+    "  vA = a * base * side;",
+    "  float wd = 1.1 * uDpr; vW = wd;",
+    "  float gw = max(wd, 1.0) + 2.0;",
+    "  vec2 d = scr(q) - scr(p); d = length(d) > 1e-4 ? normalize(d) : vec2(1.0, 0.0);",
+    "  vS = aM.x * aM.w;",
+    "  gl_Position = p; gl_Position.xy += vec2(-d.y, d.x) * aM.x * gw * 0.5 / uPx * p.w;",
     "}"
   ]).join("\n");
   const FS = [
@@ -271,14 +355,16 @@
       this.body = prog(BVS, BFS, ["aP"], ["uM", "uP", "uYb", "uXf"]);
       this.line = prog(VS, FS, ["aP", "aO", "aN", "aM"],
         ["uM", "uP", "uR", "uW", "uWP", "uBox", "uWS", "uPx", "uWave", "uYc", "uXf", "uYb", "uDpr", "uK"]);
+      this.edge = prog(EVS, FS, ["aP", "aO", "aN", "aM", "aF1", "aF2", "aG"],
+        ["uM", "uP", "uR", "uW", "uWP", "uBox", "uWS", "uPx", "uWave", "uYc", "uXf", "uYb", "uDpr", "uK"]);
       const M = mesh(step);
       this.AY = AY; this.tier = step;
       const buf = (a) => { const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, a, gl.STATIC_DRAW); return b; };
-      this.vb = buf(M.BP); this.eb = buf(M.L); this.nq = M.ns * 6;
+      this.vb = buf(M.BP); this.eb = buf(M.L); this.nq = M.ns * 6; this.fb = buf(M.E); this.ne = M.ne * 6;
       this.tb = gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.tb); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, M.BF, gl.STATIC_DRAW);
       this.nt = M.BF.length;
       this.pivot = M.pivot; this.ybot = M.ybot;
-      this.count = { verts: M.np, lines: M.nl, segments: M.ns, body: M.BF.length / 3 };
+      this.count = { verts: M.np, lines: M.nl, segments: M.ns, body: M.BF.length / 3, edges: M.ne };
       gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL);
       gl.enable(gl.BLEND);
       gl.clearColor(0, 0, 0, 0);
@@ -359,31 +445,44 @@
       let P = this.body, U = P.U;
       gl.useProgram(P.pr);
       gl.uniformMatrix4fv(U.uM, false, MV); gl.uniformMatrix4fv(U.uP, false, PM); gl.uniform1f(U.uXf, xf); gl.uniform1f(U.uYb, this.ybot);
-      for (let l = 1; l < 4; l++) if (this.line.loc[l] >= 0) gl.disableVertexAttribArray(this.line.loc[l]);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.vb); gl.enableVertexAttribArray(P.loc[0]); gl.vertexAttribPointer(P.loc[0], 3, gl.FLOAT, false, 12, 0);
       gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(1, 2); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.tb); gl.drawElements(gl.TRIANGLES, this.nt, gl.UNSIGNED_SHORT, 0);
       gl.disable(gl.POLYGON_OFFSET_FILL);
-      // 2 · the contours and meridians, each segment a quad as wide as its light (no vertex points any more)
-      P = this.line; U = P.U;
-      gl.useProgram(P.pr);
-      gl.uniformMatrix4fv(U.uM, false, MV); gl.uniformMatrix4fv(U.uP, false, PM); gl.uniformMatrix3fv(U.uR, false, R);
-      gl.uniform1f(U.uYc, -DIST); gl.uniform1f(U.uXf, xf); gl.uniform1f(U.uYb, this.ybot);
-      gl.uniform2f(U.uPx, this.c.width / 2, this.c.height / 2); gl.uniform1f(U.uDpr, this.dpr);
-      // r17: the shared wave, at this canvas's place inside the field's frame (hero portrait only)
+      // 2 · the contours and meridians, each segment a quad as wide as its light (no vertex points any more);
+      // 3 · r25: the silhouette of the face, jaw and ears, with the same uniforms
       const waving = o.wave && W.on && !this.reduced && W.box && W.box.width > 0;
-      gl.uniform1f(U.uWave, waving ? 1 : 0);
-      if (waving) {
-        const hr = this.el.getBoundingClientRect(), B = W.box;
-        gl.uniform4f(U.uBox, (hr.left - B.left) / B.width, hr.width / B.width, (hr.top - B.top) / B.height, hr.height / B.height);
-        gl.uniform4f(U.uW, W.freq, W.phase, W.bend, W.t); gl.uniform4f(U.uWP, W.pointer.x, W.pointer.y, W.pointer.k, W.aspect);
-        gl.uniform2f(U.uWS, W.scale * W.amp, W.scroll);
-      }
-      gl.uniform1f(U.uK, o.gain * (this.tier === "high" ? 0.5 : 0.5));
+      const hr = waving && this.el.getBoundingClientRect(), Bx = W.box;
+      const common = (U) => {
+        gl.uniformMatrix4fv(U.uM, false, MV); gl.uniformMatrix4fv(U.uP, false, PM); gl.uniformMatrix3fv(U.uR, false, R);
+        gl.uniform1f(U.uYc, -DIST); gl.uniform1f(U.uXf, xf); gl.uniform1f(U.uYb, this.ybot);
+        gl.uniform2f(U.uPx, this.c.width / 2, this.c.height / 2); gl.uniform1f(U.uDpr, this.dpr);
+        // r17: the shared wave, at this canvas's place inside the field's frame (hero portrait only)
+        gl.uniform1f(U.uWave, waving ? 1 : 0);
+        if (waving) {
+          gl.uniform4f(U.uBox, (hr.left - Bx.left) / Bx.width, hr.width / Bx.width, (hr.top - Bx.top) / Bx.height, hr.height / Bx.height);
+          gl.uniform4f(U.uW, W.freq, W.phase, W.bend, W.t); gl.uniform4f(U.uWP, W.pointer.x, W.pointer.y, W.pointer.k, W.aspect);
+          gl.uniform2f(U.uWS, W.scale * W.amp, W.scroll);
+        }
+      };
+      gl.depthMask(false); gl.blendFunc(gl.ONE, gl.ONE);
+      P = this.line; U = P.U;
+      gl.useProgram(P.pr); common(U);
+      gl.uniform1f(U.uK, o.gain * LK);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.eb);
       P.loc.forEach((l, k) => { gl.enableVertexAttribArray(l); gl.vertexAttribPointer(l, k < 3 ? 3 : 4, gl.FLOAT, false, 52, k * 12); });
-      gl.depthMask(false); gl.blendFunc(gl.ONE, gl.ONE);
       gl.drawArrays(gl.TRIANGLES, 0, this.nq);
+      P.loc.forEach((l) => gl.disableVertexAttribArray(l));
+      if (this.ne) {
+        P = this.edge; U = P.U;
+        gl.useProgram(P.pr); common(U);
+        gl.uniform1f(U.uK, o.gain * EK[this.tier]);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.fb);
+        const off = [0, 12, 24, 36, 52, 64, 76], sz = [3, 3, 3, 4, 3, 3, 1];
+        P.loc.forEach((l, k) => { if (l < 0) return; gl.enableVertexAttribArray(l); gl.vertexAttribPointer(l, sz[k], gl.FLOAT, false, 80, off[k]); });
+        gl.drawArrays(gl.TRIANGLES, 0, this.ne);
+        P.loc.forEach((l) => { if (l >= 0) gl.disableVertexAttribArray(l); });
+      }
       gl.depthMask(true);
     }
   }
