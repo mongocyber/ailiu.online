@@ -13,10 +13,11 @@
 window.MANIFEST = {
   version: 1,
   narrationScope: "home-all-sections",
+  // r26: hero title and meta carry the one self-introduction ("I'm Louis, a UX designer").
   // r12: page title + meta description (index.html carries the English pair for crawlers; app.js swaps on language)
   meta: {
-    zh: { title: "ailiu.online · 做软件和 AI 工具的体验设计", description: "软件 UX 体验设计，眼下主要做 AI 工具：我工作里的设计案例，和业余做的东西。" },
-    en: { title: "ailiu.online · UX designer for software and AI tools", description: "UX design for software, these days mostly AI tools: my design work, and the things I build on the side." }
+    zh: { title: "ailiu.online · 路易斯（Louis），UX 设计师", description: "我是路易斯（Louis），一名 UX 设计师。这里有我工作里的设计案例，和业余做的东西。" },
+    en: { title: "ailiu.online · Louis, UX designer", description: "I'm Louis, a UX designer. Here is my design work, and the things I make on the side." }
   },
   persona: {
     draft: true,
@@ -197,34 +198,38 @@ window.MANIFEST = {
   },
   projects: [
     {
-      key: "aviso", order: 10, type: "product", status: "in-development",
+      key: "aviso", order: 10, type: "product", status: "live",
       title: { zh: "Aviso", en: "Aviso" },
       tagline: { zh: "在任意网页划词，原地问 AI", en: "Select text on any page, ask AI in place" },
       blurb: {
         zh: "Chrome 扩展：在任意网页划选文字，原地提问，不用离开当前页面。",
         en: "A Chrome extension: highlight text on any page and ask about it without leaving the tab."
       },
-      statusLabel: { zh: "开发中", en: "In development" },
+      statusLabel: { zh: "已上线", en: "Live" },
       treatment: { id: "aviso-browser-depth", choreographyId: "aviso.browser-depth.v1" },
       transition: { enter: "depth-rise", exit: "fade-through" },
       stageHeightVh: 200,
       narration: [{ id: "aviso-1", subtitle: {
         zh: "Aviso 是我做的浏览器扩展：划一段字，答案就出现在旁边。",
         en: "Aviso is my browser extension: highlight a passage and the answer appears beside it." } }],
-      links: [{ label: { zh: "打开 Aviso", en: "Open Aviso" }, href: "https://aviso-nine.vercel.app" }],
+      links: [{ label: { zh: "Aviso 官网", en: "Aviso website" }, href: "https://aviso-nine.vercel.app/" }],
       draft: {
         label: { zh: "草稿", en: "Draft" },
         blurb: {
-          zh: "为了不离开当前页面就能问 AI，我做了这个 Chrome 扩展。划词或右键，就在原页面里解释、翻译、润色、总结，也能说明图片；用你自己的模型 API Key。",
-          en: "I built this Chrome extension so I could ask AI without leaving the page. Select text or right-click to explain, translate, polish or summarize it in place, or describe an image, with your own model API key."
+          zh: "为了不离开当前页面就能问 AI，我做了这个 Chrome 扩展。划词或右键，就在原页面里解释、翻译、润色、总结，也能说明图片。Aviso Lite 已上线：没有后端，不收费，用你自己的模型 API Key。",
+          en: "I built this Chrome extension so I could ask AI without leaving the page. Select text or right-click to explain, translate, polish or summarize it in place, or describe an image. Aviso Lite is live: no backend, no fees, your own model API key."
         },
-        statusLabel: { zh: "开发中 · 精简版待发布", en: "In development · lite build coming" },
-        statusClass: "is-dev",
-        note: { zh: "安装：下载 zip，解压，在 Chrome 里选「加载已解压的扩展程序」。", en: "To install: download the zip, unzip it, then choose “Load unpacked” in Chrome." },
+        statusLabel: { zh: "已上线", en: "Live" },
+        // r26: Aviso Lite 0.1.0 (MV3). Website = the old site's live link (verified 200); the zip ships with the site.
         links: [
-          { label: { zh: "下载 zip", en: "Download zip" }, href: null, state: "tbd" },
-          { label: { zh: "官网", en: "Website" }, href: null, state: "confirm" }
-        ]
+          { label: { zh: "Aviso 官网", en: "Aviso website" }, href: "https://aviso-nine.vercel.app/", state: "ok" },
+          { label: { zh: "下载 Aviso Lite（zip）", en: "Download Aviso Lite (zip)" }, href: "downloads/aviso-lite.zip", state: "ok", download: true }
+        ],
+        steps: {
+          title: { zh: "安装", en: "Install" },
+          zh: ["解压下载的 zip", "在 Chrome 打开 chrome://extensions", "打开右上角的「开发者模式」", "点「加载已解压的扩展程序」，选 aviso-lite-0.1.0 文件夹", "在 Aviso 的设置里填你自己的模型 API Key"],
+          en: ["Unzip the download", "Open chrome://extensions in Chrome", "Turn on Developer mode (top right)", "Click “Load unpacked” and choose the aviso-lite-0.1.0 folder", "In Aviso’s settings, add your own model API key"]
+        }
       },
       aiGenerated: false, disclosure: null, mobileFallback: "flat-window"
     },
@@ -407,11 +412,11 @@ window.MANIFEST = {
       key: "wild-louis", order: 80, type: "virtual", status: "self",
       title: { zh: "野生路易斯", en: "Wild Louis" },
       // r14: Wild Louis and this site are two separate projects (the site's content comes from Wild Louis).
-      // The chapter is Wild Louis introducing himself, first person, plus his social channels; the build log lives in the footer.
-      tagline: { zh: "设计师，爱试新鲜东西", en: "A designer who likes trying new things" },
+      // The chapter is Wild Louis's channel, first person, plus his social channels. r26: no second self-introduction (the hero has it).
+      tagline: { zh: "试新鲜东西，做了就分享", en: "Trying new things, sharing what I make" },
       blurb: {
-        zh: "我是一名设计师，喜欢尝试各种新鲜东西。",
-        en: "I'm a designer who likes trying new things."
+        zh: "看到新鲜东西就想试试，做出来就分享。",
+        en: "When something new comes along I try it, and share what I make."
       },
       statusLabel: { zh: "进行中", en: "Ongoing" },
       treatment: { id: "wild-louis-portrait", choreographyId: "wildlouis.portrait.v1" },
@@ -423,10 +428,10 @@ window.MANIFEST = {
       links: [],
       draft: {
         label: { zh: "草稿", en: "Draft" },
-        tagline: { zh: "设计师，爱试新鲜东西", en: "A designer who likes trying new things" },
+        tagline: { zh: "试新鲜东西，做了就分享", en: "Trying new things, sharing what I make" },
         blurb: {
-          zh: "我是一名设计师，喜欢尝试各种新鲜东西。做了什么就分享出来，也聊聊想法和见解。我做过的东西，都收在我的网站 ailiu.online。",
-          en: "I'm a designer, and I like trying new things. Whatever I make, I share, along with my thoughts and takes. My site, ailiu.online, is where the things I've made live. Come have a look."
+          zh: "看到新鲜东西就想试试，做出来就分享，也聊聊想法和见解。我做过的东西，都收在 ailiu.online。",
+          en: "When something new comes along I try it, share what I make, and talk through what I think. Everything I've made lives at ailiu.online. Come have a look."
         },
         statusLabel: { zh: "进行中 · 持续分享", en: "Ongoing · still sharing" },
         statusClass: "is-ai",

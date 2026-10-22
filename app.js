@@ -278,6 +278,7 @@
     const links = V(p, "links") || [];
     const cta = links.find((x) => x.href && (!x.state || x.state === "ok"));
     const items = links.filter((x) => x !== cta).map((x) => {
+      if (x.state === "ok" && x.href && x.download) return `<a class="dr-link dr-dl" href="${x.href}" download>${esc(L(x.label))}</a>`;
       if (x.state === "ok" && x.href) return `<a class="dr-link" href="${x.href}" target="_blank" rel="noopener">${esc(L(x.label))}</a>`;
       if (x.state === "text") return `<span class="dr-text">${esc(L(x.label))}</span>`;
       const t = LINK_TAG[x.state] || LINK_TAG.tbd;
@@ -287,7 +288,9 @@
     const soc = d.socials ? `<ul class="dr-soc" aria-label="${T("社交平台（待补）", "Social platforms (TBD)")}">` + d.socials.map((x) =>
       `<li aria-disabled="true"><i aria-hidden="true">${x.glyph}</i><span>${esc(L(x.label))}</span><em>${T("待补", "TBD")}</em></li>`).join("") + "</ul>" : "";
     row.innerHTML = (p.draft ? `<span class="dr-chip" title="${T("内容草稿，尚未定稿", "Draft copy, not final yet")}">${esc(L(d.label))}</span>` : "") + ai + items.join("") +
-      (d.note ? `<p class="dr-note">${esc(L(d.note))}</p>` : "") + soc;
+      (d.note ? `<p class="dr-note">${esc(L(d.note))}</p>` : "") + soc +
+      // r26: install steps (Aviso), a plain numbered list under the links
+      (d.steps ? `<div class="dr-steps"><p class="dr-steps-h">${esc(L(d.steps.title))}</p><ol>${L(d.steps).map((x) => `<li>${esc(x)}</li>`).join("")}</ol></div>` : "");
   }
 
   function renderSound() {

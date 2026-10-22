@@ -1557,3 +1557,32 @@ CONTENT-DRAFT.md 的 9 个待确认项都还在，页面上对应位置已经标
 - `scripts/deliver_r25b.py`：桌面 / Pixel 7 × 中 / 英，3 张图都加载、无禁用词、0 错误。
 - **`align.py r25b`**：24 次运行全部 0 不齐、0 溢出、0 错误。
 - 交付截图：`/workspace/deliverables/ailiu-preview-v2-shots/r25-xiaoyijia.png`（桌面中文，第 03 跨页）。
+
+## 26. r26：首页 hero 自我介绍重写 + Aviso 已上线
+
+### 26.1 hero 自我介绍
+- **改前原文**（`index.html` hero h1 两行，meta 同口径）：
+  - zh：「我是 UX 设计师，」/「做软件，眼下主要做 AI 工具。」；title「ailiu.online · 做软件和 AI 工具的体验设计」；description「软件 UX 体验设计，眼下主要做 AI 工具：我工作里的设计案例，和业余做的东西。」
+  - en："I'm a UX designer." / "Software, mostly AI tools these days."；title "ailiu.online · UX designer for software and AI tools"；description "UX design for software, these days mostly AI tools: my design work, and the things I build on the side."
+- **候选**：
+  1. zh「我是路易斯（Louis），」/「一名 UX 设计师。」· en "I'm Louis," / "a UX designer."
+  2. zh「我是路易斯（Louis），UX 设计师。」/「让软件更好懂、更好用。」· en "I'm Louis, a UX designer." / "I make software easier to understand and use."
+  3. zh「你好，我是路易斯（Louis）。」/「我做 UX 设计，也自己做点小东西。」· en "Hi, I'm Louis." / "I design UX, and make small things of my own."
+- **上线：候选 1**。理由：正好是要说的那一句，没有多余的话；下面那行 hero 说明（「下面是我做过的东西……」）已经交代了内容范围，候选 3 的「自己做点小东西」会和它重复；候选 2 的第二行和设计作品章节的标语「把复杂系统做得好懂、好用」意思重复，自我介绍就不止一处了。
+- **meta 同步**：zh title「ailiu.online · 路易斯（Louis），UX 设计师」，description「我是路易斯（Louis），一名 UX 设计师。这里有我工作里的设计案例，和业余做的东西。」；en title "ailiu.online · Louis, UX designer"，description "I'm Louis, a UX designer. Here is my design work, and the things I make on the side."（`content/manifest.js` meta 和 `index.html` 的 title / description / og 一起改）。
+- **排版**：中文 h1 加 `font-feature-settings: "halt"` + `text-spacing-trim: trim-start`。不加的话「（Louis），」会单独折到第二行，全角括号前面还空出半个字，看起来像缩进；加了以后桌面和 Pixel 7 上都是两行：「我是路易斯（Louis），」/「一名 UX 设计师。」。
+- **只出现一次**：野生路易斯原来写的是「我是一名设计师，喜欢尝试各种新鲜东西」/「设计师，爱试新鲜东西」，又介绍了一遍自己。改成标语「试新鲜东西，做了就分享 / Trying new things, sharing what I make」，正文「看到新鲜东西就想试试，做出来就分享……」（基础稿和草稿都改了）。
+- **AI 字样**：hero 和 meta 里的「AI 工具」都删了。还剩的 AI 都是在说产品本身：Aviso 的功能、设计作品章节的 AI 产品案例和图注，以及桃桃屋的内容标注「内容由 AI 辅助生成」。这条标注没有删，因为它说明的是频道内容怎么做出来的，而且删掉会影响如实披露。全站没有「分身」「虚拟形象」「avatar」。
+
+### 26.2 Aviso：已上线
+- 状态改成「已上线 / Live」（`status: "live"`，去掉 `is-dev` 虚线样式）。「开发中 · 精简版待发布」和原来的安装说明都删了。
+- 简介最后一句换成「Aviso Lite 已上线：没有后端，不收费，用你自己的模型 API Key。」/ "Aviso Lite is live: no backend, no fees, your own model API key."
+- **链接**：主按钮「Aviso 官网 / Aviso website」指向 `https://aviso-nine.vercel.app/`（旧站在用、已验证 200 的链接，新标签页打开）。下载链接「下载 Aviso Lite（zip）」指向 `downloads/aviso-lite.zip`，带 `download` 属性，不开新标签，箭头是 ↓（`.dr-dl`）。zip 和 `/workspace/aviso-lite-dist/aviso-lite.zip` 逐字节相同（Aviso Lite 0.1.0，MV3，解压后是 `aviso-lite-0.1.0/` 文件夹）。
+- **安装步骤**（`draft.steps`，`app.js` 渲染成 `.dr-steps` 编号列表）：解压 → chrome://extensions → 开启开发者模式 → 加载已解压的扩展程序，选 aviso-lite-0.1.0 文件夹 → 在设置里填自己的模型 API Key，中英各一份。样式是 12px 正文，序号用 mono 灰色，没有底色块和边框。
+- **部署**：`/workspace/scripts/build-ailiu-preview-deploy.sh` 现在会把 `downloads/` 原样复制到部署目录，并写进 `files.json`（sha / gitSha / size）和 `b64/downloads/aviso-lite.zip.b64`。
+
+### 26.3 自检与交付
+- `scripts/deliver_r26.py`（桌面 / Pixel 7 × 中 / 英）：hero 文字正确；meta 带名字，且不含 AI；去掉 Aviso、设计作品、桃桃屋三个章节以后，页面文字、标题和 alt 里都没有 AI；禁用词为 0；自我介绍只出现 1 次，没有其它自我介绍；Aviso 显示「已上线」，两条链接和 download 属性都对，安装步骤 5 步；章节里没有「开发中」等字样；zip 返回 200；0 错误。
+- **`align.py r26`**：24 次全部 0 不齐、0 溢出、0 错误。这次的环境里缺 Playwright 浏览器和 WebKit 系统库，先装好再跑。
+- 交付截图（`/workspace/deliverables/ailiu-preview-v2-shots/`，中文）：`r26-desktop-hero.png`、`r26-mobile-hero.png`、`r26-aviso.png`。
+- `CONTENT-DRAFT.md` 是历史草稿，不参与渲染，里面 Aviso「开发中」的旧记录没改。
