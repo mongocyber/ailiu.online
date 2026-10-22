@@ -454,33 +454,25 @@ html:lang(zh) .sk-cap { font-size: 13px; }
 .xy-slots { left: var(--pad-x); top: 50%; transform: translateY(-50%); width: min(28vw, 400px); }
 .xy-slots .slot-title { color: var(--ink); }
 .xy-book-wrap { position: absolute; right: calc(var(--pad-x) + 44px); top: calc(50% + var(--top-h) / 2); translate: 0 -50%; transform-origin: 50% 100%; }
-.xy-book { --bw: min(calc(100vw - 2 * var(--pad-x) - min(28vw, 400px) - 44px - 5vw), 940px, calc((100vh - var(--safe-b) - var(--top-h) - 60px) * 1.5)); position: relative; width: var(--bw); aspect-ratio: 1.5; container-type: inline-size; perspective: 1600px; filter: drop-shadow(0 30px 40px rgba(0, 0, 0, .55)); }
-.xy-spread { position: absolute; top: 0; right: 0; bottom: 0; left: 0; inset: 0; display: grid; grid-template-columns: 1fr 1fr; clip-path: inset(0 calc((1 - var(--rv, 0)) * 100%) 0 0); }
+.xy-book { --split: 36%; --bw: min(calc(100vw - 2 * var(--pad-x) - min(28vw, 400px) - 44px - 5vw), 940px, calc((100vh - var(--safe-b) - var(--top-h) - 60px) * 1.5)); position: relative; width: var(--bw); aspect-ratio: 1.5; container-type: inline-size; perspective: 1600px; filter: drop-shadow(0 30px 40px rgba(0, 0, 0, .55)); }
+.xy-spread { position: absolute; top: 0; right: 0; bottom: 0; left: 0; inset: 0; display: grid; grid-template-columns: var(--split) 1fr; clip-path: inset(0 calc((1 - var(--rv, 0)) * 100%) 0 0); }
 .xy-spread:first-child { --rv: 1; }
-.xy-page { position: relative; background: #f3ede2; padding: 6cqw 5cqw; overflow: hidden; }
-.xy-page::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; inset: 0; pointer-events: none; mix-blend-mode: multiply; opacity: .5; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='260' height='260'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3'/><feColorMatrix values='0 0 0 0 .6  0 0 0 0 .52  0 0 0 0 .42  0 0 0 .18 0'/></filter><rect width='100%' height='100%' filter='url(%23p)'/></svg>"); }
-.xy-l { border-radius: 1cqw 0 0 1cqw; background: linear-gradient(90deg, #efe7d9 0%, #f3ede2 80%, #e2d8c6 100%); color: #2a2018; display: flex; flex-direction: column; }
-.xy-r { border-radius: 0 1cqw 1cqw 0; background: linear-gradient(90deg, #ddd2bf 0%, #f3ede2 14%, #f6f1e8 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2cqw; }
-.xy-no { font: italic 400 10cqw/1 var(--f-serif); color: #C98A5B; }
-.xy-l b { margin-top: auto; font: 400 5cqw/1.05 var(--f-serif); letter-spacing: -.01em; }
-.xy-l p { margin: 1.2cqw 0 0; font: 1.5cqw/1.5 var(--f-sans); color: #7a6a58; }
-.xy-r small { font: 1.2cqw var(--f-mono); text-transform: uppercase; letter-spacing: .08em; color: #a08c74; }
-.xy-ph { position: relative; width: 74%; aspect-ratio: 1.2; border: 1px solid rgba(120, 90, 60, .25); display: grid; place-items: center; }
-.xy-ph::before, .xy-ph::after { content: ""; position: absolute; width: 3cqw; height: 3cqw; border: 1px solid rgba(120, 90, 60, .5); }
-.xy-ph::before { left: -1.5cqw; top: -1.5cqw; border-right: 0; border-bottom: 0; } .xy-ph::after { right: -1.5cqw; bottom: -1.5cqw; border-left: 0; border-top: 0; }
-.xy-seal { width: 13cqw; height: 13cqw; display: grid; place-items: center; text-align: center; background: #b5532f; color: #f6e9dc; font: 600 3.4cqw/1.05 "Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC", SimSun, serif; writing-mode: vertical-rl; letter-spacing: .1em; border-radius: 1cqw; box-shadow: inset 0 0 0 .6cqw #b5532f, inset 0 0 0 .8cqw #f6e9dc; opacity: .9; }
-.xy-ph-kv { background: linear-gradient(160deg, #e9c9a8, #c98a5b 60%, #8c4f2c); border: 0; overflow: hidden; }
-.xy-ph-kv i { position: absolute; border-radius: 50%; background: rgba(255, 240, 220, .35); }
-.xy-ph-kv i:nth-child(1) { width: 40%; aspect-ratio: 1; left: 12%; top: 18%; } .xy-ph-kv i:nth-child(2) { width: 22%; aspect-ratio: 1; right: 16%; top: 12%; background: rgba(255, 240, 220, .55); } .xy-ph-kv i:nth-child(3) { width: 90%; height: 30%; left: 5%; bottom: -12%; border-radius: 50% 50% 0 0; background: rgba(90, 40, 20, .35); }
-.xy-ph-box { border-style: dashed; }
-.xy-ph-box span { position: absolute; border: 1px solid rgba(120, 90, 60, .5); background: #efe4d3; }
-.box-a { width: 34%; height: 46%; left: 18%; top: 26%; box-shadow: 1.2cqw -1.2cqw 0 -1px #e3d5c0; }
-.box-b { width: 28%; height: 34%; right: 16%; top: 40%; background: #c98a5b !important; opacity: .7; }
-.xy-ph-menu { align-content: center; gap: 1.2cqw; padding: 0 12%; border-style: dashed; }
-.xy-ph-menu i { display: block; width: 100%; height: .8cqw; background: rgba(120, 90, 60, .22); border-radius: 1cqw; }
-.xy-ph-menu i:nth-child(odd) { width: 70%; }
-.xy-leaf { position: absolute; left: 50%; top: 0; width: 50%; height: 100%; transform-origin: 0 50%; transform: rotateY(var(--leaf, 0deg)); background: linear-gradient(90deg, rgba(0, 0, 0, .18), rgba(255, 250, 240, .12) 40%, rgba(0, 0, 0, .05)); opacity: var(--leafo, 0); pointer-events: none; border-radius: 0 1cqw 1cqw 0; }
-.xy-spine { position: absolute; left: 50%; top: 0; bottom: 0; width: 4cqw; margin-left: -2cqw; background: linear-gradient(90deg, transparent, rgba(60, 40, 20, .22) 45%, rgba(255, 255, 255, .08) 52%, transparent); pointer-events: none; }
+.xy-page { position: relative; background: #eeedea; padding: 5cqw 4cqw; overflow: hidden; }
+.xy-page::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; inset: 0; pointer-events: none; mix-blend-mode: multiply; opacity: .5; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='260' height='260'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3'/><feColorMatrix values='0 0 0 0 .5  0 0 0 0 .5  0 0 0 0 .5  0 0 0 .16 0'/></filter><rect width='100%' height='100%' filter='url(%23p)'/></svg>"); }
+.xy-l { border-radius: 1cqw 0 0 1cqw; background: linear-gradient(90deg, #e9e8e5 0%, #eeedea 80%, #dddcd8 100%); color: #1f1f1f; display: flex; flex-direction: column; }
+.xy-r { border-radius: 0 1cqw 1cqw 0; background: linear-gradient(90deg, #d8d7d3 0%, #eeedea 8%, #f2f1ee 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4cqw 4.4cqw 4cqw 5.4cqw; }
+.xy-no { font: italic 400 7cqw/1 var(--f-serif); color: #8a8a86; }
+.xy-l b { margin-top: auto; font: 400 3.8cqw/1.1 var(--f-serif); letter-spacing: -.01em; }
+.xy-l p { margin: 1.4cqw 0 0; font: 1.55cqw/1.6 var(--f-sans); color: #55554f; }
+/* r25b: real photos from the old site, mounted on the page; the only colour in the chapter */
+.xy-shot { margin: 0; width: 100%; display: flex; flex-direction: column; gap: 1.4cqw; }
+.xy-shot img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; border-radius: .4cqw; box-shadow: 0 .6cqw 1.6cqw rgba(0, 0, 0, .18); background: #dcdbd7; }
+.xy-shot figcaption { font: 1.3cqw/1.4 var(--f-mono); letter-spacing: .02em; color: #6c6c66; }
+.xy-learn { list-style: none; margin: 0; padding: 0; display: grid; gap: 3cqw; counter-reset: xl; width: 100%; }
+.xy-learn li { counter-increment: xl; position: relative; padding-left: 5cqw; font: 400 2.4cqw/1.4 var(--f-serif); color: #1f1f1f; }
+.xy-learn li::before { content: "0" counter(xl); position: absolute; left: 0; top: .35em; font: 1.3cqw var(--f-mono); color: #8a8a86; }
+.xy-leaf { position: absolute; left: var(--split); top: 0; width: calc(100% - var(--split)); height: 100%; transform-origin: 0 50%; transform: rotateY(var(--leaf, 0deg)); background: linear-gradient(90deg, rgba(0, 0, 0, .18), rgba(255, 250, 240, .12) 40%, rgba(0, 0, 0, .05)); opacity: var(--leafo, 0); pointer-events: none; border-radius: 0 1cqw 1cqw 0; }
+.xy-spine { position: absolute; left: var(--split); top: 0; bottom: 0; width: 4cqw; margin-left: -2cqw; background: linear-gradient(90deg, transparent, rgba(60, 40, 20, .22) 45%, rgba(255, 255, 255, .08) 52%, transparent); pointer-events: none; }
 .xy-tabs { position: absolute; right: -44px; top: 8%; list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; color: var(--ink-3); }
 .xy-tabs li { padding: 6px 8px; border-left: 1px solid var(--line-2); transition: color var(--dur-fast), border-color var(--dur-fast); }
 
@@ -774,10 +766,15 @@ html:lang(zh) .case-pmr { grid-template-columns: 5em minmax(0, 1fr); }
 
   /* xiaoyi: single pages, no turning */
   .xy-book-wrap { position: relative; left: auto; right: auto; top: auto; bottom: auto; translate: none; margin-top: 28px; }
-  .xy-book { --bw: 100%; aspect-ratio: auto; filter: none; display: grid; gap: 16px; }
-  .xy-spread { position: relative; top: auto; right: auto; bottom: auto; left: auto; inset: auto; clip-path: none !important; aspect-ratio: 1.5; filter: drop-shadow(0 14px 20px rgba(0, 0, 0, .5)); }
+  .xy-book { --split: 36%; --bw: 100%; aspect-ratio: auto; filter: none; display: grid; gap: 16px; }
+  .xy-spread { position: relative; top: auto; right: auto; bottom: auto; left: auto; inset: auto; clip-path: none !important; grid-template-columns: 1fr; filter: drop-shadow(0 14px 20px rgba(0, 0, 0, .5)); }
+  .xy-l { border-radius: 1.6cqw 1.6cqw 0 0; background: #eeedea; padding: 6cqw 6cqw 3cqw; }
+  .xy-r { border-radius: 0 0 1.6cqw 1.6cqw; background: #eeedea; padding: 0 6cqw 6cqw; }
+  .xy-no { font-size: 9cqw; } .xy-l b { margin-top: 3cqw; font-size: 7cqw; }
+  .xy-shot { gap: 2.4cqw; } .xy-shot figcaption { font-size: 3cqw; }
+  .xy-learn li { font-size: 4.6cqw; padding-left: 8cqw; } .xy-learn li::before { font-size: 2.8cqw; }
   .xy-leaf, .xy-spine, .xy-tabs { display: none; }
-  .xy-l p { font-size: 2.6cqw; } .xy-r small { font-size: 2cqw; }
+  .xy-l p { font-size: 3.8cqw; }
 
   /* taotao: 2x2, one playing */
   .tt-wall { position: relative; right: auto; top: auto; transform: none; width: auto; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 28px; }
@@ -853,5 +850,5 @@ html:lang(zh) .case-pmr { grid-template-columns: 5em minmax(0, 1fr); }
 .pp-printer, .pp-stack { filter: saturate(.58) brightness(.9); }
 .sk-shot img { filter: saturate(.62) brightness(.88); } /* r20: real prototype screens, same muted treatment */
 .tt-wall { filter: saturate(.42) brightness(.84); }
-.xy-book-wrap { filter: saturate(.55) brightness(.9); }
+.xy-shot img { filter: saturate(.55) brightness(.9); } /* r25b: on the photos only; paper and ink are already grey */
 .xy-tabs li.on { color: var(--ink); border-color: var(--sig-a); } /* the book's tab index reads as navigation: kept grey */

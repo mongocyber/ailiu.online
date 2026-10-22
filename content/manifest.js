@@ -374,26 +374,28 @@ window.MANIFEST = {
       // r14B: chapter 07. A venture, not a design case: I started a restaurant brand from scratch (2024, ended).
       // Facts only from CONTENT-DRAFT.md and the old site (ailiu-peek content.ts): "从 0 到 1 的餐饮品牌创业项目", 家的味道, 2024, ended,
       // and I also did the naming and the visuals. No figures, no store count, no duration.
+      // r25b: facts checked against the old site's production copy (/workspace/xiaoyi-src): 2024, ended, 0 → 1, 家的味道,
+      // 像去亲戚家吃饭那样自在热乎, a real shop; naming / mark / menu / packaging / space and signage were mine. Told as a venture.
       key: "xiaoyi", order: 70, type: "venture", status: "ended",
       title: { zh: "小姨家", en: "Aunt’s Home" },
       tagline: { zh: "我的一次餐饮创业", en: "A restaurant venture I started from scratch" },
       blurb: {
-        zh: "2024 年我从零做起的一个餐饮品牌，想做出家的味道。现在已经结束。",
-        en: "A food business I started from scratch in 2024, built around a taste of home. It has since ended."
+        zh: "2024 年我从零开起一家小店，想做出家的味道。现在已经结束。",
+        en: "A small shop I opened from scratch in 2024, built around a taste of home. It has since closed."
       },
       statusLabel: { zh: "已结束 · 2024", en: "Ended · 2024" },
       treatment: { id: "xiaoyi-venture-book", choreographyId: "xiaoyi.venture-book.v1" },
       transition: { enter: "depth-rise", exit: "fade-through" },
       stageHeightVh: 160,
       narration: [{ id: "xiaoyi-1", subtitle: {
-        zh: "小姨家是我 2024 年的一次餐饮创业，从零做起，现在已经结束。",
-        en: "Aunt’s Home was my restaurant venture in 2024. I started it from scratch, and it has since ended." } }],
+        zh: "小姨家是我 2024 年开的店，从零做起，现在已经关了。",
+        en: "Aunt’s Home was the shop I opened in 2024. I started it from scratch, and it has since closed." } }],
       links: [],
       draft: {
         label: { zh: "草稿", en: "Draft" },
         blurb: {
-          zh: "2024 年，我从零做起一个餐饮品牌，想让人吃到家的味道：像去亲戚家吃饭那样，自在、热乎。这首先是一段创业；名字、标志、菜单、包装和门店导视也是我自己做的。",
-          en: "In 2024 I started a food business from scratch, built around a taste of home: easy and warm, like dinner at a relative’s. It was a venture first; I also made the name, the mark, the menus, the packaging and the shop’s signage myself."
+          zh: "2024 年，我从零开了一家小店，想让人吃到家的味道：像去亲戚家吃饭那样，自在、热乎。这首先是一次创业；名字、标志、菜单、包装和门店导视也是我自己做的。现在店已经关了。",
+          en: "In 2024 I opened a small shop from scratch, built around a taste of home: easy and warm, like dinner at a relative’s. It was a venture first; I also made the name, the mark, the menus, the packaging and the shop’s signage myself. It has since closed."
         },
         statusLabel: { zh: "已结束 · 2024", en: "Ended · 2024" },
         statusClass: "is-pending",
