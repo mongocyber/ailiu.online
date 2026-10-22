@@ -447,7 +447,7 @@
       const common = (U) => {
         gl.uniformMatrix4fv(U.uM, false, MV); gl.uniformMatrix4fv(U.uP, false, PM); gl.uniformMatrix3fv(U.uR, false, R);
         gl.uniform1f(U.uYc, -DIST); gl.uniform1f(U.uXf, xf); gl.uniform1f(U.uYb, this.ybot);
-        gl.uniform2f(U.uPx, this.c.width / 2, this.c.height / 2); gl.uniform1f(U.uDpr, this.dpr);
+        gl.uniform2f(U.uPx, this.c.width / 2, this.c.height / 2); gl.uniform1f(U.uDpr, this.dpr * (innerWidth > 1440 ? Math.max(1, Math.min(innerWidth / 1440, innerHeight / 900)) : 1)); // r27: lines widen with the page's design pixel (--u)
       };
       gl.depthMask(false); gl.blendFunc(gl.ONE, gl.ONE);
       P = this.line; U = P.U;

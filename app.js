@@ -12,6 +12,8 @@
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const saveData = !!(navigator.connection && navigator.connection.saveData);
   const isMobile = () => mqMobile.matches;
+  // r27: the CSS design pixel (--u in styles.css): 1 up to 1440 wide, then min(width / 1440, height / 900)
+  const unit = () => innerWidth > 1440 ? Math.max(1, Math.min(innerWidth / 1440, innerHeight / 900)) : 1;
   const byKey = Object.fromEntries(M.projects.map((p) => [p.key, p]));
   const order = M.projects.slice().sort((a, b) => a.order - b.order);
   const pad = (n) => String(n).padStart(2, "0");
@@ -410,9 +412,10 @@
     const e = sstep(0.26, 0.42, p) * (1 - sstep(0.6, 0.78, p));
     s.setProperty("--rx", (16 * (1 - rise) + 6 * e).toFixed(2) + "deg");
     s.setProperty("--ry", (-12 * (1 - rise) - 14 * e).toFixed(2) + "deg");
-    s.setProperty("--tz", (-140 * (1 - rise)).toFixed(1) + "px");
-    s.setProperty("--zh", (60 * e).toFixed(1) + "px");
-    s.setProperty("--zp", (140 * e).toFixed(1) + "px");
+    const u = unit();
+    s.setProperty("--tz", (-140 * u * (1 - rise)).toFixed(1) + "px");
+    s.setProperty("--zh", (60 * u * e).toFixed(1) + "px");
+    s.setProperty("--zp", (140 * u * e).toFixed(1) + "px");
     s.setProperty("--tag", e.toFixed(3));
     const sel = sstep(0.06, 0.18, p);
     s.setProperty("--sel", sel.toFixed(3));
@@ -439,8 +442,8 @@
     const sw = sheets[0].offsetWidth;
     // keep the fan clear of the title block on the left and the desk edge on the right
     const slots = $(".pp-slots"), cx = W * 0.63;
-    const leftLimit = slots.offsetLeft + slots.offsetWidth + 24;
-    const spread = Math.max(40, Math.min(sw * 0.8, (cx - leftLimit - sw * 0.62) / 2, (W - 24 - cx - sw * 0.62) / 2));
+    const u = unit(), leftLimit = slots.offsetLeft + slots.offsetWidth + 24 * u;
+    const spread = Math.max(40 * u, Math.min(sw * 0.8, (cx - leftLimit - sw * 0.62) / 2, (W - 24 * u - cx - sw * 0.62) / 2));
     const drop = H * 0.5 + sw * 0.75;
     let printing = 0;
     sheets.forEach((sh, i) => {
@@ -450,7 +453,7 @@
       const pos = fanPos[i];
       const jit = (i % 2 ? 1 : -1) * 1.2;
       sh.style.setProperty("--x", (pos * spread * f).toFixed(1) + "px");
-      sh.style.setProperty("--y", ((1 - pr) * -drop + pos * pos * 9 * f).toFixed(1) + "px");
+      sh.style.setProperty("--y", ((1 - pr) * -drop + pos * pos * 9 * u * f).toFixed(1) + "px");
       sh.style.setProperty("--r", (pos * 4.6 * f + jit * (1 - f * 0.5)).toFixed(2) + "deg");
     });
     const fold = 18 * (1 - sstep(0.56, 0.76, p));
