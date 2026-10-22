@@ -10,3 +10,7 @@ TASK-r17.md
 TASK-r18.md
 TASK-r19.md
 TASK-r20.md
+TASK-*.md
+dist/
+node_modules/
+.vercel/
