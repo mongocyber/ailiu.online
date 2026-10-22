@@ -1,54 +1,485 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#F2F0EA" />
-    <meta name="robots" content="index, follow" />
-    <meta
-      name="description"
-      content="The portfolio of a designer and AI builder creating thoughtful brands, interfaces, and working AI products from early ideas."
-    />
-    <meta name="color-scheme" content="light" />
-    <link rel="canonical" href="https://ailiu.online/" />
-    <!-- seo:alternates:start -->
-    <link rel="alternate" hreflang="en" href="https://ailiu.online/" />
-    <link rel="alternate" hreflang="zh-CN" href="https://ailiu.online/zh" />
-    <link rel="alternate" hreflang="x-default" href="https://ailiu.online/" />
-    <!-- seo:alternates:end -->
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<!-- Real deploy: CSP + Permissions-Policy: microphone=(), camera=() go in response headers (vercel.json).
+     This static preview loads nothing from third-party origins. -->
+<title>ailiu.online · Louis, UX designer</title>
+<meta name="description" content="I'm Louis, a UX designer. Here is my design work, and the things I make on the side.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ailiu.online">
+<meta property="og:title" content="ailiu.online · Louis, UX designer">
+<meta property="og:description" content="I'm Louis, a UX designer. Here is my design work, and the things I make on the side.">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="zh_CN">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="canonical" href="https://ailiu.online/">
+<link rel="stylesheet" href="styles.css">
+<script>
+/* r12: page-level safety net. If any script fails (or the app never finishes booting), every reveal-on-scroll
+   block is shown in its end state so the page never stays blank. Silent: no UI, nothing sent anywhere. */
+(function () {
+  var d = document.documentElement, done = false;
+  function reveal() {
+    if (done) return; done = true; d.className += " js-rescue";
+    var els = document.querySelectorAll("[data-preset]");
+    for (var i = 0; i < els.length; i++) els[i].className += " is-in";
+  }
+  function soon() { if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", reveal); else reveal(); }
+  window.onerror = function () { soon(); };
+  window.addEventListener("unhandledrejection", function () { soon(); });
+  window.addEventListener("load", function () { setTimeout(function () { if (!/\bapp-ready\b/.test(d.className)) reveal(); }, 1500); });
+})();
+</script>
+</head>
+<body>
+<a class="skip" href="#aviso" data-en="Skip to chapters" data-zh="跳到章节">Skip to chapters</a>
+<div class="grain" aria-hidden="true"></div>
+<!-- r18: one fixed wireframe scene behind the whole site (fx3d.js); #fx2d is its static 2D fallback -->
+<canvas class="fx3d" id="fx3d" aria-hidden="true"></canvas>
+<canvas class="fx2d" id="fx2d" aria-hidden="true"></canvas>
 
-    <!-- Open Graph -->
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="ailiu" />
-    <meta property="og:url" content="https://ailiu.online/" />
-    <meta property="og:title" content="ailiu — Designer & AI Builder" />
-    <meta
-      property="og:description"
-      content="The portfolio of a designer and AI builder creating thoughtful brands, interfaces, and working AI products."
-    />
-    <meta property="og:image" content="https://ailiu.online/aviso/aviso-product.jpg" />
-    <meta property="og:image:alt" content="Aviso product interface featured in the ailiu portfolio" />
-    <meta property="og:locale" content="en_US" />
-    <meta property="og:locale:alternate" content="zh_CN" />
+<!-- ============ GLOBAL CHROME (identical across chapters, D10) ============ -->
+<header class="topbar">
+  <a class="brand" href="#top" aria-label="ailiu.online">
+    <span class="brand-glyph" aria-hidden="true"><i></i><i></i><i></i></span>
+    <span>ailiu<em>.online</em></span>
+  </a>
+  <nav class="chapnav" aria-label="Chapters"><ol id="chapnav"></ol></nav>
+  <div class="controls">
+    <button class="ctl" id="langBtn" type="button" aria-label="Switch language / 切换语言">
+      <span class="lang-opt" data-lang-opt="en">EN</span><span class="lang-sep">/</span><span class="lang-opt" data-lang-opt="zh">中</span>
+    </button>
+    <button class="ctl ctl-sound" id="soundBtn" type="button" aria-pressed="true">
+      <span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <span class="sound-label"></span>
+    </button>
+  </div>
+</header>
 
-    <!-- Twitter / X -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="ailiu — Designer & AI Builder" />
-    <meta
-      name="twitter:description"
-      content="The portfolio of a designer and AI builder creating thoughtful brands, interfaces, and working AI products."
-    />
-    <meta name="twitter:image" content="https://ailiu.online/aviso/aviso-product.jpg" />
-    <meta name="twitter:image:alt" content="Aviso product interface featured in the ailiu portfolio" />
+<div class="letterbox" aria-hidden="true">
+  <ol class="reel" id="reel"></ol>
+  <span class="reel-l mono" id="reelL"></span><span class="reel-r mono" id="reelR"></span>
+</div>
 
-    <!-- seo:jsonld -->
+<main id="main">
 
-    <title>ailiu — Designer & AI Builder Portfolio</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <!-- seo:static-content -->
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<!-- ================================ HERO ================================ -->
+<section class="hero" id="top" data-index="0" aria-labelledby="hero-h">
+  <div class="hero-inner">
+    <div class="hero-copy">
+      <p class="kicker mono" data-preset="reveal-up"><span class="live-dot" aria-hidden="true"></span><span data-en="ailiu.online · portfolio" data-zh="ailiu.online · 作品集">ailiu.online · portfolio</span></p>
+      <h1 class="display hero-h" id="hero-h" data-preset="reveal-up">
+        <span data-en="I'm Louis," data-zh="我是路易斯（Louis），">I'm Louis,</span>
+        <span data-en="a UX designer." data-zh="一名 UX 设计师。">a UX designer.</span>
+      </h1>
+      <div class="hero-note" data-preset="reveal-up">
+        <p id="heroNote"></p>
+      </div>
+    </div>
+    <figure class="louis-hero" aria-hidden="true">
+      <div class="louis-host" id="louisHero"></div>
+    </figure>
+  </div>
+  <ol class="hero-index" id="heroIndex" aria-label="Chapters"></ol>
+</section>
+
+<!-- ========================= 01 AVISO — browser depth ========================= -->
+<section class="chapter ch-aviso" id="aviso" data-key="aviso">
+  <div class="stage" data-stage="aviso">
+    <div class="pin">
+      <div class="cut" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="av-glow" aria-hidden="true"></div>
+      <header class="slots av-slots">
+        <span class="slot-index mono" data-slot="index"></span>
+        <h2 class="slot-title" data-slot="title"></h2>
+        <p class="slot-tagline" data-slot="tagline"></p>
+        <p class="slot-blurb" data-slot="blurb"></p>
+        <div class="slot-row"><span class="slot-status mono" data-slot="status"></span><a class="slot-cta" data-slot="cta" target="_blank" rel="noopener"></a></div>
+      </header>
+
+      <div class="av-scene">
+        <div class="av-window" id="avWin">
+          <div class="av-layer av-base">
+            <div class="av-chrome">
+              <div class="av-tabs">
+                <span class="av-lights" aria-hidden="true"><i></i><i></i><i></i></span>
+                <span class="av-tab is-on"><i class="fav"></i><span data-en="On reading slowly" data-zh="慢读札记">On reading slowly</span><b>×</b></span>
+                <span class="av-tab"><i class="fav fav2"></i><span data-en="New tab" data-zh="新标签页">New tab</span><b>×</b></span>
+                <span class="av-plus">+</span>
+              </div>
+              <div class="av-bar">
+                <span class="av-nav" aria-hidden="true">‹ › ↻</span>
+                <span class="av-url"><i class="lock"></i>fieldnotes.example/on-reading-slowly</span>
+                <span class="av-ext" title="Aviso"><i></i></span>
+              </div>
+            </div>
+            <div class="av-page">
+              <p class="av-crumb mono" data-en="ESSAY · 6 MIN" data-zh="随笔 · 6 分钟">ESSAY · 6 MIN</p>
+              <h3 data-en="On reading slowly" data-zh="慢读札记">On reading slowly</h3>
+              <p data-en="Fast reading is a way of collecting pages. Slow reading is a way of being changed by one. The difference shows up in the margins." data-zh="快读是在收集页数，慢读是让一页改变你。区别藏在页边空白里。">Fast reading is a way of collecting pages. Slow reading is a way of being changed by one. The difference shows up in the margins.</p>
+              <p><span data-en="Old books are full of pencil." data-zh="旧书里满是铅笔字。">Old books are full of pencil.</span> <mark class="av-mark" id="avMark" data-en="Marginalia are a conversation with the page." data-zh="批注，是和这一页的对话。">Marginalia are a conversation with the page.</mark> <span data-en="Someone argued, underlined, asked a question and moved on." data-zh="有人争论、划线、提了个问题，然后继续往下读。">Someone argued, underlined, asked a question and moved on.</span></p>
+              <p class="av-dim" data-en="What if the margin could answer back, without sending you to another tab?" data-zh="如果页边空白能回答你，而且不用把你送去另一个标签页呢？">What if the margin could answer back, without sending you to another tab?</p>
+              <div class="av-skel" aria-hidden="true"><i></i><i></i><i style="width:62%"></i></div>
+            </div>
+          </div>
+          <div class="av-layer av-hl" id="avHl" aria-hidden="true"><span class="av-hl-box"></span></div>
+          <div class="av-layer av-panel" id="avPanel">
+            <div class="avp-head"><span class="avp-logo"><i></i></span><b>Aviso</b><span class="avp-x mono">esc</span></div>
+            <blockquote class="avp-quote" data-en="“Marginalia are a conversation with the page.”" data-zh="“批注，是和这一页的对话。”">“Marginalia are a conversation with the page.”</blockquote>
+            <p class="avp-q"><span data-en="What would a good margin note look like here?" data-zh="这里一条好的批注应该长什么样？">What would a good margin note look like here?</span></p>
+            <div class="avp-ans" aria-hidden="true"><i></i><i></i><i></i><i class="short"></i><span class="caret"></span></div>
+            <div class="avp-input"><span data-en="Ask about the selection…" data-zh="针对选中的文字提问…">Ask about the selection…</span><kbd>↵</kbd></div>
+          </div>
+          <span class="av-tag av-tag-1 mono"><b>①</b> <span data-en="page" data-zh="网页">page</span></span>
+          <span class="av-tag av-tag-2 mono"><b>②</b> <span data-en="your selection" data-zh="你的选区">your selection</span></span>
+          <span class="av-tag av-tag-3 mono"><b>③</b> <span data-en="Aviso, in place" data-zh="Aviso，就地出现">Aviso, in place</span></span>
+        </div>
+      </div>
+      <p class="mock-note mono" data-en="Mock built in HTML · real screenshots & recording pending" data-zh="HTML 绘制的示意 · 真实截图与录屏待替换">Mock built in HTML · real screenshots &amp; recording pending</p>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= 02 PRINTPLAY — paper stack ========================= -->
+<section class="chapter ch-printplay" id="printplay" data-key="printplay">
+  <div class="stage" data-stage="printplay">
+    <div class="pin">
+      <div class="cut" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="pp-desk">
+        <div class="pp-stack" id="ppStack">
+          <!-- order in DOM = back to front -->
+          <article class="sheet sh-count" style="--i:0" aria-label="Counting sheet mock">
+            <div class="sh-in">
+              <header class="sh-h"><b data-en="How many?" data-zh="数一数">How many?</b><span>No. 05</span></header>
+              <ul class="sh-count-rows">
+                <li><span class="dots d3"></span><i class="box"></i></li>
+                <li><span class="dots d5"></span><i class="box"></i></li>
+                <li><span class="dots d2"></span><i class="box"></i></li>
+                <li><span class="dots d4"></span><i class="box"></i></li>
+              </ul>
+              <footer class="sh-f">printplay.asia · mock</footer>
+            </div>
+          </article>
+          <article class="sheet sh-maze" style="--i:1" aria-label="Maze sheet mock">
+            <div class="sh-in">
+              <header class="sh-h"><b data-en="Find the way" data-zh="走迷宫">Find the way</b><span>No. 04</span></header>
+              <svg class="maze" id="maze" viewBox="0 0 100 100" aria-hidden="true"></svg>
+              <footer class="sh-f">printplay.asia · mock</footer>
+            </div>
+          </article>
+          <article class="sheet sh-winter" style="--i:2" aria-label="Winter theme sheet mock">
+            <div class="sh-in">
+              <header class="sh-h"><b data-en="Winter words" data-zh="冬天的词">Winter words</b><span>No. 03</span></header>
+              <div class="winter-grid">
+                <figure><svg viewBox="0 0 40 40"><g stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M20 4v32M6 12l28 16M6 28l28-16"/><path d="M16 6l4 4 4-4M16 34l4-4 4 4"/></g></svg><figcaption>snow</figcaption></figure>
+                <figure><svg viewBox="0 0 40 40"><path d="M12 34V16a6 6 0 0 1 12 0v4l4-4a3 3 0 0 1 4 4l-8 9v5z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M11 30h14" stroke="currentColor" stroke-width="1.6"/></svg><figcaption>mitten</figcaption></figure>
+                <figure><svg viewBox="0 0 40 40"><path d="M8 26c0-9 5-16 12-16s12 7 12 16z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6 26h28v5H6z" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="20" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><figcaption>hat</figcaption></figure>
+                <figure><svg viewBox="0 0 40 40"><circle cx="20" cy="27" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="20" cy="12" r="6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M18 12h.1M22 12h.1" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><figcaption>snowman</figcaption></figure>
+              </div>
+              <footer class="sh-f">printplay.asia · mock</footer>
+            </div>
+          </article>
+          <article class="sheet sh-trace" style="--i:3" aria-label="Letter tracing sheet mock">
+            <div class="sh-in">
+              <header class="sh-h"><b data-en="Trace it" data-zh="描一描">Trace it</b><span>No. 02</span></header>
+              <svg class="trace" viewBox="0 0 100 110" aria-hidden="true">
+                <g class="guides"><path d="M4 22h92M4 42h92M4 74h92M4 94h92"/></g>
+                <text x="8" y="42" class="tr-solid">A</text><text x="36" y="42">A</text><text x="66" y="42">A</text>
+                <text x="8" y="94" class="tr-solid">a</text><text x="36" y="94">a</text><text x="66" y="94">a</text>
+              </svg>
+              <footer class="sh-f">printplay.asia · mock</footer>
+            </div>
+          </article>
+          <article class="sheet sh-cards" style="--i:4" aria-label="Word card sheet mock">
+            <div class="fold-top"><div class="sh-in">
+              <header class="sh-h"><b data-en="Word cards · Fruit" data-zh="词卡 · 水果">Word cards · Fruit</b><span>No. 01</span></header>
+              <div class="cards">
+                <figure><svg viewBox="0 0 40 40"><path d="M20 13c-4-3-12-2-12 8s6 14 9 14c1.5 0 2-.8 3-.8s1.5.8 3 .8c3 0 9-4 9-14s-8-11-12-8z" fill="#E0573B"/><path d="M20 13c0-4 2-7 5-8" stroke="#3B2A1A" stroke-width="1.6" fill="none"/><path d="M21 9c3-3 7-2 8-1-2 2-5 3-8 1z" fill="#5E8C3A"/></svg><figcaption>apple</figcaption></figure>
+                <figure><svg viewBox="0 0 40 40"><path d="M14 12c6 2 10 6 12 12M26 12c-2 4-2 8 0 12" stroke="#3B2A1A" stroke-width="1.4" fill="none"/><circle cx="13" cy="28" r="6" fill="#B8243A"/><circle cx="26" cy="29" r="6" fill="#D0303F"/><path d="M20 8c3-2 6-1 7 0-2 2-5 2-7 0z" fill="#5E8C3A"/></svg><figcaption>cherry</figcaption></figure>
+              </div>
+            </div></div>
+            <div class="fold-bot"><div class="sh-in">
+              <div class="cards">
+                <figure><svg viewBox="0 0 40 40"><ellipse cx="20" cy="22" rx="13" ry="9" fill="#F2C94C"/><path d="M7 22h-2M33 22h2" stroke="#C99A1E" stroke-width="2" stroke-linecap="round"/></svg><figcaption>lemon</figcaption></figure>
+                <figure><svg viewBox="0 0 40 40"><g fill="#7B4FA8"><circle cx="16" cy="16" r="4.2"/><circle cx="24" cy="16" r="4.2"/><circle cx="20" cy="22" r="4.2"/><circle cx="12" cy="22" r="4.2"/><circle cx="28" cy="22" r="4.2"/><circle cx="16" cy="28" r="4.2"/><circle cx="24" cy="28" r="4.2"/><circle cx="20" cy="34" r="4.2"/></g><path d="M20 12V6" stroke="#3B2A1A" stroke-width="1.6"/></svg><figcaption>grapes</figcaption></figure>
+              </div>
+              <footer class="sh-f">printplay.asia · mock</footer>
+            </div></div>
+          </article>
+        </div>
+        <header class="slots pp-slots">
+          <span class="slot-index mono" data-slot="index"></span>
+          <h2 class="slot-title" data-slot="title"></h2>
+          <p class="slot-tagline" data-slot="tagline"></p>
+          <p class="slot-blurb" data-slot="blurb"></p>
+          <div class="slot-row"><span class="slot-status mono" data-slot="status"></span><a class="slot-cta" data-slot="cta" target="_blank" rel="noopener"></a></div>
+        </header>
+        <p class="mock-note mono pp-note" data-en="Sheets drawn as mocks · real PDF pages pending" data-zh="纸张为示意 · 真实 PDF 页面待替换">Sheets drawn as mocks · real PDF pages pending</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= 03 DESIGN WORK — case studies ========================= -->
+<!-- r13: an ordered case-study chapter. Head: title slots + capabilities + method. Then a sticky case index (01–05)
+     and five cases in one grid template — text left (sticky on tall screens), a lead screen and two smaller ones right.
+     Cases, copy and images come from MANIFEST.work (app.js renderWork). -->
+<section class="chapter ch-work" id="work" data-key="work">
+  <div class="stage" data-stage="work">
+    <div class="pin wk-head">
+      <div class="cut" aria-hidden="true"><i></i><i></i><i></i></div>
+      <header class="slots wk-slots">
+        <span class="slot-index mono" data-slot="index"></span>
+        <h2 class="slot-title" data-slot="title"></h2>
+        <p class="slot-tagline" data-slot="tagline"></p>
+        <p class="slot-blurb" data-slot="blurb"></p>
+        <div class="slot-row"><span class="slot-status mono" data-slot="status"></span></div>
+      </header>
+      <div class="wk-side">
+        <div class="wk-caps-box">
+          <h3 class="wk-sec mono" data-en="Core capabilities" data-zh="核心能力">Core capabilities</h3>
+          <ol class="wk-caps" id="workCaps"></ol>
+        </div>
+        <div class="wk-method-box" id="workMethod"></div>
+        <p class="mock-note mono wk-note" data-en="Screens are anonymized mockups" data-zh="界面图为脱敏示意">Screens are anonymized mockups</p>
+      </div>
+    </div>
+  </div>
+  <div class="wk-body">
+    <nav class="wk-index mono" id="workIndex" aria-label="Cases"></nav>
+    <div class="wk-cases" id="workCases"></div>
+  </div>
+</section>
+
+<!-- ========================= 04 STEAM — gauge & pipes ========================= -->
+<section class="chapter ch-steam" id="steam" data-key="steam">
+  <div class="stage" data-stage="steam">
+    <div class="pin">
+      <div class="cut" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="st-grid" aria-hidden="true"></div>
+      <div class="st-left">
+      <header class="slots st-slots">
+        <span class="slot-index mono" data-slot="index"></span>
+        <h2 class="slot-title" data-slot="title"></h2>
+        <p class="slot-tagline" data-slot="tagline"></p>
+        <p class="slot-blurb" data-slot="blurb"></p>
+      </header>
+      <div class="st-drawing">
+        <svg class="st-svg" id="stSvg" viewBox="0 0 1000 520" preserveAspectRatio="xMinYMax meet" aria-label="One-pipe steam system schematic" role="img">
+          <defs>
+            <linearGradient id="stHot" x1="0" x2="1"><stop offset="0" stop-color="#F2A93B"/><stop offset="1" stop-color="#F6D7A0"/></linearGradient>
+            <mask id="stFront" maskUnits="userSpaceOnUse" x="0" y="0" width="1000" height="520"><path class="st-front-m" d="M115 300V120H860" pathLength="1"/></mask>
+            <filter id="stGlow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          </defs>
+          <!-- boiler -->
+          <g class="st-part">
+            <rect x="40" y="300" width="150" height="170" rx="10" class="st-line"/>
+            <path d="M58 440h114M58 418h114" class="st-thin"/>
+            <path class="st-flame" d="M92 462c0-14 12-14 12-26 6 8 10 14 10 26z"/>
+            <path d="M58 360h114" class="st-thin st-water"/>
+            <text x="115" y="335" class="st-lbl" text-anchor="middle" data-en="BOILER" data-zh="锅炉">BOILER</text>
+          </g>
+          <!-- pipe network (pathLength=1 for scrubbed stroke growth) -->
+          <path id="stPipe" class="st-pipe" pathLength="1" d="M115 300V120H860l0 0"/>
+          <path id="stDrop1" class="st-pipe st-pipe-b" pathLength="1" d="M420 120v130"/>
+          <path id="stDrop2" class="st-pipe st-pipe-b" pathLength="1" d="M700 120v130"/>
+          <path id="stReturn" class="st-pipe st-pipe-b" pathLength="1" d="M860 120v330H190"/>
+          <!-- steam front (slider + scrub) -->
+          <path id="stSteam" class="st-steam" d="M115 300V120H860" pathLength="1" filter="url(#stGlow)"/>
+          <path class="st-flow" d="M115 300V120H860" pathLength="1" mask="url(#stFront)"/>
+          <!-- radiators -->
+          <g class="st-rad" transform="translate(370 250)"><rect width="100" height="70" rx="6" class="st-line"/><path d="M14 8v54M28 8v54M42 8v54M56 8v54M70 8v54M84 8v54" class="st-thin"/></g>
+          <g class="st-rad" transform="translate(650 250)"><rect width="100" height="70" rx="6" class="st-line"/><path d="M14 8v54M28 8v54M42 8v54M56 8v54M70 8v54M84 8v54" class="st-thin"/></g>
+          <text x="420" y="342" class="st-lbl" text-anchor="middle" data-en="RADIATOR" data-zh="散热器">RADIATOR</text>
+          <text x="700" y="342" class="st-lbl" text-anchor="middle" data-en="RADIATOR" data-zh="散热器">RADIATOR</text>
+          <!-- main vent -->
+          <g class="st-vent" id="stVent" transform="translate(860 120)">
+            <path d="M0 0v-26" class="st-line"/><rect x="-14" y="-62" width="28" height="36" rx="8" class="st-line"/>
+            <path d="M-6 -62v-8h12v8" class="st-line"/>
+            <g class="st-air"><path d="M-3 -78c-6-6 6-10 0-16M6 -80c-5-5 5-8 0-13"/></g>
+          </g>
+          <text x="886" y="62" class="st-lbl" data-en="MAIN VENT" data-zh="主排气阀">MAIN VENT</text>
+          <text x="886" y="78" class="st-lbl st-vent-state" id="stVentState">AIR OUT</text>
+          <text x="480" y="106" class="st-lbl" text-anchor="middle" data-en="STEAM MAIN — PITCHED BACK TO BOILER" data-zh="蒸汽主管 · 坡向锅炉">STEAM MAIN — PITCHED BACK TO BOILER</text>
+          <text x="520" y="466" class="st-lbl" text-anchor="middle" data-en="DRY RETURN" data-zh="回水管">DRY RETURN</text>
+        </svg>
+      </div>
+      </div>
+      <div class="st-gauge" aria-hidden="true">
+        <svg viewBox="0 0 200 200">
+          <circle cx="100" cy="100" r="92" class="g-ring"/>
+          <g id="gTicks" class="g-ticks"></g>
+          <path id="gArc" class="g-arc" d="M41.2 158.8A83 83 0 1 1 158.8 158.8" pathLength="1"/>
+          <g id="gNeedle" class="g-needle"><path d="M100 100L100 30" /><circle cx="100" cy="100" r="6"/></g>
+        </svg>
+        <div class="g-read mono"><b id="gRead">— —</b><span data-en="demo · no values yet" data-zh="演示 · 暂无数值">demo · no values yet</span></div>
+      </div>
+      <div class="st-block mono">
+        <div class="tb-row"><span data-en="PROJECT" data-zh="项目">PROJECT</span><b data-slot="title"></b></div>
+        <div class="tb-row"><span data-en="DRAWING" data-zh="图">DRAWING</span><b data-en="One-pipe steam, schematic" data-zh="单管蒸汽系统 · 示意">One-pipe steam, schematic</b></div>
+        <div class="tb-row tb-split"><div><span data-en="SHEET" data-zh="图号">SHEET</span><b data-slot="index"></b></div><div><span data-en="STATUS" data-zh="状态">STATUS</span><b class="slot-status" data-slot="status"></b></div></div>
+        <div class="tb-row"><span data-en="RULE" data-zh="规则">RULE</span><b data-en="No formula without a source" data-zh="没有出处，不上公式">No formula without a source</b></div>
+        <label class="tb-row tb-ctl"><span data-en="DEMO · STEAM FRONT" data-zh="演示 · 蒸汽前锋">DEMO · STEAM FRONT</span>
+          <input type="range" id="stRange" min="0" max="100" value="0" aria-describedby="stRangeNote">
+          <small id="stRangeNote" data-en="Visual only. Real numbers will come from steam-hydronic-formulas once approved." data-zh="仅为示意。真实数值确认后接入 steam-hydronic-formulas。">Visual only. Real numbers will come from steam-hydronic-formulas once approved.</small>
+        </label>
+        <a class="slot-cta tb-cta" data-slot="cta" target="_blank" rel="noopener"></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= 05 SUIKOU — one phone, the three prototype screens in turn (r21; r20 had three phones) ========================= -->
+<section class="chapter ch-suikou" id="suikou" data-key="suikou">
+  <div class="stage" data-stage="suikou">
+    <div class="pin">
+      <div class="cut" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="sk-rings" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <div class="sk-phone-wrap" data-preset="depth-rise">
+        <div class="sk-car" id="skCar" role="region" aria-roledescription="carousel" data-label-en="Suikou English prototype screens" data-label-zh="随口英语原型截图" aria-label="Suikou English prototype screens">
+          <div class="sk-phone" id="skPhone">
+            <div class="sk-island" aria-hidden="true"></div>
+            <div class="sk-track" id="skTrack">
+              <div class="sk-shot is-on" id="skShot0" role="group" aria-roledescription="slide" data-label-en="1 of 3 · Home" data-label-zh="第 1 张，共 3 张 · 首页" aria-label="1 of 3 · Home"><img src="assets/suikou/home.webp" srcset="assets/suikou/home-sm.webp 400w, assets/suikou/home.webp 720w" sizes="(max-width: 760px) 66vw, 300px" width="720" height="1558" loading="lazy" decoding="async" alt="Suikou English prototype home: today's few English lines, a check-in card and the tab bar" data-alt-en="Suikou English prototype home: today's few English lines, a check-in card and the tab bar" data-alt-zh="随口英语原型首页：今天要说的几句英语、打卡卡片和底部导航"></div>
+              <div class="sk-shot" id="skShot1" role="group" aria-roledescription="slide" data-label-en="2 of 3 · Scene library" data-label-zh="第 2 张，共 3 张 · 场景库" aria-label="2 of 3 · Scene library" aria-hidden="true"><img src="assets/suikou/scenes.webp" srcset="assets/suikou/scenes-sm.webp 400w, assets/suikou/scenes.webp 720w" sizes="(max-width: 760px) 66vw, 300px" width="720" height="1558" loading="lazy" decoding="async" alt="Suikou English prototype scene library: parent–child scenes grouped as morning, heading out and meals" data-alt-en="Suikou English prototype scene library: parent–child scenes grouped as morning, heading out and meals" data-alt-zh="随口英语原型场景库：按早晨、出门、吃饭分组的亲子场景"></div>
+              <div class="sk-shot" id="skShot2" role="group" aria-roledescription="slide" data-label-en="3 of 3 · Card" data-label-zh="第 3 张，共 3 张 · 英语卡片" aria-label="3 of 3 · Card" aria-hidden="true"><img src="assets/suikou/card.webp" srcset="assets/suikou/card-sm.webp 400w, assets/suikou/card.webp 720w" sizes="(max-width: 760px) 66vw, 300px" width="720" height="1558" loading="lazy" decoding="async" alt="Suikou English prototype card: one English line, its Chinese meaning, how a child might answer, and a usage tip" data-alt-en="Suikou English prototype card: one English line, its Chinese meaning, how a child might answer, and a usage tip" data-alt-zh="随口英语原型英语卡片：一句英语、中文释义、孩子可以怎么接和使用提示"></div>
+            </div>
+          </div>
+          <div class="sk-ctl">
+            <button class="sk-arrow" type="button" id="skPrev" aria-controls="skTrack" data-label-en="Previous screen" data-label-zh="上一张" aria-label="Previous screen">‹</button>
+            <span class="sk-dots"><button class="sk-dot" type="button" aria-controls="skShot0" data-label-en="Show screen 1: Home" data-label-zh="显示第 1 张：首页" aria-label="Show screen 1: Home" aria-current="true"></button><button class="sk-dot" type="button" aria-controls="skShot1" data-label-en="Show screen 2: Scene library" data-label-zh="显示第 2 张：场景库" aria-label="Show screen 2: Scene library"></button><button class="sk-dot" type="button" aria-controls="skShot2" data-label-en="Show screen 3: Card" data-label-zh="显示第 3 张：英语卡片" aria-label="Show screen 3: Card"></button></span>
+            <button class="sk-arrow" type="button" id="skNext" aria-controls="skTrack" data-label-en="Next screen" data-label-zh="下一张" aria-label="Next screen">›</button>
+            <button class="sk-play mono" type="button" id="skPlay" data-label-en="Pause automatic rotation" data-label-zh="暂停自动轮播" aria-label="Pause automatic rotation"><span aria-hidden="true">❙❙</span></button>
+          </div>
+          <div class="sk-caps" id="skCaps" aria-live="off"><p class="sk-cap is-on" data-en="I cut the home screen down to one job: the few lines for today." data-zh="我把首页收成一件事：今天就说这几句。">I cut the home screen down to one job: the few lines for today.</p><p class="sk-cap" data-en="I grouped scenes by moments in the day, so finding a line takes no search." data-zh="场景按一天里的时刻分组，找一句话不用搜索。">I grouped scenes by moments in the day, so finding a line takes no search.</p><p class="sk-cap" data-en="Each card holds one line, plus how a child might answer it." data-zh="一张卡只放一句话，再告诉大人孩子会怎么接。">Each card holds one line, plus how a child might answer it.</p></div>
+        </div>
+      </div>
+      <header class="slots sk-slots">
+        <span class="slot-index mono" data-slot="index"></span>
+        <h2 class="slot-title" data-slot="title"></h2>
+        <p class="slot-tagline" data-slot="tagline"></p>
+        <p class="slot-blurb" data-slot="blurb"></p>
+        <div class="slot-row"><span class="slot-status mono is-dev" data-slot="status"></span><span class="slot-noqr mono" data-en="No link yet · mini program not public" data-zh="暂无链接 · 小程序未公开">No link yet · mini program not public</span></div>
+      </header>
+      <p class="mock-note mono sk-note" data-en="Screens from the HTML prototype · mini program in development" data-zh="截图来自 HTML 原型 · 小程序开发中">Screens from the HTML prototype · mini program in development</p>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= 06 TAOTAO — video wall ========================= -->
+<section class="chapter ch-taotao" id="taotao" data-key="taotao">
+  <div class="stage" data-stage="taotao">
+    <div class="pin">
+      <div class="cut" aria-hidden="true"><i></i><i></i><i></i></div>
+      <header class="slots tt-slots">
+        <span class="slot-index mono" data-slot="index"></span>
+        <h2 class="slot-title" data-slot="title"></h2>
+        <p class="slot-tagline" data-slot="tagline"></p>
+        <p class="slot-blurb" data-slot="blurb"></p>
+        <div class="slot-row">
+          <span class="slot-status mono" data-slot="status"></span>
+        </div>
+      </header>
+      <div class="tt-wall" id="ttWall">
+        <figure class="tt-cell c1" style="--i:0"><div class="tt-art art-peach"><span class="pch"></span><span class="lf"></span></div><figcaption><b>♪</b><span data-en="clip 01 · pending" data-zh="片段 01 · 待授权">clip 01 · pending</span><em>00:04</em></figcaption></figure>
+        <figure class="tt-cell c2" style="--i:1"><div class="tt-art art-notes"><i></i><i></i><i></i></div><figcaption><b>♪</b><span data-en="clip 02 · pending" data-zh="片段 02 · 待授权">clip 02 · pending</span><em>00:04</em></figcaption></figure>
+        <figure class="tt-cell c3" style="--i:2"><div class="tt-art art-balls"><i></i><i></i><i></i></div><figcaption><b>♪</b><span data-en="clip 03 · pending" data-zh="片段 03 · 待授权">clip 03 · pending</span><em>00:03</em></figcaption></figure>
+        <figure class="tt-cell c4" style="--i:3"><div class="tt-art art-rainbow"><i></i><i></i><i></i><i></i></div><figcaption><b>♪</b><span data-en="clip 04 · pending" data-zh="片段 04 · 待授权">clip 04 · pending</span><em>00:04</em></figcaption></figure>
+        <figure class="tt-cell c5" style="--i:4"><div class="tt-art art-moon"><span class="moon"></span><i></i><i></i><i></i><i></i></div><figcaption><b>♪</b><span data-en="clip 05 · pending" data-zh="片段 05 · 待授权">clip 05 · pending</span><em>00:03</em></figcaption></figure>
+        <figure class="tt-cell c6" style="--i:5"><div class="tt-art art-ducks"><span class="duck"></span><span class="duck d2"></span><i class="wv"></i></div><figcaption><b>♪</b><span data-en="clip 06 · pending" data-zh="片段 06 · 待授权">clip 06 · pending</span><em>00:04</em></figcaption></figure>
+      </div>
+      <p class="mock-note mono tt-note" data-en="Animated stand-ins · real clips to come" data-zh="动画占位 · 真实片段待替换">Animated stand-ins · real clips to come</p>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= 07 XIAOYI — a venture (brand-book layout; r25b: real photos from the old site, venture story) ========================= -->
+<section class="chapter ch-xiaoyi" id="xiaoyi" data-key="xiaoyi">
+  <div class="stage" data-stage="xiaoyi">
+    <div class="pin">
+      <div class="cut" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="xy-light" aria-hidden="true"></div>
+      <header class="slots xy-slots">
+        <span class="slot-index mono" data-slot="index"></span>
+        <h2 class="slot-title" data-slot="title"></h2>
+        <p class="slot-tagline" data-slot="tagline"></p>
+        <p class="slot-blurb" data-slot="blurb"></p>
+        <div class="slot-row"><span class="slot-status mono is-pending" data-slot="status"></span></div>
+      </header>
+      <div class="xy-book-wrap" data-preset="depth-rise">
+        <div class="xy-book" id="xyBook">
+          <div class="xy-spread" style="--s:0">
+            <div class="xy-page xy-l"><span class="xy-no">01</span><b data-en="Why a shop" data-zh="为什么开店">Why a shop</b><p data-en="I wanted a place that feels like dinner at a relative’s: easy, warm, no fuss. In 2024 I opened one." data-zh="想开一家像去亲戚家吃饭的店：自在、热乎、不拘束。2024 年开了。">I wanted a place that feels like dinner at a relative’s: easy, warm, no fuss. In 2024 I opened one.</p></div>
+            <div class="xy-page xy-r"><figure class="xy-shot"><img src="assets/xiaoyi/shop.webp" srcset="assets/xiaoyi/shop-sm.webp 560w, assets/xiaoyi/shop.webp 1000w" sizes="(max-width: 760px) 90vw, 560px" width="1000" height="741" loading="lazy" decoding="async" alt="The Aunt’s Home shop front: the sign, the window and the wayfinding board by the door" data-alt-en="The Aunt’s Home shop front: the sign, the window and the wayfinding board by the door" data-alt-zh="小姨家门店：招牌、橱窗和门边的导视牌"><figcaption data-en="The shop. I made the sign and the wayfinding." data-zh="门店。招牌和导视是我做的。">The shop. I made the sign and the wayfinding.</figcaption></figure></div>
+          </div>
+          <div class="xy-spread" style="--s:1">
+            <div class="xy-page xy-l"><span class="xy-no">02</span><b data-en="From zero" data-zh="从 0 到 1">From zero</b><p data-en="No team, no playbook. The name, the mark and the menu I worked out myself, one at a time." data-zh="没有团队，也没有现成的路。名字、标志、菜单，我一样一样自己定。">No team, no playbook. The name, the mark and the menu I worked out myself, one at a time.</p></div>
+            <div class="xy-page xy-r"><figure class="xy-shot"><img src="assets/xiaoyi/menu.webp" srcset="assets/xiaoyi/menu-sm.webp 560w, assets/xiaoyi/menu.webp 1000w" sizes="(max-width: 760px) 90vw, 560px" width="1000" height="750" loading="lazy" decoding="async" alt="Aunt’s Home menus and printed materials: a poster and a menu with mains, snacks and drinks" data-alt-en="Aunt’s Home menus and printed materials: a poster and a menu with mains, snacks and drinks" data-alt-zh="小姨家的菜单和物料：海报和列着主食、小吃、饮品的菜单"><figcaption data-en="The menu and printed materials." data-zh="菜单和店里的物料。">The menu and printed materials.</figcaption></figure></div>
+          </div>
+          <div class="xy-spread" style="--s:2">
+            <div class="xy-page xy-l"><span class="xy-no">03</span><b data-en="To go" data-zh="带走">To go</b><p data-en="Takeaway should feel like the portion family packs for you to take home." data-zh="外卖也该像家里人给你打包带走的那一份。">Takeaway should feel like the portion family packs for you to take home.</p></div>
+            <div class="xy-page xy-r"><figure class="xy-shot"><img src="assets/xiaoyi/pack.webp" srcset="assets/xiaoyi/pack-sm.webp 560w, assets/xiaoyi/pack.webp 1000w" sizes="(max-width: 760px) 90vw, 560px" width="1000" height="750" loading="lazy" decoding="async" alt="Aunt’s Home takeaway packaging: a paper bag, cups, a bowl, a box and a fries pack" data-alt-en="Aunt’s Home takeaway packaging: a paper bag, cups, a bowl, a box and a fries pack" data-alt-zh="小姨家外卖包装：纸袋、杯子、碗、餐盒和薯条盒"><figcaption data-en="Takeaway packaging." data-zh="外卖包装。">Takeaway packaging.</figcaption></figure></div>
+          </div>
+          <div class="xy-spread" style="--s:3">
+            <div class="xy-page xy-l"><span class="xy-no">04</span><b data-en="It ended" data-zh="结束了">It ended</b><p data-en="The shop opened in 2024 and has since closed. What I took from it:" data-zh="店在 2024 年开张，现在已经关了。我带走的是：">The shop opened in 2024 and has since closed. What I took from it:</p></div>
+            <div class="xy-page xy-r"><ul class="xy-learn"><li data-en="A shop is a business first. Looking good comes after." data-zh="开店先是生意，好看排在后面。">A shop is a business first. Looking good comes after.</li><li data-en="Doing it all myself got the shop open. Keeping it open is every single day." data-zh="什么都自己做，能把店开起来；开下去靠的是每一天。">Doing it all myself got the shop open. Keeping it open is every single day.</li><li data-en="I’ve been from zero to one once. Next time I’ll know what comes first." data-zh="从 0 到 1 走过一遍，下次知道先做什么。">I’ve been from zero to one once. Next time I’ll know what comes first.</li></ul></div>
+          </div>
+          <div class="xy-leaf" id="xyLeaf" aria-hidden="true"></div>
+          <div class="xy-spine" aria-hidden="true"></div>
+        </div>
+        <ol class="xy-tabs mono" id="xyTabs" aria-hidden="true"><li>01</li><li>02</li><li>03</li><li>04</li></ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= 08 WILD LOUIS — self-introduction ========================= -->
+<!-- r14: Wild Louis introducing himself (first person) and his channels -->
+<section class="chapter ch-wild" id="wild-louis" data-key="wild-louis">
+  <div class="stage" data-stage="wild-louis">
+    <div class="pin">
+      <div class="cut" aria-hidden="true"><i></i><i></i><i></i></div>
+      <header class="slots wl-slots">
+        <span class="slot-index mono" data-slot="index"></span>
+        <h2 class="slot-title" data-slot="title"></h2>
+        <p class="slot-tagline" data-slot="tagline"></p>
+        <p class="slot-blurb" data-slot="blurb"></p>
+        <div class="slot-row"><span class="slot-status mono is-ai" data-slot="status"></span></div>
+      </header>
+      <div class="wl-louis" id="louisWild" aria-hidden="true"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= CONTACT ======================= -->
+<footer class="footer" id="contact">
+  <!-- r21: the footer is a display line, the contact row on the twelve-column grid (mono label in columns 1–3, handles in
+       4–12), the voiceprint strip, then the © / back-to-top line ("How this site is made" and the build log removed) -->
+  <div class="wrap foot">
+    <h2 class="display foot-h"><span data-en="Want to make" data-zh="想一起">Want to make</span> <span data-en="something together?" data-zh="做点什么？">something together?</span></h2>
+    <div class="foot-row">
+      <p class="foot-k mono"><span data-en="Contact" data-zh="联系">Contact</span></p>
+      <ul class="foot-links" id="footContact"></ul>
+    </div>
+  </div>
+  <!-- r20B: the voiceprint lives in its own solid strip inside the footer, so it never draws over the wireframe scene -->
+  <div class="wrap foot-signal" aria-hidden="true"><canvas class="voiceprint" id="voiceprint"></canvas></div>
+  <div class="wrap foot foot-end">
+    <div class="foot-meta mono">
+      <span>© 2026 ailiu.online</span>
+      <a href="#top" data-en="Back to top ↑" data-zh="回到顶部 ↑">Back to top ↑</a>
+    </div>
+  </div>
+</footer>
+</main>
+
+<script src="content/manifest.js"></script>
+<script src="louis-data.js"></script>
+<script src="louis.js"></script>
+<script src="fx3d.js"></script>
+<script src="app.js"></script>
+</body>
 </html>

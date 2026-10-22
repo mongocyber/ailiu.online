@@ -1,96 +1,31 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
-        },
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
-        },
-        {
-          "key": "Referrer-Policy",
-          "value": "strict-origin-when-cross-origin"
-        },
-        {
-          "key": "Permissions-Policy",
-          "value": "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()"
-        }
-      ]
-    }
-  ],
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
   "redirects": [
     {
       "source": "/",
-      "has": [
-        {
-          "type": "host",
-          "value": "www.ailiu.online"
-        }
-      ],
+      "has": [{ "type": "host", "value": "www.ailiu.online" }],
       "destination": "https://ailiu.online/",
       "permanent": true
     },
     {
       "source": "/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "www.ailiu.online"
-        }
-      ],
+      "has": [{ "type": "host", "value": "www.ailiu.online" }],
       "destination": "https://ailiu.online/:path*",
       "permanent": true
     }
   ],
-  "rewrites": [
+  "headers": [
     {
-      "source": "/projects/aviso",
-      "destination": "/projects/aviso/index.html"
-    },
-    {
-      "source": "/projects/aviso/",
-      "destination": "/projects/aviso/index.html"
-    },
-    {
-      "source": "/projects/xiaoyi",
-      "destination": "/projects/xiaoyi/index.html"
-    },
-    {
-      "source": "/projects/xiaoyi/",
-      "destination": "/projects/xiaoyi/index.html"
-    },
-    {
-      "source": "/zh",
-      "destination": "/zh/index.html"
-    },
-    {
-      "source": "/zh/",
-      "destination": "/zh/index.html"
-    },
-    {
-      "source": "/zh/projects/aviso",
-      "destination": "/zh/projects/aviso/index.html"
-    },
-    {
-      "source": "/zh/projects/aviso/",
-      "destination": "/zh/projects/aviso/index.html"
-    },
-    {
-      "source": "/zh/projects/xiaoyi",
-      "destination": "/zh/projects/xiaoyi/index.html"
-    },
-    {
-      "source": "/zh/projects/xiaoyi/",
-      "destination": "/zh/projects/xiaoyi/index.html"
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()" }
+      ]
     }
   ]
 }

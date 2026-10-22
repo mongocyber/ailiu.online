@@ -1,0 +1,26 @@
+# ailiu.online
+
+> ailiu.online is the personal portfolio of Louis, a UX designer. It is a single bilingual page: English by default, with a Chinese (中文) version switched in place on the same URL. It covers Louis's design work and the products, channels and ventures he makes on the side.
+
+## Page
+
+- [ailiu.online](https://ailiu.online/): Louis, UX designer. One page, told in chapters, in English and Chinese.
+
+## Chapters
+
+- [Aviso](https://ailiu.online/#aviso): A Chrome extension: highlight text on any page and ask about it without leaving the tab.
+- [Suikou English / 随口英语](https://ailiu.online/#suikou): A WeChat mini program in development: everyday scene cards that parents and kids say out loud together.
+- [Design Work / 设计作品](https://ailiu.online/#work): UX for B2B and AI products: agent orchestration, data annotation, data platform, self-service analytics, and AI-assisted support. Cases are anonymized.
+- [PrintPlay](https://ailiu.online/#printplay): Pick a theme, print it, play at the table: English cards and worksheets for small kids.
+- [Steam & Hydronic](https://ailiu.online/#steam): Formulas and calculators for one-pipe steam heat, every number traced to its source.
+- [TaoTao House / 桃桃屋](https://ailiu.online/#taotao): Kids' songs and short videos on YouTube and Douyin.
+- [Aunt's Home / 小姨家](https://ailiu.online/#xiaoyi): A small shop Louis opened from scratch in 2024, built around a taste of home. It has since closed; the chapter tells it as a venture and what he learned.
+- [Wild Louis / 野生路易斯](https://ailiu.online/#wild-louis): When something new comes along, Louis tries it and shares what he makes.
+
+## Downloads
+
+- [Aviso Lite (Chrome extension, .zip)](https://ailiu.online/downloads/aviso-lite.zip): Load unpacked in Chrome to try Aviso Lite.
+
+## Crawler Notes
+
+The English and Chinese versions are the same portfolio content on one page. Public content may be used for search indexing and answer grounding. This file does not grant permission for model-training crawlers.
