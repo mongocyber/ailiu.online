@@ -10,12 +10,13 @@
    between chin and brow, meridians ×3 toward the front), the per-point cavity adds a mid-scale term on the face, so the
    lids, brows, lip line, nostrils and philtrum show in the lines' brightness, and the silhouette of the face, jaw and ears
    is drawn from the body's edges. Below the neck the bust fades out by height (no pointed base).
-   It turns up to ±25° toward the cursor and breathes slowly; reduced motion → one static frame.
+   It turns up to ±25° toward the cursor; reduced motion → one static frame.
+   r26: the portrait no longer moves with the field — no wave displacement or brightening, no breath, no idle sway, no
+   scroll nod. Only the turn toward the mouse is left; with the pointer still, the frame is not redrawn.
    WebGL missing / failing / context lost → .is-fallback (louis-fallback.png, rendered from this model).
    History: r11 scanline portrait (INSTRUCTIONS §4.2 option A).
-   r17: the old voice-level motion (mouth bar, level sweep) is gone. The hero portrait now moves in the same wave
-   as the WebGL field (fx3d.js): one shared clock and wave (window.FX_WAVE, below) drive both from a single rAF,
-   and a crest is computed from the same screen position, so it passes through the face and the field together.
+   r17: the old voice-level motion (mouth bar, level sweep) is gone. The hero portrait moved in the same wave as the
+   WebGL field (fx3d.js) until r26; the shared clock (window.FX_WAVE, below) still drives both from a single rAF.
    Interface: mount / setState / dock / destroy.
    r12: hardened for real phones — the backing store is capped (DPR ≤ 2 and a total pixel budget, well under
    iOS's canvas memory limits), every draw is guarded, and the host only drops its static fallback portrait
@@ -192,12 +193,6 @@
   const LK = 0.4, EK = { high: 0.5, low: 0.28 };
   // the hairline at the front, in cm above the base (the crop is 9 cm deeper at the back of the head, down to the nape)
   const HAIR = 28.4;
-  const WAVE = [
-    // FX_WAVE.at(x, u), as in fx3d.js — uW = freq, phase, bend, t · uWP = pointer x, u, k, aspect · uWS = scale × amp, scroll
-    "float wave(vec2 p){ float s = 0.5 + 0.5 * sin(6.2832 * uW.x * p.y - uW.y + uW.z * sin(p.x * 5.0 + uW.w * 0.4));",
-    "  vec2 d = vec2((p.x - uWP.x) * uWP.w, p.y - uWP.y); float b = uWP.z * exp(-dot(d, d) / 0.01);",
-    "  return uWS.x * ((1.0 + 0.6 * uWS.y) * s * s * s + 0.7 * b); }"
-  ];
   // r25: below the neck the bust fades out by height (cm, model y): whole above FADE[1] (just under the chin), gone at
   // FADE[0] (the upper chest), eased at both ends — the shoulders and chest dissolve instead of ending in a pointed base
   const FADE = [-1.5, 6.5];
@@ -211,15 +206,13 @@
   const BFS = "precision mediump float; varying float vA; void main(){ gl_FragColor = vec4(0.0, 0.0, 0.0, vA); }";
   const VS = [
     "attribute vec3 aP, aO, aN; attribute vec4 aM;",
-    "uniform mat4 uM, uP; uniform mat3 uR; uniform vec4 uW, uWP, uBox; uniform vec2 uWS, uPx; uniform float uWave, uYc, uXf, uYb, uDpr;",
+    "uniform mat4 uM, uP; uniform mat3 uR; uniform vec2 uPx; uniform float uYc, uXf, uYb, uDpr;",
     "varying float vA, vS, vW;"
-  ].concat(WAVE, FADEF, [
+  ].concat(FADEF, [
     "vec2 scr(vec4 c){ return c.xy / c.w * uPx; }",
     "void main(){",
     "  vec3 n = normalize(uR * aN);",
-    "  vec4 e = uM * vec4(aP, 1.0), c = uP * e; float w = 0.0;",
-    "  if (uWave > 0.5 && c.w > 0.0) { vec2 s = vec2(0.5 + 0.5 * c.x / c.w, 0.5 - 0.5 * c.y / c.w); w = wave(vec2(uBox.x + s.x * uBox.y, uBox.z + s.y * uBox.w)); }",
-    "  vec4 p = uP * (uM * vec4(aP + aN * w * 0.22, 1.0)), q = uP * (uM * vec4(aO + aN * w * 0.22, 1.0));",
+    "  vec4 e = uM * vec4(aP, 1.0), c = uP * e, p = c, q = uP * (uM * vec4(aO, 1.0));",
     // light in view space: a wrapped key from the upper left front, a soft fill, a cool rim on the parts turned away
     "  vec3 vd = normalize(-e.xyz); float nv = dot(n, vd);",
     "  float kd = dot(n, normalize(vec3(-0.5, 0.32, 0.8))), fill = max(dot(n, normalize(vec3(0.7, -0.1, 0.7))), 0.0);",
@@ -235,7 +228,6 @@
     "  float alb = mix(1.0, 0.6, hair);",
     "  float face = smoothstep(-0.2, 0.25, nv);",       // lines seen through at the silhouette fade out
     "  float a = (pow(lit * cv * alb, 1.25) * mix(0.42, 1.12, near) + 0.85 * rim * mix(0.6, 1.0, near)) * face;",
-    "  a *= 1.0 + w * 0.7;",
     "  float base = fade(aM.z);",
     "  float side = 1.0 - smoothstep(uXf * 0.8, uXf, abs(c.x / max(c.w, 1e-4)));",
     "  vA = a * base * side;",
@@ -254,20 +246,17 @@
   // edges from the same body — at ~7k faces they make stray sticks at the mouth and muddy the grid; DESIGN-NOTES §25.)
   const EVS = [
     "attribute vec3 aP, aO, aN, aF1, aF2; attribute vec4 aM; attribute float aG;",
-    "uniform mat4 uM, uP; uniform mat3 uR; uniform vec4 uW, uWP, uBox; uniform vec2 uWS, uPx; uniform float uWave, uYc, uXf, uYb, uDpr;",
+    "uniform mat4 uM, uP; uniform mat3 uR; uniform vec2 uPx; uniform float uYc, uXf, uYb, uDpr;",
     "varying float vA, vS, vW;"
-  ].concat(WAVE, FADEF, [
+  ].concat(FADEF, [
     "vec2 scr(vec4 c){ return c.xy / c.w * uPx; }",
     "void main(){",
-    "  vec4 e = uM * vec4(aP, 1.0), c = uP * e; float w = 0.0;",
-    "  if (uWave > 0.5 && c.w > 0.0) { vec2 s = vec2(0.5 + 0.5 * c.x / c.w, 0.5 - 0.5 * c.y / c.w); w = wave(vec2(uBox.x + s.x * uBox.y, uBox.z + s.y * uBox.w)); }",
-    "  vec4 p = uP * (uM * vec4(aP + aN * w * 0.22, 1.0)), q = uP * (uM * vec4(aO + aN * w * 0.22, 1.0));",
+    "  vec4 e = uM * vec4(aP, 1.0), c = uP * e, p = c, q = uP * (uM * vec4(aO, 1.0));",
     "  vec3 vd = normalize(-e.xyz), n1 = uR * aF1, n2 = uR * aF2;",
     "  float d1 = dot(n1, vd), d2 = dot(n2, vd);",
     "  float sil = (d1 * d2 < 0.0) ? 1.0 : 0.0;",
     "  float near = smoothstep(-9.0, 9.0, e.z - uYc);",
     "  float a = aG * sil * 0.9 * mix(0.5, 1.1, near);",
-    "  a *= 1.0 + w * 0.7;",
     "  float base = fade(aM.z);",
     "  float side = 1.0 - smoothstep(uXf * 0.8, uXf, abs(c.x / max(c.w, 1e-4)));",
     "  vA = a * base * side;",
@@ -297,7 +286,7 @@
 
   class Louis {
     constructor(opts = {}) {
-      this.o = Object.assign({ fill: 0.98, interactive: true, wave: false, low: null, keep: false, gain: 1 }, opts);
+      this.o = Object.assign({ fill: 0.98, interactive: true, low: null, keep: false, gain: 1 }, opts);
       this.mouse = { x: 0, y: 0, px: 0, py: 0 };
       this.running = false; this.last = 0;
       this.reduced = mm("(prefers-reduced-motion: reduce)");
@@ -354,9 +343,9 @@
       };
       this.body = prog(BVS, BFS, ["aP"], ["uM", "uP", "uYb", "uXf"]);
       this.line = prog(VS, FS, ["aP", "aO", "aN", "aM"],
-        ["uM", "uP", "uR", "uW", "uWP", "uBox", "uWS", "uPx", "uWave", "uYc", "uXf", "uYb", "uDpr", "uK"]);
+        ["uM", "uP", "uR", "uPx", "uYc", "uXf", "uYb", "uDpr", "uK"]);
       this.edge = prog(EVS, FS, ["aP", "aO", "aN", "aM", "aF1", "aF2", "aG"],
-        ["uM", "uP", "uR", "uW", "uWP", "uBox", "uWS", "uPx", "uWave", "uYc", "uXf", "uYb", "uDpr", "uK"]);
+        ["uM", "uP", "uR", "uPx", "uYc", "uXf", "uYb", "uDpr", "uK"]);
       const M = mesh(step);
       this.AY = AY; this.tier = step;
       const buf = (a) => { const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, a, gl.STATIC_DRAW); return b; };
@@ -415,24 +404,28 @@
     destroy() { this.stop(); this.ro && this.ro.disconnect(); this.io && this.io.disconnect(); window.removeEventListener("pointermove", this.onMove); window.removeEventListener("resize", this.resize); this.c && this.c.remove(); }
     tick(now) {
       if (!this.running || this.failed) return;
-      if (now - this.last >= 1000 / Math.min(this.fps, W.fps) - 2) { this.last = now; this.paint(now); }
+      if (now - this.last < 1000 / Math.min(this.fps, W.fps) - 2) return;
+      // r26: nothing moves but the turn toward the mouse — once it has settled, keep the last frame
+      const m = this.mouse;
+      if (this.live && Math.abs(m.x - m.px) < 1e-3 && Math.abs(m.y - m.py) < 1e-3) return;
+      this.last = now; this.paint(now);
     }
     draw(now) {
       const { gl, w, h, o } = this;
-      const t = this.reduced ? 0 : o.wave ? W.t : now / 1000;
-      // pose: a slight turn toward the hero copy, a slow breath, up to ±25° / ±8° toward the cursor (the model is a full
-      // head, so it holds up from the side), a nod as the hero scrolls away
+      // pose: a slight turn toward the hero copy, up to ±25° / ±8° toward the cursor (the model is a full head, so it
+      // holds up from the side). r26: no breath, idle sway or scroll nod — only the mouse moves it
       const m = this.mouse;
       m.px += (m.x - m.px) * 0.05; m.py += (m.y - m.py) * 0.05;
-      let yaw = Math.max(-0.436, Math.min(0.436, -0.06 + (this.reduced ? 0 : 0.38 * m.px + 0.02 * Math.sin(t * 0.25))));
-      let pitch = 0.04 + (this.reduced ? 0 : 0.1 * m.py + 0.01 * Math.sin(t * 0.31 + 1) + (o.wave ? 0.06 * W.scroll : 0));
+      if (Math.abs(m.x - m.px) < 1e-3) m.px = m.x;
+      if (Math.abs(m.y - m.py) < 1e-3) m.py = m.y;
+      let yaw = Math.max(-0.436, Math.min(0.436, -0.06 + (this.reduced ? 0 : 0.38 * m.px)));
+      let pitch = 0.04 + (this.reduced ? 0 : 0.1 * m.py);
       if (o.pose) { yaw = o.pose[0]; pitch = o.pose[1]; }              // fixed pose (fallback render, checks)
-      const breath = this.reduced ? 0 : 0.12 * Math.sin(t * 0.9);       // cm: the chest rises a little, the head follows
       const cy_ = Math.cos(yaw), sy_ = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch);
       // R = Ry(yaw) · Rx(pitch), column-major
       const R = [cy_, 0, -sy_, sy_ * sp, cp, cy_ * sp, sy_ * cp, -sp, cy_ * cp];
       const pv = this.pivot, DIST = 190, YC = Y0 + BH / 2;           // camera DIST cm in front of the head's centre
-      const tr = [0, 1, 2].map((r) => pv[r] - (R[r] * pv[0] + R[3 + r] * pv[1] + R[6 + r] * pv[2]) + (r === 1 ? breath - YC : r === 2 ? -DIST : 0));
+      const tr = [0, 1, 2].map((r) => pv[r] - (R[r] * pv[0] + R[3 + r] * pv[1] + R[6 + r] * pv[2]) + (r === 1 ? -YC : r === 2 ? -DIST : 0));
       const MV = [R[0], R[1], R[2], 0, R[3], R[4], R[5], 0, R[6], R[7], R[8], 0, tr[0], tr[1], tr[2], 1];
       // projection: the plane z = 0 maps onto the portrait box (fit to the host, bottom-aligned)
       const ph = Math.min(h * o.fill, w * AY), f = ph / BH * DIST;
@@ -451,19 +444,10 @@
       gl.disable(gl.POLYGON_OFFSET_FILL);
       // 2 · the contours and meridians, each segment a quad as wide as its light (no vertex points any more);
       // 3 · r25: the silhouette of the face, jaw and ears, with the same uniforms
-      const waving = o.wave && W.on && !this.reduced && W.box && W.box.width > 0;
-      const hr = waving && this.el.getBoundingClientRect(), Bx = W.box;
       const common = (U) => {
         gl.uniformMatrix4fv(U.uM, false, MV); gl.uniformMatrix4fv(U.uP, false, PM); gl.uniformMatrix3fv(U.uR, false, R);
         gl.uniform1f(U.uYc, -DIST); gl.uniform1f(U.uXf, xf); gl.uniform1f(U.uYb, this.ybot);
         gl.uniform2f(U.uPx, this.c.width / 2, this.c.height / 2); gl.uniform1f(U.uDpr, this.dpr);
-        // r17: the shared wave, at this canvas's place inside the field's frame (hero portrait only)
-        gl.uniform1f(U.uWave, waving ? 1 : 0);
-        if (waving) {
-          gl.uniform4f(U.uBox, (hr.left - Bx.left) / Bx.width, hr.width / Bx.width, (hr.top - Bx.top) / Bx.height, hr.height / Bx.height);
-          gl.uniform4f(U.uW, W.freq, W.phase, W.bend, W.t); gl.uniform4f(U.uWP, W.pointer.x, W.pointer.y, W.pointer.k, W.aspect);
-          gl.uniform2f(U.uWS, W.scale * W.amp, W.scroll);
-        }
       };
       gl.depthMask(false); gl.blendFunc(gl.ONE, gl.ONE);
       P = this.line; U = P.U;

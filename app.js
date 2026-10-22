@@ -313,13 +313,13 @@
 
   /* ------------------------------------------------------------------ Louis instances */
   // r12: a portrait that can't start leaves its static fallback (CSS) and a no-op stand-in; the page carries on
-  // r17: the caption bar (and its mini portrait) is gone; the hero portrait rides the shared wave with the WebGL field
+  // r17: the caption bar (and its mini portrait) is gone. r26: neither portrait rides the field's wave; only the mouse turns them
   const mountLouis = (opts, el) => {
     try { return new Louis(opts).mount(el); }
     catch (e) { el.classList.add("is-fallback"); return { setState() {}, dock() {}, destroy() {} }; }
   };
   // r20C: both are the 3D wireframe bust (louis.js); the mesh tier follows the device, not the options
-  const louisHero = mountLouis({ wave: true }, $("#louisHero"));
+  const louisHero = mountLouis({}, $("#louisHero"));
   mountLouis({}, $("#louisWild"));
 
   /* ------------------------------------------------------------------ active chapter, glitch-cut */

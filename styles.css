@@ -38,6 +38,11 @@
   --f-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Noto Serif", "Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC", SimSun, serif;
 
   --pad-x: clamp(20px, 4.2vw, 64px);
+  /* r26: on wide screens the chapter content sits in one centred column (--maxw); --gut is its left / right edge.
+     Used where % is the full page width (the hero, chapter stages, pins), so it equals --pad-x up to ~1570px.
+     The top bar, the reel and the scene stay full width. Body type grows from 1440px to 2560px (clamp, below). */
+  --maxw: 1440px;
+  --gut: max(var(--pad-x), calc((100% - var(--maxw)) / 2));
   --top-h: 64px;
   --safe-b: 40px; /* r6: desktop letterbox band under the stages; r17: the caption bar is gone, only the chapter reel is left */
 }
@@ -62,7 +67,7 @@ html:lang(zh) .display { letter-spacing: -.01em; line-height: 1.18; }
 .skip { position: absolute; left: -999px; top: 8px; z-index: 100; background: var(--ink); color: var(--bg); padding: 8px 12px; }
 .skip:focus { left: 8px; }
 :focus-visible { outline: 2px solid var(--sig-a); outline-offset: 3px; border-radius: 4px; }
-.wrap { padding: 0 var(--pad-x); max-width: 1600px; margin: 0 auto; }
+.wrap { padding: 0 var(--pad-x); max-width: calc(var(--maxw) + 2 * var(--pad-x)); margin: 0 auto; }
 
 /* film grain — gives the black real material instead of flat #000 */
 .grain { position: fixed; top: 0; right: 0; bottom: 0; left: 0; inset: 0; z-index: 90; pointer-events: none; opacity: .055;
@@ -140,7 +145,7 @@ body.at-hero .letterbox { opacity: 0; }
 .reel-l b, .reel-r b { color: var(--ink-2); font-weight: 500; }
 
 /* ---------- 6. Hero ---------- */
-.hero { position: relative; padding: 0 var(--pad-x); overflow: hidden; }
+.hero { position: relative; padding: 0 var(--gut); overflow: hidden; }
 /* r18: the wireframe scene is one fixed canvas behind every chapter (fx3d.js); #fx2d is the static 2D fallback frame.
    main sits above it; the chapter stages are transparent so the scene shows through. */
 .fx3d, .fx2d { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100vh; height: 100lvh; z-index: 0; pointer-events: none; }
@@ -152,15 +157,15 @@ main { position: relative; z-index: 1; }
 .hero-copy { position: relative; z-index: 1; margin-top: -10vh; }
 .kicker { display: flex; align-items: center; gap: 10px; color: var(--ink-2); margin: 0 0 28px; }
 .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink); box-shadow: 0 0 8px rgba(255, 255, 255, .5); }
-.hero-h { font-size: clamp(40px, 5.3vw, 84px); max-width: 13.5em; color: var(--ink); }
-html:lang(zh) .hero-h { font-size: clamp(36px, 4.6vw, 72px); max-width: 10em; }
+.hero-h { font-size: clamp(40px, 5.3vw, 96px); max-width: 13.5em; color: var(--ink); }
+html:lang(zh) .hero-h { font-size: clamp(36px, 4.6vw, 84px); max-width: 10em; }
 .hero-h span { display: block; text-wrap: balance; }
 html:lang(zh) .hero-h span { word-break: keep-all; }
 .hero-h span:last-child { color: var(--ink-2); }
 html:lang(zh) .hero-note { line-height: 1.75; }
 html:lang(zh) .hero-h { font-feature-settings: "halt"; text-spacing-trim: trim-start; } /* r26: "（Louis），" wraps to line 2; no full-width gap before it */
 /* r8: no indent, no left rule (a hanging rule would be cut off by the reveal preset's clip-path); shares the title's left edge */
-.hero-note { text-wrap: pretty; max-width: 30em; color: var(--ink-2); font-size: 15px; margin: 30px 0 0; }
+.hero-note { text-wrap: pretty; max-width: 30em; color: var(--ink-2); font-size: clamp(15px, calc(15px + (100vw - 1440px) * 0.0018), 17px); margin: 30px 0 0; }
 .louis-hero { position: relative; margin: 0 calc(var(--pad-x) * -0.5) 0 0; height: min(86vh, calc(100vh - var(--top-h) - 12px)); height: min(86dvh, calc(100dvh - var(--top-h) - 12px)); min-height: 300px; align-self: end; }
 .louis-host { position: absolute; top: 0; right: 0; bottom: 0; left: 0; inset: 0; }
 .louis-host canvas { width: 100%; height: 100%; }
@@ -191,11 +196,11 @@ html:lang(zh) .hero-h { font-feature-settings: "halt"; text-spacing-trim: trim-s
 .slots { position: absolute; z-index: 5; }
 .slot-index { display: block; color: var(--ink-3); margin-bottom: 14px; }
 .slot-index::after { content: var(--of, " / 08"); opacity: .55; } /* --of is set from the manifest (app.js) */
-.slot-title { margin: 0; font-size: clamp(48px, 6.6vw, 104px); font-weight: 500; letter-spacing: -.045em; line-height: .95; }
-html:lang(zh) .slot-title { letter-spacing: -.02em; line-height: 1.08; font-size: clamp(42px, 5.2vw, 84px); }
-.slot-tagline { margin: 16px 0 0; font-size: clamp(17px, 1.45vw, 21px); line-height: 1.3; letter-spacing: -.01em; max-width: 22em; text-wrap: balance; }
+.slot-title { margin: 0; font-size: clamp(48px, 6.6vw, 120px); font-weight: 500; letter-spacing: -.045em; line-height: .95; }
+html:lang(zh) .slot-title { letter-spacing: -.02em; line-height: 1.08; font-size: clamp(42px, 5.2vw, 96px); }
+.slot-tagline { margin: 16px 0 0; font-size: clamp(17px, 1.45vw, 25px); line-height: 1.3; letter-spacing: -.01em; max-width: 22em; text-wrap: balance; }
 html:lang(zh) .slot-tagline { line-height: 1.45; letter-spacing: 0; }
-.slot-blurb { margin: 12px 0 0; color: var(--ink-2); font-size: 14.5px; line-height: 1.55; max-width: 27em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 3.1em; }
+.slot-blurb { margin: 12px 0 0; color: var(--ink-2); font-size: clamp(14.5px, calc(14.5px + (100vw - 1440px) * 0.0027), 17.5px); line-height: 1.55; max-width: 27em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 3.1em; }
 html:lang(zh) .slot-blurb { line-height: 1.6; height: 3.2em; }
 .slot-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-top: 22px; }
 .slot-status { display: inline-flex; align-items: center; gap: 7px; padding: 5px 9px; border-radius: 5px; border: 1px solid var(--line-2); color: var(--ink); }
@@ -204,7 +209,7 @@ html:lang(zh) .slot-blurb { line-height: 1.6; height: 3.2em; }
 .slot-status.is-pending { color: var(--ink-2); border-color: var(--line-2); }
 .slot-status.is-ai { padding: 5px 9px; }
 .slot-status.is-work { color: var(--ink); }
-.slot-cta { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; text-decoration: none; padding-bottom: 2px; border-bottom: 1px solid currentColor; }
+.slot-cta { display: inline-flex; align-items: center; gap: 8px; font-size: clamp(14px, calc(14px + (100vw - 1440px) * 0.0018), 16px); text-decoration: none; padding-bottom: 2px; border-bottom: 1px solid currentColor; }
 .slot-cta::after { content: "↗"; font-size: 12px; }
 .slot-cta:empty { display: none; }
 .mock-note { position: absolute; z-index: 6; color: var(--ink-3); font-size: 9.5px; margin: 0; }
@@ -212,7 +217,7 @@ html:lang(zh) .slot-blurb { line-height: 1.6; height: 3.2em; }
 /* r7 draft row: 草稿 chip + unconfirmed links / placeholders (from manifest `draft`) */
 .slot-blurb { -webkit-line-clamp: 5; height: auto; max-height: 7.75em; max-width: 31em; }
 html:lang(zh) .slot-blurb { height: auto; max-height: 8em; }
-.draft-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin-top: 14px; font-size: 10px; text-transform: none; letter-spacing: .02em; color: var(--ink-3); max-width: 30em; }
+.draft-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin-top: 14px; font-size: clamp(10px, calc(10px + (100vw - 1440px) * 0.0009), 11px); text-transform: none; letter-spacing: .02em; color: var(--ink-3); max-width: 30em; }
 .dr-chip { display: inline-flex; align-items: center; padding: 3px 7px; border-radius: 4px; background: rgba(255, 255, 255, .06); color: var(--ink-2); border: 1px solid var(--line-2); text-transform: uppercase; letter-spacing: .08em; }
 .dr-ai { color: var(--ink-2); border: 1px solid var(--line-2); border-radius: 4px; padding: 3px 7px; }
 .dr-link { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid currentColor; padding-bottom: 1px; }
@@ -220,9 +225,9 @@ html:lang(zh) .slot-blurb { height: auto; max-height: 8em; }
 .dr-text { color: var(--ink-2); }
 .dr-ph { display: inline-flex; gap: 6px; padding: 3px 7px; border-radius: 4px; border: 1px dashed var(--line-2); color: var(--ink-2); cursor: not-allowed; }
 .dr-ph em, .dr-soc em { font-style: normal; color: var(--ink-3); }
-.dr-note { flex-basis: 100%; margin: 2px 0 0; color: var(--ink-3); font: 12px/1.55 var(--f-sans); letter-spacing: 0; text-wrap: pretty; }
+.dr-note { flex-basis: 100%; margin: 2px 0 0; color: var(--ink-3); font: clamp(12px, calc(12px + (100vw - 1440px) * 0.0018), 14px)/1.55 var(--f-sans); letter-spacing: 0; text-wrap: pretty; }
 .dr-dl::after { content: " ↓"; }
-.dr-steps { flex-basis: 100%; margin: 4px 0 0; color: var(--ink-2); font: 12px/1.6 var(--f-sans); letter-spacing: 0; }
+.dr-steps { flex-basis: 100%; margin: 4px 0 0; color: var(--ink-2); font: clamp(12px, calc(12px + (100vw - 1440px) * 0.0018), 14px)/1.6 var(--f-sans); letter-spacing: 0; }
 .dr-steps-h { margin: 0 0 2px; font: 10px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
 .dr-steps ol { margin: 0; padding: 0 0 0 1.4em; }
 .dr-steps li { padding-left: 2px; text-wrap: pretty; }
@@ -240,9 +245,9 @@ html:lang(zh) .slot-blurb { height: auto; max-height: 8em; }
    ========================================================================= */
 .ch-aviso .pin { background: none; } /* r18: transparent, the wireframe scene shows through */
 .av-glow { display: none; } /* r18: no tinted glow */
-.av-slots { left: var(--pad-x); top: 50%; transform: translateY(-52%); width: min(30vw, 440px); }
+.av-slots { left: var(--gut); top: 50%; transform: translateY(-52%); width: min(30vw, 440px); }
 .ch-aviso .slot-title { color: var(--ink); }
-.av-scene { position: absolute; right: calc(var(--pad-x) * 1.2); top: 50%; width: min(56vw, 900px, calc((100vh - var(--safe-b) - 170px) * 1.58)); transform: translateY(-50%); margin-top: calc(var(--top-h) / 2); perspective: var(--persp); perspective-origin: 40% 40%; container-type: inline-size; }
+.av-scene { position: absolute; right: calc(var(--gut) + var(--pad-x) * .2); top: 50%; width: min(56vw, .6 * var(--maxw), 900px, calc((100vh - var(--safe-b) - 170px) * 1.58)); transform: translateY(-50%); margin-top: calc(var(--top-h) / 2); perspective: var(--persp); perspective-origin: 40% 40%; container-type: inline-size; }
 .av-window { position: relative; width: 100%; aspect-ratio: 16 / 10.2; transform-style: preserve-3d;
   transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateZ(var(--tz, 0px)); will-change: transform; }
 .av-layer { position: absolute; top: 0; right: 0; bottom: 0; left: 0; inset: 0; }
@@ -294,17 +299,15 @@ html:lang(zh) .slot-blurb { height: auto; max-height: 8em; }
 .av-tag-1 { left: 3%; bottom: 6%; transform: translateZ(0); }
 .av-tag-2 { left: var(--hl-x, 20%); top: calc(var(--hl-y, 40%) - 3.6cqw); transform: translateZ(var(--zh, 0px)); }
 .av-tag-3 { right: 4%; top: calc(31% - 3.6cqw); transform: translateZ(var(--zp, 0px)); }
-.ch-aviso .mock-note { right: var(--pad-x); top: calc(var(--top-h) + 12px); }
+.ch-aviso .mock-note { right: var(--gut); top: calc(var(--top-h) + 12px); }
 
 /* =========================================================================
    02 PRINTPLAY — paper out of a printer, fanned on a desk (§7.4)
    ========================================================================= */
-.ch-printplay .pin { padding: calc(var(--top-h) + 4px) 16px 16px; }
+.ch-printplay .pin { padding: calc(var(--top-h) + 4px) max(16px, calc(var(--gut) - 40px)) 16px; } /* r26: the title at --gut like every chapter */
 .pp-desk { position: relative; height: 100%; border-radius: 28px; overflow: hidden; color: var(--ink); } /* r18: no paper-coloured desk; the sheets sit on the scene */
-.pp-printer { position: absolute; z-index: 4; left: 63%; top: 0; transform: translateX(-50%); width: min(480px, 36vw); }
-.pp-body { height: 46px; border-radius: 0 0 18px 18px; background: linear-gradient(#2a2724, #171512); display: flex; align-items: center; justify-content: space-between; padding: 0 22px; color: #8d877d; box-shadow: 0 12px 30px rgba(40, 30, 10, .35); }
-.pp-led { width: 7px; height: 7px; border-radius: 50%; background: #E0573B; box-shadow: 0 0 10px #E0573B; opacity: calc(.4 + var(--printing, 0) * .6); }
-.pp-slot { margin: -8px auto 0; width: 82%; height: 8px; border-radius: 0 0 6px 6px; background: #0d0c0a; box-shadow: 0 6px 12px rgba(0, 0, 0, .35); }
+/* r26: the printer prop (a dark bar labelled PRINTPLAY under the top bar) is gone — on wide screens it floated alone
+   above the fan and read as an empty box; the sheets still drop in from above */
 .pp-stack { position: absolute; z-index: 3; left: 0; right: 0; top: 46px; bottom: 0; overflow: hidden; perspective: var(--persp); }
 .sheet { --w: min(calc((100vh - var(--safe-b) - 330px) / 1.414), 310px); position: absolute; left: 63%; top: 50%; width: var(--w); aspect-ratio: 1 / 1.414; margin-left: calc(var(--w) / -2); margin-top: calc(var(--w) * -0.707 - 16px); container-type: inline-size; transform-style: preserve-3d; cursor: pointer;
   transform: translate3d(var(--x, 0px), var(--y, 0px), 0) rotate(var(--r, 0deg)) translateY(calc(var(--lift) * -18px)) scale(calc(1 + var(--lift) * .035));
@@ -364,7 +367,7 @@ html:lang(zh) .slot-blurb { height: auto; max-height: 8em; }
   background: linear-gradient(rgba(255, 255, 255, .04) 1px, transparent 1px) 0 0 / 48px 48px, linear-gradient(90deg, rgba(255, 255, 255, .04) 1px, transparent 1px) 0 0 / 48px 48px;
   -webkit-mask-image: radial-gradient(90% 80% at 50% 50%, #000 40%, transparent); mask-image: radial-gradient(90% 80% at 50% 50%, #000 40%, transparent); }
 /* r6: title block and drawing share one flex column, so a wider system font can only shrink the drawing, never overlap it */
-.st-left { position: absolute; z-index: 5; left: var(--pad-x); top: calc(var(--top-h) + 4vh); bottom: 3vh; width: min(60vw, 920px); display: flex; flex-direction: column; gap: 1vh; }
+.st-left { position: absolute; z-index: 5; left: var(--gut); top: calc(var(--top-h) + 4vh); bottom: 3vh; width: min(60vw, 920px); display: flex; flex-direction: column; gap: 1vh; }
 .st-slots { position: relative; width: min(40vw, 560px); }
 .st-slots .slot-tagline { max-width: none; }
 .ch-steam .slot-title { color: var(--ink); }
@@ -384,7 +387,7 @@ html:lang(zh) .slot-blurb { height: auto; max-height: 8em; }
 .st-air path { fill: none; stroke: rgba(246, 239, 226, .6); stroke-width: 1.5; stroke-linecap: round; opacity: calc(1 - var(--closed, 0)); }
 .st-rad .st-line { stroke: rgba(246, 239, 226, calc(.45 + var(--heat, 0) * .5)); }
 .st-rad { filter: drop-shadow(0 0 calc(var(--heat, 0) * 14px) rgba(242, 169, 59, .7)); }
-.st-gauge { position: absolute; right: var(--pad-x); top: calc(var(--top-h) + 3vh); width: min(23vw, 34vh, 340px); }
+.st-gauge { position: absolute; right: var(--gut); top: calc(var(--top-h) + 3vh); width: min(23vw, 34vh, 340px); }
 .st-gauge svg { width: 100%; overflow: visible; }
 .g-ring { fill: rgba(14, 12, 9, .9); stroke: rgba(246, 239, 226, .16); stroke-width: 1; }
 .g-ticks line { stroke: rgba(246, 239, 226, .35); stroke-width: 1; }
@@ -395,7 +398,7 @@ html:lang(zh) .slot-blurb { height: auto; max-height: 8em; }
 .g-needle circle { fill: #f6efe2; }
 .g-read { position: absolute; left: 0; right: 0; top: 76%; text-align: center; color: var(--ink-3); font-size: 9.5px; }
 .g-read b { display: block; font: 500 22px/1 var(--f-mono); color: var(--ink); letter-spacing: .1em; margin-bottom: 6px; }
-.st-block { position: absolute; right: var(--pad-x); bottom: 3vh; width: min(28vw, 400px); border: 1px solid rgba(246, 239, 226, .28); font-size: 10px; color: rgba(246, 239, 226, .5); }
+.st-block { position: absolute; right: var(--gut); bottom: 3vh; width: min(28vw, 400px); border: 1px solid rgba(246, 239, 226, .28); font-size: 10px; color: rgba(246, 239, 226, .5); }
 .tb-row { display: block; padding: 9px 12px; border-bottom: 1px solid rgba(246, 239, 226, .16); }
 .tb-row > span, .tb-split span { display: block; margin-bottom: 3px; }
 .tb-row b { display: block; font: 500 13px/1.3 var(--f-sans); color: var(--ink); letter-spacing: 0; text-transform: none; }
@@ -412,13 +415,13 @@ html:lang(zh) .slot-blurb { height: auto; max-height: 8em; }
    05 SUIKOU — real prototype screens in phone frames (r20; was an HTML/CSS mock, §7.6)
    ========================================================================= */
 .ch-suikou .pin { background: none; } /* r18: transparent, the wireframe scene shows through */
-.sk-rings { position: absolute; left: 34%; top: 54%; width: 0; height: 0; }
+.sk-rings { position: absolute; left: calc(50% - .16 * min(100%, var(--maxw) + 2 * var(--pad-x))); top: 54%; width: 0; height: 0; }
 .sk-rings i { position: absolute; left: 50%; top: 50%; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .07); transform: translate(-50%, -50%) scale(calc(.9 + var(--ring, 0) * .14)); }
 .sk-rings i:nth-child(1) { width: 52vh; height: 52vh; } .sk-rings i:nth-child(2) { width: 74vh; height: 74vh; opacity: .75; }
 .sk-rings i:nth-child(3) { width: 98vh; height: 98vh; opacity: .5; } .sk-rings i:nth-child(4) { width: 124vh; height: 124vh; opacity: .3; }
 /* r21: back to one real-sized phone (as before r20); the three prototype screens take turns inside it, with arrows, dots
    and a pause button below, then the caption of the screen on show. Auto-rotation and fading are in app.js. */
-.sk-phone-wrap { position: absolute; left: 34%; top: calc(50% + 10px); translate: -50% -50%; transform-origin: 50% 100%; }
+.sk-phone-wrap { position: absolute; left: calc(50% - .16 * min(100%, var(--maxw) + 2 * var(--pad-x))); top: calc(50% + 10px); translate: -50% -50%; transform-origin: 50% 100%; }
 .sk-car { display: flex; flex-direction: column; align-items: center; }
 .sk-phone { --ph: min(calc(100vh - var(--top-h) - var(--safe-b) - 150px), 620px); --pb: calc(var(--ph) * .018); position: relative; height: var(--ph); width: calc(var(--ph) * .4815); border-radius: calc(var(--ph) * .085); background: linear-gradient(145deg, #3a3d42, #16171a 40%, #2a2c30); box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .14), 0 40px 90px rgba(0, 0, 0, .6), 0 0 0 1px #000;
   transform: perspective(var(--persp)) rotateY(var(--pry, 0deg)) rotateX(var(--prx, 0deg)); }
@@ -447,10 +450,10 @@ html:lang(zh) .slot-blurb { height: auto; max-height: 8em; }
 .sk-cap { grid-area: 1 / 1; margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--ink-2); opacity: 0; visibility: hidden; transition: opacity 280ms linear, visibility 0s 280ms; }
 .sk-cap.is-on { opacity: 1; visibility: visible; transition: opacity 280ms linear; }
 html:lang(zh) .sk-cap { font-size: 13px; }
-.sk-slots { left: 58%; top: 50%; transform: translateY(-50%); width: min(34vw, 480px); }
+.sk-slots { left: calc(50% + .08 * min(100%, var(--maxw) + 2 * var(--pad-x))); top: 50%; transform: translateY(-50%); width: min(34vw, 480px); }
 .ch-suikou .slot-title { color: var(--ink); }
 .slot-noqr { color: var(--ink-3); font-size: 10px; }
-.sk-note { right: var(--pad-x); top: calc(var(--top-h) + 12px); }
+.sk-note { right: var(--gut); top: calc(var(--top-h) + 12px); }
 
 /* =========================================================================
    07 XIAOYI — a venture shown as a book whose pages turn (§7.7, treatment A; r14B: venture labels)
@@ -458,10 +461,10 @@ html:lang(zh) .sk-cap { font-size: 13px; }
 .ch-xiaoyi .pin { background: none; } /* r18: transparent, the wireframe scene shows through */
 .xy-light { position: absolute; left: 50%; top: -10%; width: 70vw; height: 90vh; transform: translateX(-50%); background: conic-gradient(from 180deg at 50% 0%, transparent 160deg, rgba(255, 255, 255, .03) 175deg, rgba(255, 255, 255, .05) 180deg, rgba(255, 255, 255, .03) 185deg, transparent 200deg); pointer-events: none; }
 /* r8: one left column like every other chapter (the r5 three-column header put tagline and status on other edges) */
-.xy-slots { left: var(--pad-x); top: 50%; transform: translateY(-50%); width: min(28vw, 400px); }
+.xy-slots { left: var(--gut); top: 50%; transform: translateY(-50%); width: min(28vw, 400px); }
 .xy-slots .slot-title { color: var(--ink); }
-.xy-book-wrap { position: absolute; right: calc(var(--pad-x) + 44px); top: calc(50% + var(--top-h) / 2); translate: 0 -50%; transform-origin: 50% 100%; }
-.xy-book { --split: 36%; --bw: min(calc(100vw - 2 * var(--pad-x) - min(28vw, 400px) - 44px - 5vw), 940px, calc((100vh - var(--safe-b) - var(--top-h) - 60px) * 1.5)); position: relative; width: var(--bw); aspect-ratio: 1.5; container-type: inline-size; perspective: 1600px; filter: drop-shadow(0 30px 40px rgba(0, 0, 0, .55)); }
+.xy-book-wrap { position: absolute; right: calc(var(--gut) + 44px); top: calc(50% + var(--top-h) / 2); translate: 0 -50%; transform-origin: 50% 100%; }
+.xy-book { --split: 36%; --bw: min(calc(min(100vw - 2 * var(--pad-x), var(--maxw)) - min(28vw, 400px) - 44px - 5vw), 940px, calc((100vh - var(--safe-b) - var(--top-h) - 60px) * 1.5)); position: relative; width: var(--bw); aspect-ratio: 1.5; container-type: inline-size; perspective: 1600px; filter: drop-shadow(0 30px 40px rgba(0, 0, 0, .55)); }
 .xy-spread { position: absolute; top: 0; right: 0; bottom: 0; left: 0; inset: 0; display: grid; grid-template-columns: var(--split) 1fr; clip-path: inset(0 calc((1 - var(--rv, 0)) * 100%) 0 0); }
 .xy-spread:first-child { --rv: 1; }
 .xy-page { position: relative; background: #eeedea; padding: 5cqw 4cqw; overflow: hidden; }
@@ -487,9 +490,9 @@ html:lang(zh) .sk-cap { font-size: 13px; }
    06 TAOTAO — a wall of looping clips, at most 2 playing (§7.8)
    ========================================================================= */
 .ch-taotao .pin { background: none; } /* r18: transparent, the wireframe scene shows through */
-.tt-slots { left: var(--pad-x); top: 50%; transform: translateY(-50%); width: min(28vw, 400px); }
+.tt-slots { left: var(--gut); top: 50%; transform: translateY(-50%); width: min(28vw, 400px); }
 .ch-taotao .slot-title { color: var(--ink); }
-.tt-wall { position: absolute; right: var(--pad-x); top: calc(50% - 10px); transform: translateY(-50%); width: min(60vw, calc((100vh - var(--safe-b) - 170px) * 1.98)); display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.tt-wall { position: absolute; right: var(--gut); top: calc(50% - 10px); transform: translateY(-50%); width: min(60vw, .6 * var(--maxw), calc((100vh - var(--safe-b) - 170px) * 1.98)); display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
 .tt-cell { --c: #FFB4A2; position: relative; margin: 0; aspect-ratio: 4 / 3; border-radius: 18px; overflow: hidden; background: var(--c); container-type: inline-size; box-shadow: 0 20px 40px rgba(0, 0, 0, .4); transform: translate3d(var(--fx, 0px), var(--fy, 0px), 0) rotate(var(--fr, 0deg)) scale(calc(1 + var(--lift) * .04)); transition: --lift var(--dur-fast) var(--ease-out); cursor: pointer; }
 .tt-cell:hover { --lift: 1; z-index: 3; }
 .tt-cell.c1 { --c: #FFB4A2; } .tt-cell.c2 { --c: #A0C4FF; } .tt-cell.c3 { --c: #B9FBC0; } .tt-cell.c4 { --c: #FDFFB6; } .tt-cell.c5 { --c: #2E2A5A; } .tt-cell.c6 { --c: #9BF6FF; }
@@ -527,17 +530,17 @@ html:lang(zh) .sk-cap { font-size: 13px; }
 @keyframes tt-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6cqw); } }
 @keyframes tt-bounce { from { transform: translateY(0); } to { transform: translateY(-22cqw); } }
 @keyframes tt-twinkle { 50% { opacity: .2; } }
-.tt-note { right: var(--pad-x); top: calc(var(--top-h) + 12px); }
+.tt-note { right: var(--gut); top: calc(var(--top-h) + 12px); }
 
 /* =========================================================================
    07 WILD LOUIS — self-introduction (r14): the slots sit left, vertically centred (as in TaoTao);
    the portrait fills the right half on a soft violet glow and grows in as the chapter arrives.
    ========================================================================= */
 .ch-wild .pin { background: none; } /* r18: transparent, the wireframe scene shows through */
-.wl-slots { left: var(--pad-x); top: 50%; transform: translateY(-50%); width: min(34vw, 480px); }
+.wl-slots { left: var(--gut); top: 50%; transform: translateY(-50%); width: min(34vw, 480px); }
 .ch-wild .slot-title { color: var(--ink); }
 .ch-wild .dr-soc { margin-top: 10px; }
-.wl-louis { position: absolute; right: var(--pad-x); top: calc(var(--top-h) + 2vh); bottom: 0; width: min(50vw, calc((100vh - var(--safe-b) - var(--top-h)) * .9), 760px);
+.wl-louis { position: absolute; right: var(--gut); top: calc(var(--top-h) + 2vh); bottom: 0; width: min(50vw, calc((100vh - var(--safe-b) - var(--top-h)) * .9), 760px);
   transform: scale(calc(.8 + var(--grow, 1) * .2)); transform-origin: 50% 100%; opacity: calc(.3 + var(--grow, 1) * .7); }
 .wl-louis::after { content: ""; position: absolute; left: 6%; right: 6%; bottom: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .25), transparent); }
 .wl-louis canvas { width: 100%; height: 100%; }
@@ -552,7 +555,7 @@ html:lang(zh) .sk-cap { font-size: 13px; }
    display line, the contact row between hairlines (mono label in columns 1–3, the large handles in 4–12), the voiceprint
    strip, and the © / back-to-top line right under it. Black / white / grey only; the voiceprint strip is the one solid band. */
 .footer { position: relative; padding: 14vh 0 calc(var(--safe-b) + 20px); overflow: hidden; }
-.foot-h { font-size: clamp(40px, 5.6vw, 92px); color: var(--ink); margin: 0 0 7vh; }
+.foot-h { font-size: clamp(40px, 5.6vw, 104px); color: var(--ink); margin: 0 0 7vh; }
 .foot-h span { display: block; text-wrap: balance; } /* r8: one line per phrase, so no stray space between Han phrases */
 html:lang(zh) .foot-h span { word-break: keep-all; overflow-wrap: anywhere; } /* zh: keep each phrase whole */
 .foot-row { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; align-items: baseline; padding: 22px 0 26px; border-top: 1px solid var(--line); }
@@ -583,7 +586,7 @@ html:lang(zh) .foot-h span { word-break: keep-all; overflow-wrap: anywhere; } /*
 .ch-work .stage { height: auto !important; }
 .ch-work .pin { position: relative; height: auto; overflow: visible; }
 .wk-head { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); column-gap: 4vw; align-items: end;
-  padding: calc(var(--top-h) + 7vh) var(--pad-x) 5vh; }
+  padding: calc(var(--top-h) + 7vh) var(--gut) 5vh; }
 .ch-work .slots { position: relative; }
 .wk-side { display: flex; flex-direction: column; gap: 26px; }
 .wk-sec { margin: 0 0 10px; color: var(--ink-3); font-weight: 500; }
@@ -607,7 +610,7 @@ html:lang(zh) .foot-h span { word-break: keep-all; overflow-wrap: anywhere; } /*
    an opaque strip fills the top bar's faded lower edge so the case screens never show through a gap */
 .wk-index::before { content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: var(--topbar-h, var(--top-h)); background: var(--bg); visibility: hidden; pointer-events: none; }
 .wk-index.is-stuck::before { visibility: visible; }
-.wk-index ol { list-style: none; margin: 0; padding: 0 var(--pad-x); display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.wk-index ol { list-style: none; margin: 0; padding: 0 var(--gut); display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
 .wk-index a { --ca: var(--sig-a); position: relative; display: flex; align-items: baseline; gap: 10px; padding: 14px 12px 15px 0; color: var(--ink-3); text-decoration: none; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   transition: color var(--dur-fast) var(--ease-out); }
 .wk-index a span { font-family: var(--f-sans); font-size: 13px; letter-spacing: -.005em; text-transform: none; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; transition: color var(--dur-fast) var(--ease-out); }
@@ -617,7 +620,7 @@ html:lang(zh) .foot-h span { word-break: keep-all; overflow-wrap: anywhere; } /*
 .wk-index a.is-on::after { transform: scaleX(1); }
 .wk-index a.is-done b { color: var(--ink-2); }
 
-.wcase { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); column-gap: 4vw; align-items: start; padding: 6vh var(--pad-x); scroll-margin-top: calc(var(--top-h) + 48px);
+.wcase { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); column-gap: 4vw; align-items: start; padding: 6vh var(--gut); scroll-margin-top: calc(var(--top-h) + 48px);
   transition: padding var(--dur-slow) var(--ease-out); }
 .wcase.is-open { padding-bottom: 10vh; }
 .wcase + .wcase { border-top: 1px solid var(--line); }
@@ -627,8 +630,8 @@ html:lang(zh) .foot-h span { word-break: keep-all; overflow-wrap: anywhere; } /*
 .case-tag { display: flex; gap: 12px; margin: 0 0 14px; color: var(--ca); font-size: 10.5px; }
 .case-tag span { color: var(--ink-3); }
 .case-h { margin: 0; font-size: clamp(30px, 3vw, 46px); font-weight: 500; letter-spacing: -.035em; line-height: 1.02; }
-.case-sum { margin: 16px 0 0; font-size: clamp(16px, 1.2vw, 18px); line-height: 1.5; letter-spacing: -.005em; max-width: 30em; text-wrap: pretty; }
-.case-pmr { margin: 0; display: grid; grid-template-columns: 7.5em minmax(0, 1fr); gap: 14px 18px; font-size: 14px; line-height: 1.6; color: var(--ink-2); border-top: 1px solid var(--line); padding-top: 18px; max-width: 38em; }
+.case-sum { margin: 16px 0 0; font-size: clamp(16px, 1.2vw, 20px); line-height: 1.5; letter-spacing: -.005em; max-width: 30em; text-wrap: pretty; }
+.case-pmr { margin: 0; display: grid; grid-template-columns: 7.5em minmax(0, 1fr); gap: 14px 18px; font-size: clamp(14px, calc(14px + (100vw - 1440px) * 0.0018), 16px); line-height: 1.6; color: var(--ink-2); border-top: 1px solid var(--line); padding-top: 18px; max-width: 38em; }
 html:lang(zh) .case-pmr { grid-template-columns: 5em minmax(0, 1fr); }
 .case-pmr dt { color: var(--ink-3); font-size: 10px; padding-top: 4px; }
 .case-pmr dt:nth-of-type(2) { color: var(--ca); }
@@ -694,6 +697,13 @@ html:lang(zh) .case-pmr { grid-template-columns: 5em minmax(0, 1fr); }
 @media (max-width: 1700px) {
   .chapnav a { padding: 6px 7px; gap: 5px; font-size: 12px; }
 }
+/* r26: wide screens — the text columns grow with their type; PrintPlay's title sits level with the fan, not in the corner */
+@media (min-width: 1800px) {
+  .av-slots { width: 480px; }
+  .xy-slots, .tt-slots { width: 460px; }
+  .wl-slots, .sk-slots { width: 540px; }
+  .pp-slots { width: 460px; top: 50%; translate: 0 -50%; }
+}
 @media (max-width: 1360px) { .chapnav a b { display: none; } .chapnav a { padding: 6px 8px; } }
 @media (max-width: 1180px) {
   .chapnav a span { display: none; }
@@ -742,7 +752,6 @@ html:lang(zh) .case-pmr { grid-template-columns: 5em minmax(0, 1fr); }
   .ch-printplay .pin { padding: 64px 10px 40px; }
   .pp-desk { height: auto; padding: 72px 18px 26px; border-radius: 22px; display: flex; flex-direction: column; }
   .pp-slots { order: -1; }
-  .pp-printer { width: 74%; }
   .pp-slots { padding: 0 6px; }
   .pp-stack { position: relative; top: auto; overflow: visible; display: flex; flex-direction: column; align-items: center; padding: 26px 0 8px; perspective: none; }
   .sheet { --w: 68vw; position: relative; left: auto; top: auto; margin: 0; transform: rotate(var(--mr, 0deg)) !important; }
@@ -854,7 +863,7 @@ html:lang(zh) .case-pmr { grid-template-columns: 5em minmax(0, 1fr); }
    Steam Vent Calc keeps the grey drawing. ---------- */
 .st-drawing, .st-gauge { filter: grayscale(1); }
 .av-scene { filter: saturate(.75) brightness(.93); }
-.pp-printer, .pp-stack { filter: saturate(.58) brightness(.9); }
+.pp-stack { filter: saturate(.58) brightness(.9); }
 .sk-shot img { filter: saturate(.62) brightness(.88); } /* r20: real prototype screens, same muted treatment */
 .tt-wall { filter: saturate(.42) brightness(.84); }
 .xy-shot img { filter: saturate(.55) brightness(.9); } /* r25b: on the photos only; paper and ink are already grey */
