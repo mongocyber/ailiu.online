@@ -242,7 +242,7 @@ html:lang(zh) .slot-blurb { height: auto; max-height: 8em; }
 .dr-steps li::marker { font: calc(10 * var(--u)) var(--f-mono); color: var(--ink-3); }
 .dr-soc { flex-basis: 100%; list-style: none; margin: calc(4 * var(--u)) 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: calc(8 * var(--u)); }
 .dr-soc { gap: calc(6 * var(--u)); }
-.dr-soc li { display: inline-flex; gap: calc(6 * var(--u)); align-items: center; padding: calc(3 * var(--u)) calc(8 * var(--u)) calc(3 * var(--u)) calc(3 * var(--u)); border: 1px dashed var(--line-2); border-radius: calc(6 * var(--u)); cursor: not-allowed; }
+.dr-soc li { display: inline-flex; gap: 7px; align-items: center; padding: 6px 9px; border: 1px solid var(--line-2); border-radius: calc(6 * var(--u)); cursor: default; }
 .dr-soc i { width: calc(20 * var(--u)); height: calc(20 * var(--u)); border-radius: calc(5 * var(--u)); display: grid; place-items: center; font: 600 calc(11 * var(--u))/1 var(--f-sans); font-style: normal; color: var(--ink); background: rgba(255, 255, 255, .06); border: 1px solid var(--line-2); }
 .dr-soc span { color: var(--ink-2); line-height: 1.2; }
 .dr-soc em { line-height: 1.2; }
@@ -434,15 +434,15 @@ html:lang(zh) .slot-blurb { height: auto; max-height: 8em; }
 .sk-phone { --ph: min(calc(100vh - var(--top-h) - var(--safe-b) - calc(150 * var(--u))), calc(620 * var(--u))); --pb: calc(var(--ph) * .018); position: relative; height: var(--ph); width: calc(var(--ph) * .4815); border-radius: calc(var(--ph) * .085); background: linear-gradient(145deg, #3a3d42, #16171a 40%, #2a2c30); box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .14), 0 calc(40 * var(--u)) calc(90 * var(--u)) rgba(0, 0, 0, .6), 0 0 0 1px #000;
   transform: perspective(var(--persp)) rotateY(var(--pry, 0deg)) rotateX(var(--prx, 0deg)); }
 .sk-island { position: absolute; z-index: 3; left: 50%; top: calc(var(--ph) * .03); width: calc(var(--ph) * .13); height: calc(var(--ph) * .034); translate: -50% 0; border-radius: calc(99 * var(--u)); background: #000; }
-/* r22: the screen is sized from the screenshots themselves (720 × 1558): the glass is the phone minus the bezel on each
-   side, at exactly the image's aspect ratio, so object-fit has nothing to crop or letterbox. The rounded clip is a
-   clip-path (not overflow + border-radius, which the tilted 3D phone could briefly drop while compositing), the slides
-   are their own flat layers, and the outgoing screen (.is-prev) stays opaque under the incoming one while it fades in. */
-.sk-track { position: absolute; left: var(--pb); top: var(--pb); width: calc(100% - 2 * var(--pb)); height: auto; aspect-ratio: 720 / 1558; border-radius: calc(var(--ph) * .07); clip-path: inset(0 round calc(var(--ph) * .07)); overflow: hidden; background: #1c1d20; isolation: isolate; }
-.sk-shot { position: absolute; inset: 0; z-index: 0; opacity: 0; visibility: hidden; backface-visibility: hidden; will-change: opacity; transition: opacity 280ms linear, visibility 0s 280ms; }
+/* Keep the original phone and glass dimensions. Full-page images scroll below a fixed safe area
+   reserved for the island. The rounded glass clips the content, without stretching or cropping the source. */
+.sk-track { position: absolute; z-index: 1; left: var(--pb); top: var(--pb); width: calc(100% - 2 * var(--pb)); height: auto; aspect-ratio: 720 / 1558; border-radius: calc(var(--ph) * .07); clip-path: inset(0 round calc(var(--ph) * .07)); overflow: hidden; background: #fbfcf5; isolation: isolate; }
+.sk-shot { position: absolute; inset: calc(var(--ph) * .05) 0 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; z-index: 0; opacity: 0; visibility: hidden; backface-visibility: hidden; will-change: opacity; transition: opacity 280ms linear, visibility 0s 280ms; }
 .sk-shot.is-prev { z-index: 1; opacity: 1; visibility: visible; transition: none; }
 .sk-shot.is-on { z-index: 2; opacity: 1; visibility: visible; transition: opacity 280ms linear; }
-.sk-shot img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; }
+.sk-shot img { display: block; width: 100%; height: auto; margin-top: calc(var(--ph) * -.015); }
+.sk-shot::-webkit-scrollbar { display: none; }
+.sk-shot:focus-visible { outline: 2px solid var(--sig-a); outline-offset: -2px; }
 .sk-ctl { display: flex; align-items: center; gap: calc(6 * var(--u)); margin-top: calc(18 * var(--u)); }
 .sk-ctl button { appearance: none; border: 0; background: none; color: var(--ink-2); cursor: pointer; }
 .sk-arrow { width: calc(32 * var(--u)); height: calc(32 * var(--u)); border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(246, 239, 226, .22); font-size: calc(18 * var(--u)); line-height: 1; transition: color var(--dur-fast), box-shadow var(--dur-fast); }
@@ -796,7 +796,7 @@ html:lang(zh) .case-pmr { grid-template-columns: 5em minmax(0, 1fr); }
   /* taotao: 2x2, one playing */
   .tt-wall { position: relative; right: auto; top: auto; transform: none; width: auto; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 28px; }
   .tt-cell { transform: none !important; border-radius: 14px; }
-  .tt-cell.c5, .tt-cell.c6 { display: none; }
+  .tt-cell { grid-column: auto; }
   .tt-note { margin-top: 14px; }
 
   /* wild louis: text, then the portrait */
@@ -865,7 +865,73 @@ html:lang(zh) .case-pmr { grid-template-columns: 5em minmax(0, 1fr); }
 .st-drawing, .st-gauge { filter: grayscale(1); }
 .av-scene { filter: saturate(.75) brightness(.93); }
 .pp-stack { filter: saturate(.58) brightness(.9); }
-.sk-shot img { filter: saturate(.62) brightness(.88); } /* r20: real prototype screens, same muted treatment */
 .tt-wall { filter: saturate(.42) brightness(.84); }
 .xy-shot img { filter: saturate(.55) brightness(.9); } /* r25b: on the photos only; paper and ink are already grey */
 .xy-tabs li.on { color: var(--ink); border-color: var(--sig-a); } /* the book's tab index reads as navigation: kept grey */
+
+
+/* Six TaoTao cards: five completed episodes plus a cover for the upcoming song. */
+.tt-wall { grid-template-columns: repeat(3, minmax(0, 1fr)); filter: none; }
+.tt-cell { grid-column: auto; aspect-ratio: auto; background: #17191d; color: var(--ink); text-decoration: none; }
+.tt-cell:focus-visible { outline: 3px solid var(--ink); outline-offset: 5px; }
+.tt-media { position: relative; aspect-ratio: 16 / 9; }
+.tt-media img, .tt-media video { display: block; width: 100%; height: 100%; object-fit: contain; }
+.tt-media video { position: absolute; inset: 0; opacity: 0; }
+.tt-cell.has-preview .tt-media video { opacity: 1; }
+.tt-caption { display: flex; align-items: center; gap: 7px; padding: 12px 10px; font: 500 12px/1.4 var(--f-sans); }
+.tt-caption b { font-size: 15px; }
+.tt-caption em { margin-left: auto; font: normal 10px var(--f-mono); white-space: nowrap; }
+@media (max-width: 760px) {
+  .tt-wall { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tt-cell, .tt-cell:nth-child(4), .tt-cell:nth-child(5) { grid-column: auto; }
+  .tt-cell { grid-column: auto; }
+  .tt-caption { font-size: 12px; }
+}
+
+.tt-cell.is-upcoming { cursor: default; }
+.tt-cell.is-upcoming:hover { --lift: 0; }
+.tt-cell.is-upcoming .tt-caption em { color: var(--ink-3); }
+.dr-soc li.has-link { border-style: solid; padding: 0; cursor: pointer; }
+.dr-soc li.is-text { cursor: default; }
+.dr-soc a { display: inline-flex; align-items: center; gap: 7px; padding: 6px 9px; color: inherit; text-decoration: none; }
+.dr-soc a:hover { color: var(--ink); background: rgba(255,255,255,.06); }
+.dr-soc a:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 5px; }
+.dr-soc i.platform-icon { display: inline-block; flex: 0 0 20px; width: 20px; height: 20px; border: 0; border-radius: 0; background: currentColor; color: var(--ink-2); mask: var(--platform-mark) center / contain no-repeat; -webkit-mask: var(--platform-mark) center / contain no-repeat; }
+.dr-soc i.platform-icon--xhs { flex-basis: 28px; width: 28px; }
+.platform-icon--youtube { --platform-mark: url("assets/platforms/youtube.svg"); }
+.platform-icon--douyin { --platform-mark: url("assets/platforms/douyin.svg"); }
+.platform-icon--channels { --platform-mark: url("assets/platforms/channels.svg"); }
+.platform-icon--mp { --platform-mark: url("assets/platforms/mp.svg"); }
+.platform-icon--bilibili { --platform-mark: url("assets/platforms/bilibili.svg"); }
+.platform-icon--xhs { --platform-mark: url("assets/platforms/xhs.svg"); }
+.platform-icon--kuaishou { --platform-mark: url("assets/platforms/kuaishou.svg"); }
+
+/* Integrated review: face topology stays readable; background recedes at the silhouette. */
+.louis-hero::before { display: none; }
+#louisHero.wire-portrait { transform: none; }
+.wire-portrait, .wire-portrait:not(.is-live) { background-image: none; }
+.wire-portrait::before { content: ""; position: absolute; inset: 8% 13% 12%; background: radial-gradient(ellipse, #08090a 20%, rgba(8,9,10,.94) 43%, transparent 70%); }
+.portrait-wire { display: block; position: relative; width: 100%; height: 100%; object-fit: contain; object-position: center bottom; mix-blend-mode: screen; opacity: .86; transform-origin: 50% 70%; mask-image: radial-gradient(ellipse 56% 57% at 50% 47%, #000 46%, rgba(0,0,0,.95) 66%, transparent 96%); }
+@media (prefers-reduced-motion: reduce) { .portrait-wire { transform: none !important; opacity: .86 !important; } }
+/* Keep the line portrait legible from the chapter's first frame. */
+.wl-louis.wire-portrait { opacity: 1; transform: none; }
+.wl-louis.wire-portrait::after { display: none; }
+
+/* Model refinement: match portrait visibility in both chapters. */
+.wl-louis { opacity: 1; transform: none; }
+.louis-host canvas, .wl-louis canvas { touch-action: pan-y; }
+[hidden] { display: none !important; }
+.dr-soc i.platform-icon, .dr-soc i.platform-icon--xhs { flex: 0 0 22px; width: 22px; height: 22px; mask-size: 20px 20px; -webkit-mask-size: 20px 20px; }
+.dr-soc i.platform-icon--xhs { mask-size: 22px auto; -webkit-mask-size: 22px auto; }
+/* Kuaishou fills its SVG viewBox; compensate optically without changing alignment. */
+.dr-soc i.platform-icon--kuaishou { mask-size: 18px 18px; -webkit-mask-size: 18px 18px; }
+
+/* Local review URL only: keep the unapproved portrait out of the site review. */
+html[data-portrait-review="off"] .louis-hero,
+html[data-portrait-review="off"] .wl-louis { display: none; }
+@media (max-width: 760px) {
+  html[data-portrait-review="off"] .hero-inner { align-content: center; padding-bottom: 12svh; }
+}
+
+.voiceprint { height: calc(124 * var(--u)); }
+@media(max-width:760px) { .voiceprint { height: 104px; } }

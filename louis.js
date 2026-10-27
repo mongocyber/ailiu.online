@@ -92,6 +92,8 @@
       do { c = fb[o++]; d |= (c & 127) << sh; sh += 7; } while (c & 128);
       BF[k] = hw - d; if (d === 0) hw++;
     }
+    // Sculpt the body and its curves together, retaining a single coherent 3D surface.
+    for (let i=0;i<B.nv;i++) BP.set(window.LOUIS_REFINE.sculpt(...BP.slice(i*3,i*3+3)),i*3);
     // r25: vertex normals of the body; the depth-writing fill is shrunk 0.3 cm along them (so it never covers a line in a
     // hollow), the unshrunk body gives the feature / silhouette edges
     const FN = new Float32Array(B.nf * 3), VN = new Float32Array(B.nv * 3);
@@ -154,6 +156,7 @@
       }
       const phi = lb.subarray(o, o + n), cav = lb.subarray(o + n, o + 2 * n); o += 2 * n;
       if (!mine) continue;
+      for(let i=0;i<n;i++) P.set(window.LOUIS_REFINE.sculpt(...P.slice(i*3,i*3+3)),i*3);
       nl++; np += n;
       // normals: tangent from the neighbours, Pn the plane's normal, B = Pn × T (as the packer)
       const pn = mer ? [c, 0, -s] : [0, 1, 0], N = new Float32Array(n * 3), C = new Float32Array(n);
@@ -171,6 +174,7 @@
       for (let i = 0; i < n - 1; i++) segs.push(pt(i).concat(pt(i + 1)));
       if (closed) segs.push(pt(n - 1).concat(pt(0)));
     }
+    segs.push(...window.LOUIS_REFINE.details(BP,BF,VN,low));
     // six vertices per segment: own point · other point · own normal · [side, cavity, height, end]. The far end (end −1)
     // measures its side from the reversed direction, so its stored side is the mirror of its place across the line
     const L = new Float32Array(segs.length * 6 * 13);
@@ -190,12 +194,12 @@
   const BW = 30, Y0 = -7.5, BH = 37.5, AY = BH / BW;
   // r25: the grid's and the silhouette's gain (the denser face grid needs less than r24's 0.5; on the low tier's sparser
   // grid a full-strength silhouette reads as a mask's outline)
-  const LK = 0.4, EK = { high: 0.5, low: 0.28 };
+  const LK = 0.35, EK = { high: 0.23, low: 0.20 };
   // the hairline at the front, in cm above the base (the crop is 9 cm deeper at the back of the head, down to the nape)
   const HAIR = 28.4;
   // r25: below the neck the bust fades out by height (cm, model y): whole above FADE[1] (just under the chin), gone at
   // FADE[0] (the upper chest), eased at both ends — the shoulders and chest dissolve instead of ending in a pointed base
-  const FADE = [-1.5, 6.5];
+  const FADE = [-3.5, 4.5];
   const FADEF = "float fade(float y){ float t = smoothstep(" + FADE[0].toFixed(1) + ", " + FADE[1].toFixed(1) + ", y); return t * t * (2.0 - t); }";
   // the body: a near-black surface (alpha only) that writes depth and hides the scene behind, as a solid would
   const BVS = [
@@ -216,7 +220,7 @@
     // light in view space: a wrapped key from the upper left front, a soft fill, a cool rim on the parts turned away
     "  vec3 vd = normalize(-e.xyz); float nv = dot(n, vd);",
     "  float kd = dot(n, normalize(vec3(-0.5, 0.32, 0.8))), fill = max(dot(n, normalize(vec3(0.7, -0.1, 0.7))), 0.0);",
-    "  float lit = 0.04 + 1.15 * pow(0.5 + 0.5 * kd, 2.4) + 0.1 * fill;",
+    "  float lit = 0.07 + 1.05 * pow(0.5 + 0.5 * kd, 2.3) + 0.12 * fill;",
     "  float rim = pow(1.0 - abs(nv), 2.4) * (0.4 + 0.6 * max(dot(n.xy, normalize(vec2(0.75, 0.45))), 0.0));",
     // depth: what stands out toward the camera (nose, brow, lips, cheekbones, the near shoulder) is brighter and wider,
     // what lies back (the far cheek, the ears, the back of the head, the shoulders behind the neck) darker and finer
@@ -225,14 +229,17 @@
     "  float cv = clamp(1.0 - 2.4 * aM.y, 0.3, 1.45), ridge = clamp(-aM.y / 0.25, 0.0, 1.0), hollow = clamp(aM.y / 0.25, 0.0, 1.0);",
     // albedo: the short crop (above the hairline, and the back of the head above the nape) reads darker than the skin
     "  float hair = smoothstep(-0.8, 0.8, aM.z - uYb - " + HAIR.toFixed(1) + " + 9.0 * smoothstep(1.0, -4.0, aP.z));",
-    "  float alb = mix(1.0, 0.6, hair);",
+    "  float strand = step(0.6, -aM.y);",
+    "  float scalp = smoothstep(19.5+.35*cos(aP.x*.8),21.0+.35*cos(aP.x*.8),aP.y) + (1.0-smoothstep(-3.0,4.0,aP.z))*smoothstep(14.0,19.0,aP.y);",
+    "  float alb = mix(1.0, 0.16, min(1.0,scalp)*(1.0-strand));",
     "  float face = smoothstep(-0.2, 0.25, nv);",       // lines seen through at the silhouette fade out
     "  float a = (pow(lit * cv * alb, 1.25) * mix(0.42, 1.12, near) + 0.85 * rim * mix(0.6, 1.0, near)) * face;",
     "  float base = fade(aM.z);",
     "  float side = 1.0 - smoothstep(uXf * 0.8, uXf, abs(c.x / max(c.w, 1e-4)));",
-    "  vA = a * base * side;",
+    "  float longitude = smoothstep(.05,.7,abs(aO.y-aP.y)/max(length(aO-aP),.0001))*(1.0-strand);",
+    "  vA = a * base * side * mix(1.15,.60,longitude) * mix(1.0, 0.48, strand);",
     // width (css px): from depth, light and ridge, finer in hollows and toward the silhouette
-    "  float wd = mix(0.45, 1.5, clamp(0.55 * near + 0.35 * max(kd, 0.0) + 0.35 * ridge - 0.45 * hollow, 0.0, 1.0)) * mix(0.75, 1.0, face);",
+    "  float wd = mix(0.40, 1.1, clamp(0.55 * near + 0.35 * max(kd, 0.0) + 0.35 * ridge - 0.45 * hollow, 0.0, 1.0)) * mix(0.75, 1.0, face);",
     "  wd *= uDpr; vW = wd;",
     "  float gw = max(wd, 1.0) + 2.0;",                 // the quad: the line plus a pixel of antialiasing on each side
     "  vec2 d = scr(q) - scr(p); d = length(d) > 1e-4 ? normalize(d) : vec2(1.0, 0.0);",
@@ -260,7 +267,7 @@
     "  float base = fade(aM.z);",
     "  float side = 1.0 - smoothstep(uXf * 0.8, uXf, abs(c.x / max(c.w, 1e-4)));",
     "  vA = a * base * side;",
-    "  float wd = 1.1 * uDpr; vW = wd;",
+    "  float wd = 0.72 * uDpr; vW = wd;",
     "  float gw = max(wd, 1.0) + 2.0;",
     "  vec2 d = scr(q) - scr(p); d = length(d) > 1e-4 ? normalize(d) : vec2(1.0, 0.0);",
     "  vS = aM.x * aM.w;",
@@ -286,14 +293,16 @@
 
   class Louis {
     constructor(opts = {}) {
-      this.o = Object.assign({ fill: 0.98, interactive: true, low: null, keep: false, gain: 1 }, opts);
+      this.o = Object.assign({ fill: 1.02, interactive: true, low: null, keep: false, gain: 1 }, opts);
       this.mouse = { x: 0, y: 0, px: 0, py: 0 };
       this.running = false; this.last = 0;
-      this.reduced = mm("(prefers-reduced-motion: reduce)");
+      this.motionQuery = matchMedia("(prefers-reduced-motion: reduce)");
+      this.reduced = this.motionQuery.matches;
       this.failed = false; this.live = false;
     }
     mount(el) {
       this.el = el;
+      el.dataset.portraitMode = "webgl-3d";
       this.resize = this.resize.bind(this);
       this.tick = this.tick.bind(this);
       const low = this.o.low == null ? weak() : this.o.low;
@@ -310,17 +319,31 @@
       this.c.addEventListener("webglcontextlost", (e) => { e.preventDefault(); this.fail(); });
       if (window.ResizeObserver) { this.ro = new ResizeObserver(this.resize); this.ro.observe(el); }
       else window.addEventListener("resize", this.resize);
-      if (this.o.interactive && !this.reduced) {
+      if (this.o.interactive) {
         this.onMove = (e) => {
-          if (e.pointerType !== "mouse") return;
+          if (this.reduced || !this.running || (e.pointerType !== "mouse" && !this.dragging)) return;
           const r = this.c.getBoundingClientRect();
           this.mouse.x = Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width) * 2 - 1));
           this.mouse.y = Math.max(-1, Math.min(1, ((e.clientY - r.top) / r.height) * 2 - 1));
         };
+        this.onDown = e => { if(e.pointerType !== "mouse") { this.dragging = true; this.onMove(e); } };
+        this.onUp = () => { this.dragging = false; };
+        this.onLeave = e => { if (!e.relatedTarget) this.mouse.x = this.mouse.y = 0; };
+        this.c.addEventListener("pointerdown", this.onDown, { passive:true });
+        window.addEventListener("pointerup", this.onUp, { passive:true });
+        window.addEventListener("pointercancel", this.onUp, { passive:true });
+        document.addEventListener("mouseout", this.onLeave);
         window.addEventListener("pointermove", this.onMove, { passive: true });
       }
+      this.onMotion = () => {
+        this.reduced = this.motionQuery.matches;
+        this.mouse.x = this.mouse.y = this.mouse.px = this.mouse.py = 0;
+        if(this.reduced) { this.stop(); this.paint(performance.now()); }
+        else if(this.visible) this.start();
+      };
+      this.motionQuery.addEventListener("change",this.onMotion);
       if (window.IntersectionObserver) {
-        this.io = new IntersectionObserver((ens) => { ens[0].isIntersecting ? this.start() : this.stop(); });
+        this.io = new IntersectionObserver((ens) => { this.visible=ens[0].isIntersecting; if(this.visible) this.start(); else this.stop(); });
         this.io.observe(el);
       } else this.start();
       this.resize();
@@ -353,6 +376,8 @@
       this.tb = gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.tb); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, M.BF, gl.STATIC_DRAW);
       this.nt = M.BF.length;
       this.pivot = M.pivot; this.ybot = M.ybot;
+      this.el.dataset.meshTriangles = String(M.BF.length / 3);
+      this.el.dataset.meshSegments = String(M.ns);
       this.count = { verts: M.np, lines: M.nl, segments: M.ns, body: M.BF.length / 3, edges: M.ne };
       gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL);
       gl.enable(gl.BLEND);
@@ -394,14 +419,14 @@
     }
     fail() {
       this.failed = true; this.stop();
-      if (this.el) { this.el.classList.remove("is-live"); this.el.classList.add("is-fallback"); }
+      if (this.el) { this.el.dataset.portraitMode = "fallback"; this.el.classList.remove("is-live"); this.el.classList.add("is-fallback"); }
       if (this.c) { this.c.width = this.c.height = 0; }  // hand the memory back
     }
     setState() {}
     dock(on) { this.el.classList.toggle("is-docked", !!on); }
     start() { if (this.failed) return; if (this.running || this.reduced) { this.paint(performance.now()); return; } this.running = true; W.sub(this.tick); }
     stop() { this.running = false; W.unsub(this.tick); }
-    destroy() { this.stop(); this.ro && this.ro.disconnect(); this.io && this.io.disconnect(); window.removeEventListener("pointermove", this.onMove); window.removeEventListener("resize", this.resize); this.c && this.c.remove(); }
+    destroy() { this.stop(); this.motionQuery.removeEventListener("change",this.onMotion); this.ro && this.ro.disconnect(); this.io && this.io.disconnect(); window.removeEventListener("pointermove", this.onMove); window.removeEventListener("pointerup", this.onUp); window.removeEventListener("pointercancel", this.onUp); document.removeEventListener("mouseout", this.onLeave); this.c?.removeEventListener("pointerdown",this.onDown); window.removeEventListener("resize", this.resize); this.c && this.c.remove(); }
     tick(now) {
       if (!this.running || this.failed) return;
       if (now - this.last < 1000 / Math.min(this.fps, W.fps) - 2) return;
@@ -418,9 +443,11 @@
       m.px += (m.x - m.px) * 0.05; m.py += (m.y - m.py) * 0.05;
       if (Math.abs(m.x - m.px) < 1e-3) m.px = m.x;
       if (Math.abs(m.y - m.py) < 1e-3) m.py = m.y;
-      let yaw = Math.max(-0.436, Math.min(0.436, -0.06 + (this.reduced ? 0 : 0.38 * m.px)));
+      let yaw = Math.max(-0.56, Math.min(0.56, -0.27 + (this.reduced ? 0 : 0.48 * m.px)));
       let pitch = 0.04 + (this.reduced ? 0 : 0.1 * m.py);
       if (o.pose) { yaw = o.pose[0]; pitch = o.pose[1]; }              // fixed pose (fallback render, checks)
+      this.el.dataset.yaw = (yaw * 180 / Math.PI).toFixed(1);
+      this.el.dataset.pitch = (pitch * 180 / Math.PI).toFixed(1);
       const cy_ = Math.cos(yaw), sy_ = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch);
       // R = Ry(yaw) · Rx(pitch), column-major
       const R = [cy_, 0, -sy_, sy_ * sp, cp, cy_ * sp, sy_ * cp, -sp, cy_ * cp];

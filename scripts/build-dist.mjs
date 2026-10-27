@@ -7,11 +7,11 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const out = join(root, "dist");
 
 const files = [
-  "index.html", "styles.css", "app.js", "fx3d.js", "louis.js", "louis-data.js", "louis-fallback.png",
-  "content/manifest.js", "downloads/aviso-lite.zip",
+  "index.html", "styles.css", "app.js", "louis-refine.js", "fx3d.js", "louis.js", "louis-data.js", "louis-fallback.png",
+  "content/manifest.js",
   "favicon.svg", "robots.txt", "sitemap.xml", "llms.txt", "google1d46b99a88f4b0f9.html"
 ];
-const dirs = ["assets/audio", "assets/suikou", "assets/work", "assets/xiaoyi"];
+const dirs = ["assets/audio", "assets/suikou", "assets/work", "assets/xiaoyi", "assets/taotao", "assets/platforms"];
 
 rmSync(out, { recursive: true, force: true });
 let n = 0;

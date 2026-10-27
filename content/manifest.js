@@ -2,7 +2,7 @@
    Mirrors INSTRUCTIONS §8 shape (trimmed for this static preview).
    All copy is a DRAFT pending user approval (OPEN-3). No metrics, no invented numbers.
    r7: each project carries a `draft` block (copy, status, links from CONTENT-DRAFT.md, unconfirmed);
-   the page renders `draft` over the base fields and tags it 草稿 / Draft.
+   the page uses the editorial overrides without a public draft badge.
    r8: order is Aviso, PrintPlay, Steam, Suikou, TaoTao, Wild Louis, Xiaoyi (07); copy tightened; `work` = ailiu's professional design work.
    r10: Design Work is chapter 03 (key "work", order 30): Aviso, PrintPlay, Design Work, Steam, Suikou, TaoTao, Wild Louis, Xiaoyi (08).
    r12: all copy is ailiu speaking in the first person; no chapter counts, one self-introduction (the hero title).
@@ -16,7 +16,7 @@ window.MANIFEST = {
   // r26: hero title and meta carry the one self-introduction ("I'm Louis, a UX designer").
   // r12: page title + meta description (index.html carries the English pair for crawlers; app.js swaps on language)
   meta: {
-    zh: { title: "ailiu.online · 路易斯（Louis），UX 设计师", description: "我是路易斯（Louis），一名 UX 设计师。这里有我工作里的设计案例，和业余做的东西。" },
+    zh: { title: "ailiu.online · 路易斯，UX 设计师", description: "我是路易斯，一名 UX 设计师。这里有我工作里的设计案例，和业余做的东西。" },
     en: { title: "ailiu.online · Louis, UX designer", description: "I'm Louis, a UX designer. Here is my design work, and the things I make on the side." }
   },
   persona: {
@@ -28,6 +28,9 @@ window.MANIFEST = {
       zh: "下面是我做过的东西：工作里的设计案例，也有业余做的小产品、儿歌频道，和一次餐饮创业。",
       en: "Below is what I’ve made: design work from my day job, and things I do on the side, from small products to a kids’ song channel and a restaurant venture."
     }
+  },
+  footer: {
+    title: [{ zh: "聊聊设计，", en: "Let’s talk design," }, { zh: "也聊聊新想法。", en: "and new ideas." }]
   },
   contact: [
     // r7 decision: only these two. Real links.
@@ -65,7 +68,7 @@ window.MANIFEST = {
        and images from the old site (anonymized mockups; see scripts/work_images.py). Image entries give the
        desktop file; app.js derives the "-sm" phone file. w / h are the desktop pixel size. */
     cases: [
-      { id: "agent", title: "Agent Builder", domain: { zh: "AI Agent · 编排", en: "AI agents · orchestration" },
+      { id: "agent", title: { zh: "Agent Builder", en: "Agent Builder" }, domain: { zh: "AI Agent · 编排", en: "AI agents · orchestration" },
         summary: { zh: "某云平台内部的 Agent 编排平台。我把模型、工具、知识源、任务节点和卡片放进一张画布，让业务同事能搭、能调、能复用。",
                    en: "An internal agent orchestration platform at a cloud provider. I put models, tools, knowledge, task nodes and cards on one canvas so business teams could build, debug and reuse agents." },
         problem: { zh: "能跑的 Agent 不只是一段 Prompt。对象多、依赖关系看不清，从配置到调试的路径断成几截；运行失败时，没人说得清卡在哪一步。",
@@ -91,7 +94,7 @@ window.MANIFEST = {
             alt: { zh: "Agent Builder 信息架构图", en: "Agent Builder information architecture diagram" },
             caption: { zh: "信息架构：围绕创建、编排、调试、观察和迭代组织入口。", en: "Information architecture, built around create, orchestrate, debug, observe, iterate." } }
         ] },
-      { id: "annotation", title: "Data Annotation Service", domain: { zh: "数据生产 · 标注", en: "Data production · annotation" },
+      { id: "annotation", title: { zh: "数据标注服务", en: "Data Annotation Service" }, domain: { zh: "Data production · annotation", en: "Data production · annotation" },
         summary: { zh: "AI 训练数据的生产平台。原本散在文档、表格和聊天里的标注协作，我把它做成能配置、分发、执行、追踪、验收的系统。",
                    en: "A platform for producing AI training data. Annotation work that lived in docs, sheets and chat became a system you configure, assign, do, track and sign off." },
         problem: { zh: "规则散在不同文档里，执行的人理解不一；任务分给了谁、做到哪了只能靠追问；结果没有像样的验收，坏数据会流到下游。",
@@ -117,7 +120,7 @@ window.MANIFEST = {
             alt: { zh: "进度管理与结果验收看板示意", en: "Mockup of the progress and review dashboard" },
             caption: { zh: "进度与验收：完成情况、待复核队列、退回与导出。", en: "Progress and review: completion, review queue, returns and export." } }
         ] },
-      { id: "platform", title: "Data Platform", domain: { zh: "数据平台 · 管理与使用", en: "Data platform · manage & use" },
+      { id: "platform", title: { zh: "数据平台", en: "Data Platform" }, domain: { zh: "Data platform · manage & use", en: "Data platform · manage & use" },
         summary: { zh: "某云平台内部的数据管理与使用平台。我把数据资产、数据市场、数据服务、权限和平台管理放进一套体验：找到、看懂、申请、用上。",
                    en: "An internal platform for managing and using data at a cloud provider. I brought assets, the data market, data services, permissions and admin into one experience: find it, understand it, request it, use it." },
         problem: { zh: "资产、服务、权限申请和使用入口分在不同系统；字段、来源、负责人信息不集中，业务同事判断不了数据能不能用；审批走到哪一步也看不到。",
@@ -143,7 +146,7 @@ window.MANIFEST = {
             alt: { zh: "数据平台信息架构图", en: "Data platform information architecture diagram" },
             caption: { zh: "信息架构：模块边界，和一条从接入到使用的链路。", en: "Information architecture: module boundaries and one path from ingest to use." } }
         ] },
-      { id: "analytics", title: "Self-Service Analytics", domain: { zh: "数据分析 · 自助", en: "Analytics · self-service" },
+      { id: "analytics", title: { zh: "自助数据分析", en: "Self-Service Analytics" }, domain: { zh: "Analytics · self-service", en: "Analytics · self-service" },
         summary: { zh: "给业务同事和分析师用的自助分析工具：自己选数据、配字段、出图表、搭看板并发布，不用等研发。",
                    en: "A self-service analytics tool for business teams and analysts: pick data, set up fields, make charts, build and publish dashboards, without waiting on engineers." },
         problem: { zh: "用户不知道该选哪个数据源、字段代表什么；指标、维度和筛选的关系绕，容易配错；从出图到发布看板断成好几步。",
@@ -169,7 +172,7 @@ window.MANIFEST = {
             alt: { zh: "图表配置与筛选联动界面示意", en: "Mockup of chart setup and linked filters" },
             caption: { zh: "图表配置与筛选联动：作用范围和受影响的组件一目了然。", en: "Chart setup and linked filters: scope and affected widgets in plain view." } }
         ] },
-      { id: "support", title: "Support & Service Upgrade", domain: { zh: "客户支持 · AI 辅助", en: "Support · AI-assisted" },
+      { id: "support", title: { zh: "客户支持体验升级", en: "Support & Service Upgrade" }, domain: { zh: "Support · AI-assisted", en: "Support · AI-assisted" },
         summary: { zh: "重做云控制台里的「新建工单」：用户只描述问题，AI 自动填分类、先给解答，解决不了再带着上下文转人工。",
                    en: "A redesign of “new ticket” in a cloud console: users just describe the problem, AI fills in the categories and answers first, and if that doesn’t solve it, a person takes over with the full context." },
         problem: { zh: "用户还没说清问题，就得先在多层产品分类和问题类型里做选择；页面上的助手和工单表单是割裂的，不知道用户在用什么服务；能自助解决的问题也流进了人工。",
@@ -198,7 +201,7 @@ window.MANIFEST = {
   },
   projects: [
     {
-      key: "aviso", order: 10, type: "product", status: "live",
+      key: "aviso", showStatus: false, order: 10, type: "product", status: "live",
       title: { zh: "Aviso", en: "Aviso" },
       tagline: { zh: "在任意网页划词，原地问 AI", en: "Select text on any page, ask AI in place" },
       blurb: {
@@ -214,27 +217,21 @@ window.MANIFEST = {
         en: "Aviso is my browser extension: highlight a passage and the answer appears beside it." } }],
       links: [{ label: { zh: "Aviso 官网", en: "Aviso website" }, href: "https://aviso-nine.vercel.app/" }],
       draft: {
-        label: { zh: "草稿", en: "Draft" },
         blurb: {
-          zh: "为了不离开当前页面就能问 AI，我做了这个 Chrome 扩展。划词或右键，就在原页面里解释、翻译、润色、总结，也能说明图片。Aviso Lite 已上线：没有后端，不收费，用你自己的模型 API Key。",
-          en: "I built this Chrome extension so I could ask AI without leaving the page. Select text or right-click to explain, translate, polish or summarize it in place, or describe an image. Aviso Lite is live: no backend, no fees, your own model API key."
+          zh: "为了不离开当前页面就能问 AI，我做了这个 Chrome 扩展。通过划词、右键或快捷键，在原页面里解释、翻译、润色、总结，也能继续追问。",
+          en: "I built this Chrome extension so I could ask AI without leaving the page. Select text, right-click or use a shortcut to explain, translate, polish, summarize and ask follow-up questions in place."
         },
         statusLabel: { zh: "已上线", en: "Live" },
         // r26: Aviso Lite 0.1.0 (MV3). Website = the old site's live link (verified 200); the zip ships with the site.
         links: [
-          { label: { zh: "Aviso 官网", en: "Aviso website" }, href: "https://aviso-nine.vercel.app/", state: "ok" },
-          { label: { zh: "下载 Aviso Lite（zip）", en: "Download Aviso Lite (zip)" }, href: "downloads/aviso-lite.zip", state: "ok", download: true }
+          { label: { zh: "Aviso 官网", en: "Aviso website" }, href: "https://aviso-nine.vercel.app/", state: "ok" }
         ],
-        steps: {
-          title: { zh: "安装", en: "Install" },
-          zh: ["解压下载的 zip", "在 Chrome 打开 chrome://extensions", "打开右上角的「开发者模式」", "点「加载已解压的扩展程序」，选 aviso-lite-0.1.0 文件夹", "在 Aviso 的设置里填你自己的模型 API Key"],
-          en: ["Unzip the download", "Open chrome://extensions in Chrome", "Turn on Developer mode (top right)", "Click “Load unpacked” and choose the aviso-lite-0.1.0 folder", "In Aviso’s settings, add your own model API key"]
-        }
       },
       aiGenerated: false, disclosure: null, mobileFallback: "flat-window"
     },
     {
       key: "printplay", order: 20, type: "product", status: "live",
+      showStatus: false,
       title: { zh: "PrintPlay", en: "PrintPlay" },
       tagline: { zh: "打印出来就能玩的英文词卡", en: "English word cards you print and play" },
       blurb: {
@@ -250,7 +247,6 @@ window.MANIFEST = {
         en: "PrintPlay ends on paper: every page is made to come out of a printer." } }],
       links: [{ label: { zh: "访问 printplay.asia", en: "Visit printplay.asia" }, href: "https://printplay.asia" }],
       draft: {
-        label: { zh: "草稿", en: "Draft" },
         blurb: {
           zh: "我给课堂比划猜词和家里的猜词游戏做了这个网站：选主题和年龄段，预览后直接打印或下载 PDF，不用注册。已上线，主题和打印件还在陆续加。",
           en: "I made this site for classroom charades and family guessing games: pick a theme and an age range, preview, then print or download a PDF. No sign-up. It’s live, and I keep adding themes and printables."
@@ -262,23 +258,22 @@ window.MANIFEST = {
     },
     {
       // r10: chapter 03. Not a product: ailiu's professional design work. Body = MANIFEST.work (capabilities, cases, background).
-      key: "work", order: 30, type: "portfolio", status: "professional",
+      key: "work", showStatus: false, order: 30, type: "portfolio", status: "professional",
       title: { zh: "设计作品", en: "Design Work" },
       tagline: { zh: "把复杂系统做得好懂、好用", en: "Making complex systems easy to read and use" },
       blurb: {
-        zh: "我的本职：B 端与 AI 产品的体验设计。下面的案例来自某云平台的内部产品，名称和数据已隐去；点开看问题、做法和结果。",
-        en: "My day job: UX for B2B and AI products. The cases below come from a cloud platform’s internal tools, with names and figures left out. Open one for the problem, the moves and the outcome."
+        zh: "B 端与 AI 产品 UX 体验设计。下面的案例来自某云平台的内部产品，名称和数据已隐去；点开看问题、做法和结果。",
+        en: "UX design for B2B and AI products. The cases below come from a cloud platform’s internal tools, with names and figures left out. Open one for the problem, the moves and the outcome."
       },
       statusLabel: { zh: "本行 · 案例已脱敏", en: "Day job · anonymized" },
       treatment: { id: "work-case-studies", choreographyId: "work.case-studies.v1" },
       transition: { enter: "reveal-up", exit: "fade-through" },
       stageHeightVh: null, // r13: no pinned stage — the chapter scrolls as a normal page (case studies)
       narration: [{ id: "work-1", subtitle: {
-        zh: "这一章是我的本职：B 端和 AI 产品设计，每个案例讲问题、做法和结果。",
-        en: "My day job: B2B and AI product design. Each case: the problem, the move, the result." } }],
+        zh: "B 端与 AI 产品 UX 体验设计，每个案例讲问题、做法和结果。",
+        en: "UX design for B2B and AI products. Each case: the problem, the move, the result." } }],
       links: [],
       draft: {
-        label: { zh: "草稿", en: "Draft" },
         statusClass: "is-work",
         links: []
       },
@@ -301,15 +296,13 @@ window.MANIFEST = {
         en: "On Steam Vent Calc, no formula goes live without a source." } }],
       links: [{ label: { zh: "steamventcalc.com", en: "steamventcalc.com" }, href: "https://steamventcalc.com" }],
       draft: {
-        label: { zh: "草稿", en: "Draft" },
         blurb: {
           zh: "我把单管蒸汽采暖的几类计算做成了在线工具：排气阀选型、散热器排气、室外温度补偿曲线、注入混水。为了能核对，每条公式都注明公开来源；结果只是估算，不能代替专业设计。",
           en: "I turned the core sums of one-pipe steam heat into online tools: main and radiator vent sizing, outdoor reset curves, injection mixing. So you can check them, every formula cites a public source; results are estimates, not a substitute for professional design."
         },
         statusLabel: { zh: "已上线 · 限量维护", en: "Live · light upkeep" },
         links: [
-          { label: { zh: "steamventcalc.com", en: "steamventcalc.com" }, href: "https://steamventcalc.com", state: "ok" },
-          { label: { zh: "公式库（MIT）", en: "Formula library (MIT)" }, href: null, state: "confirm" }
+          { label: { zh: "蒸汽站官网", en: "Steam Vent Calc website" }, href: "https://steamventcalc.com", state: "ok" }
         ]
       },
       aiGenerated: false, disclosure: null, mobileFallback: "static-diagram"
@@ -331,19 +324,81 @@ window.MANIFEST = {
         en: "Suikou English is still in the works. This is the prototype." } }],
       links: [], qr: null,
       draft: {
-        label: { zh: "草稿", en: "Draft" },
         blurb: {
           zh: "想让家长在日常里随口带孩子说英语，我在做这个微信小程序：把刷牙、吃饭、出门这些场景做成卡片。首版面向 3–5 岁，还在开发，没有上线。",
           en: "I want parents to slip into English with their kids during the day, so I’m building this WeChat mini program: brushing teeth, mealtime and heading out become cards. The first version is for ages 3–5; it’s still in development."
         },
         statusLabel: { zh: "开发中", en: "In development" },
         statusClass: "is-dev",
-        links: [{ label: { zh: "小程序码", en: "Mini-program QR" }, href: null, state: "tbd" }]
+        links: []
       },
       aiGenerated: false, disclosure: null, mobileFallback: "swipe-screens"
     },
     {
       key: "taotao", order: 60, type: "channel", status: "live",
+      episodes: [
+        {
+                "id": "mealtime",
+                "title": {
+                        "zh": "好好吃饭",
+                        "en": "Time to Eat"
+                },
+                "poster": "assets/taotao/mealtime.jpg",
+                "preview": "assets/taotao/mealtime.mp4",
+                "href": "https://www.youtube.com/watch?v=d362lgqvB2U",
+                "duration": "2:15"
+        },
+        {
+                "id": "bath-time",
+                "title": {
+                        "zh": "洗澡澡 · 放克版",
+                        "en": "Bath Time · Funk"
+                },
+                "poster": "assets/taotao/bath-time.jpg",
+                "preview": "assets/taotao/bath-time.mp4",
+                "href": "https://www.youtube.com/watch?v=psf7sgz6RFo",
+                "duration": "2:16"
+        },
+        {
+                "id": "wash-hands",
+                "title": {
+                        "zh": "洗洗手",
+                        "en": "Wash Your Hands"
+                },
+                "poster": "assets/taotao/wash-hands.jpg",
+                "preview": "assets/taotao/wash-hands.mp4",
+                "href": "https://www.youtube.com/watch?v=4XcRN5_U8zg",
+                "duration": "1:24"
+        },
+        {
+                "id": "toothbrush-train",
+                "title": {
+                        "zh": "牙刷小火车",
+                        "en": "Toothbrush Train"
+                },
+                "poster": "assets/taotao/toothbrush-train.jpg",
+                "preview": "assets/taotao/toothbrush-train.mp4",
+                "href": "https://www.youtube.com/watch?v=VCRPuV4I_h4",
+                "duration": "2:11"
+        },
+        {
+                "id": "bedtime-brush",
+                "title": {
+                        "zh": "刷牙晚安曲",
+                        "en": "Bedtime Brushing Song"
+                },
+                "poster": "assets/taotao/bedtime-brush.jpg",
+                "preview": "assets/taotao/bedtime-brush.mp4",
+                "href": "https://www.youtube.com/watch?v=6lWhUN_vKyM",
+                "duration": "1:29"
+        },
+        {
+          id: "toys-home",
+          title: { zh: "送玩具回家", en: "Time to Put Toys Away" },
+          poster: "assets/taotao/toys-home.jpg",
+          status: { zh: "即将上线", en: "Coming soon" }
+        }
+],
       title: { zh: "桃桃屋", en: "TaoTao House" },
       tagline: { zh: "给小朋友的中英双语原创儿歌", en: "Original bilingual songs for little kids" },
       blurb: {
@@ -355,25 +410,28 @@ window.MANIFEST = {
       transition: { enter: "stack-fan", exit: "fade-through" },
       stageHeightVh: 140,
       narration: [{ id: "taotao-1", subtitle: {
-        zh: "桃桃屋把刷牙、洗手这些小事编成歌，一首教三个英文词。",
-        en: "TaoTao House turns brushing teeth and washing hands into songs, three English words each." } }],
+        zh: "桃桃屋把刷牙、洗手这些小事编成歌，在生活情境里学中文和英文。",
+        en: "TaoTao House turns brushing teeth and washing hands into songs, with Chinese and English in everyday situations." } }],
       links: [],
       draft: {
-        label: { zh: "草稿", en: "Draft" },
         blurb: {
-          zh: "我给 2–4 岁的孩子做的中英双语儿歌频道：把刷牙、洗手、吃饭、睡觉编成能跟着唱的歌，每首教三个英文词。在 YouTube 和抖音持续更新。",
-          en: "My Chinese–English song channel for ages 2–4: brushing teeth, washing hands, mealtime and bedtime become sing-alongs, and each song teaches three English words. Still updating on YouTube and Douyin."
+          zh: "我给 2–4 岁的孩子做的中英双语儿歌频道：把刷牙、洗手、吃饭、睡觉编成能跟着唱的歌，在生活情境里学中文和英文。在 YouTube 和抖音持续更新。",
+          en: "My Chinese–English song channel for ages 2–4: brushing teeth, washing hands, mealtime and bedtime become sing-alongs, with Chinese and English in everyday situations. Still updating on YouTube and Douyin."
         },
         statusLabel: { zh: "运营中", en: "Running" },
-        links: [
-          { label: { zh: "YouTube", en: "YouTube" }, href: "https://www.youtube.com/@TaoTaoHouse", state: "ok" },
-          { label: { zh: "抖音号 TaoTaoHouse2026", en: "Douyin ID TaoTaoHouse2026" }, href: null, state: "text" },
-          { label: { zh: "B 站", en: "Bilibili" }, href: null, state: "confirm" }
+        links: [],
+        socials: [
+          { id: "kuaishou", label: { zh: "快手", en: "Kuaishou" }, state: "text" },
+          { id: "mp", label: { zh: "公众号", en: "WeChat OA" }, state: "text" },
+          { id: "douyin", label: { zh: "抖音", en: "Douyin" }, state: "text" },
+          { id: "channels", label: { zh: "视频号", en: "WeChat Channels" }, state: "text" },
+          { id: "xhs", label: { zh: "小红书", en: "Xiaohongshu" }, state: "text" },
+          { id: "youtube", label: { zh: "YouTube", en: "YouTube" }, href: "https://www.youtube.com/@TaoTaoHouse", state: "ok" }
         ]
       },
       aiGenerated: true,
       disclosure: { zh: "内容由 AI 辅助生成", en: "Made with AI assistance" },
-      mobileFallback: "grid-2x2"
+      mobileFallback: "grid-2x3"
     },
     {
       // r14B: chapter 07. A venture, not a design case: I started a restaurant brand from scratch (2024, ended).
@@ -397,7 +455,6 @@ window.MANIFEST = {
         en: "Aunt’s Home was the shop I opened in 2024. I started it from scratch, and it has since closed." } }],
       links: [],
       draft: {
-        label: { zh: "草稿", en: "Draft" },
         blurb: {
           zh: "2024 年，我从零开了一家小店，想让人吃到家的味道：像去亲戚家吃饭那样，自在、热乎。这首先是一次创业；名字、标志、菜单、包装和门店导视也是我自己做的。现在店已经关了。",
           en: "In 2024 I opened a small shop from scratch, built around a taste of home: easy and warm, like dinner at a relative’s. It was a venture first; I also made the name, the mark, the menus, the packaging and the shop’s signage myself. It has since closed."
@@ -418,7 +475,7 @@ window.MANIFEST = {
         zh: "看到新鲜东西就想试试，做出来就分享。",
         en: "When something new comes along I try it, and share what I make."
       },
-      statusLabel: { zh: "进行中", en: "Ongoing" },
+      statusLabel: { zh: "持续分享", en: "Sharing regularly" },
       treatment: { id: "wild-louis-portrait", choreographyId: "wildlouis.portrait.v1" },
       transition: { enter: "mask-wipe", exit: "fade-through" },
       stageHeightVh: 160,
@@ -427,20 +484,20 @@ window.MANIFEST = {
         en: "I like trying new things and sharing what I make. It all lives at ailiu.online." } }],
       links: [],
       draft: {
-        label: { zh: "草稿", en: "Draft" },
         tagline: { zh: "试新鲜东西，做了就分享", en: "Trying new things, sharing what I make" },
         blurb: {
           zh: "看到新鲜东西就想试试，做出来就分享，也聊聊想法和见解。我做过的东西，都收在 ailiu.online。",
           en: "When something new comes along I try it, share what I make, and talk through what I think. Everything I've made lives at ailiu.online. Come have a look."
         },
-        statusLabel: { zh: "进行中 · 持续分享", en: "Ongoing · still sharing" },
+        statusLabel: { zh: "持续分享", en: "Sharing regularly" },
         statusClass: "is-ai",
         socials: [
-          { id: "channels", label: { zh: "视频号", en: "WeChat Channels" }, glyph: "视" },
-          { id: "douyin", label: { zh: "抖音", en: "Douyin" }, glyph: "抖" },
-          { id: "xhs", label: { zh: "小红书", en: "Xiaohongshu" }, glyph: "书" },
-          { id: "kuaishou", label: { zh: "快手", en: "Kuaishou" }, glyph: "快" },
-          { id: "mp", label: { zh: "公众号", en: "WeChat OA" }, glyph: "公" }
+          { id: "kuaishou", label: { zh: "快手", en: "Kuaishou" }, state: "text" },
+          { id: "mp", label: { zh: "公众号", en: "WeChat OA" }, state: "text" },
+          { id: "douyin", label: { zh: "抖音", en: "Douyin" }, state: "text" },
+          { id: "channels", label: { zh: "视频号", en: "WeChat Channels" }, state: "text" },
+          { id: "xhs", label: { zh: "小红书", en: "Xiaohongshu" }, state: "text" },
+          { id: "youtube", label: { zh: "YouTube", en: "YouTube" }, state: "text" }
         ],
         links: []
       },

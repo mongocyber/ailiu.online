@@ -26,7 +26,7 @@
 
   /* ------------------------------------------------------------------ language */
   const params = new URLSearchParams(location.search);
-  let lang = params.get("lang") || store.get("ailiu.lang") || ((navigator.language || "").startsWith("zh") ? "zh" : "en");
+  let lang = params.get("lang") || store.get("ailiu.lang") || "en";
   if (lang !== "zh") lang = "en";
   const L = (o) => (o == null ? "" : typeof o === "string" ? o : o[lang] || o.en || "");
   // r7: draft copy (CONTENT-DRAFT.md, unconfirmed) wins over the base field when present
@@ -59,7 +59,7 @@
     $("#chapnav").innerHTML = `<li class="nav-ind" aria-hidden="true" role="presentation"></li>` + order.map((p, i) =>
       `<li><a href="#${p.key}" data-key="${p.key}"><b>${pad(i + 1)}</b><span>${L(V(p, "title"))}</span></a></li>`).join("");
     $("#heroIndex").innerHTML = order.map((p, i) =>
-      `<li><a href="#${p.key}"><b>${pad(i + 1)}</b><span>${L(V(p, "title"))}</span><em>${L(V(p, "statusLabel"))}</em></a></li>`).join("");
+      `<li><a href="#${p.key}"><b>${pad(i + 1)}</b><span>${L(V(p, "title"))}</span>${p.showStatus === false ? "" : `<em>${L(V(p, "statusLabel"))}</em>`}</a></li>`).join("");
     if (active) setActive(active, true);
   }
   function fillSlots() {
@@ -75,6 +75,7 @@
         else if (s === "blurb") el.textContent = L(V(p, "blurb"));
         else if (s === "status") {
           el.textContent = L(V(p, "statusLabel"));
+          el.hidden = p.showStatus === false;
           const c = p.draft && p.draft.statusClass;
           if (c && c !== "is-ai") { el.classList.remove("is-dev", "is-pending"); el.classList.add(c); }
         } else if (s === "cta") {
@@ -88,6 +89,7 @@
       renderDraftRow(p, sec);
     });
     $("#heroNote").textContent = L(M.persona.line);
+    $("#footTitle").innerHTML = M.footer.title.map(line => `<span>${esc(L(line))}</span>`).join(" ");
     $("#footContact").innerHTML = M.contact.map((c) =>
       `<li><span class="mono">${esc(L(c.label))}</span><a href="${c.href}"${c.id === "x" ? ' target="_blank" rel="noopener"' : ""}>${esc(c.text)}</a></li>`).join("");
   }
@@ -116,13 +118,13 @@
       `<p class="wk-sec mono">${esc(L(W.methodNote))}</p><ol class="wk-method mono">${L(W.method).map((m, i) => `<li style="--i:${i}"><b>${pad(i + 1)}</b>${esc(m)}</li>`).join("")}</ol>`;
     $("#workIndex").setAttribute("aria-label", T("案例索引", "Cases"));
     $("#workIndex").innerHTML = `<ol>${W.cases.map((c, i) =>
-      `<li><a href="#case-${c.id}" class="case-${c.id}" data-i="${i}"><b>${pad(i + 1)}</b><span>${esc(c.title)}</span></a></li>`).join("")}</ol>`;
+      `<li><a href="#case-${c.id}" class="case-${c.id}" data-i="${i}"><b>${pad(i + 1)}</b><span>${esc(L(c.title))}</span></a></li>`).join("")}</ol>`;
     $("#workCases").innerHTML = W.cases.map((c, i) => {
       const [lead, ...rest] = c.images, id = c.id, open = wkOpen.has(id);
       return `<article class="wcase case-${id}${open ? " is-open" : ""}" id="case-${id}" data-i="${i}" aria-labelledby="case-h-${id}">
         <div class="wcase-text" data-preset="reveal-up">
           <p class="case-tag mono"><span>${pad(i + 1)} / ${pad(n)}</span>${esc(L(c.domain))}</p>
-          <h3 class="case-h" id="case-h-${id}"><button class="case-btn" type="button" id="case-b-${id}" aria-expanded="${open}" aria-controls="case-dt-${id} case-dm-${id}">${esc(c.title)}<i class="case-pm" aria-hidden="true"></i></button></h3>
+          <h3 class="case-h" id="case-h-${id}"><button class="case-btn" type="button" id="case-b-${id}" aria-expanded="${open}" aria-controls="case-dt-${id} case-dm-${id}">${esc(L(c.title))}<i class="case-pm" aria-hidden="true"></i></button></h3>
           <p class="case-sum">${esc(L(c.summary))}</p>
           <span class="case-more mono" aria-hidden="true"><span class="cm-o">${T("展开：问题、做法、结果", "Open: problem, moves, outcome")}</span><span class="cm-c">${T("收起", "Fold")}</span><i class="case-pm"></i></span>
           <div class="case-fold" id="case-dt-${id}" role="region" aria-labelledby="case-h-${id}"><div class="case-fold-in">
@@ -287,12 +289,16 @@
       return `<span class="dr-ph" aria-disabled="true">${esc(L(x.label))} <em>${T(t[0], t[1])}</em></span>`;
     });
     const ai = p.aiGenerated && p.key !== "wild-louis" ? `<span class="dr-ai">${esc(L(p.disclosure))}</span>` : "";
-    const soc = d.socials ? `<ul class="dr-soc" aria-label="${T("社交平台（待补）", "Social platforms (TBD)")}">` + d.socials.map((x) =>
-      `<li aria-disabled="true"><i aria-hidden="true">${x.glyph}</i><span>${esc(L(x.label))}</span><em>${T("待补", "TBD")}</em></li>`).join("") + "</ul>" : "";
-    row.innerHTML = (p.draft ? `<span class="dr-chip" title="${T("内容草稿，尚未定稿", "Draft copy, not final yet")}">${esc(L(d.label))}</span>` : "") + ai + items.join("") +
-      (d.note ? `<p class="dr-note">${esc(L(d.note))}</p>` : "") + soc +
-      // r26: install steps (Aviso), a plain numbered list under the links
-      (d.steps ? `<div class="dr-steps"><p class="dr-steps-h">${esc(L(d.steps.title))}</p><ol>${L(d.steps).map((x) => `<li>${esc(x)}</li>`).join("")}</ol></div>` : "");
+    const soc = d.socials ? `<ul class="dr-soc" aria-label="${T("社交平台", "Social platforms")}">` + d.socials.map((x) => {
+      const icon = `<i class="platform-icon platform-icon--${x.id}" aria-hidden="true"></i>`;
+      const label = `${icon}<span>${esc(L(x.label))}</span>`;
+      if (x.state === "ok" && x.href) return `<li class="has-link"><a href="${x.href}" target="_blank" rel="noopener noreferrer">${label}</a></li>`;
+      const tag = x.state === "text" ? "" : `<em>${T(...(LINK_TAG[x.state] || LINK_TAG.tbd))}</em>`;
+      return `<li${x.state === "text" ? ' class="is-text"' : ' aria-disabled="true"'}>${label}${tag}</li>`;
+    }).join("") + "</ul>" : "";
+    row.innerHTML = ai + items.join("") +
+      (d.note ? `<p class="dr-note">${esc(L(d.note))}</p>` : "") + soc;
+    row.hidden = !row.innerHTML.trim();
   }
 
   function renderSound() {
@@ -317,10 +323,11 @@
   // r12: a portrait that can't start leaves its static fallback (CSS) and a no-op stand-in; the page carries on
   // r17: the caption bar (and its mini portrait) is gone. r26: neither portrait rides the field's wave; only the mouse turns them
   const mountLouis = (opts, el) => {
+    if (document.documentElement.dataset.portraitReview === "off") return { live: false, setState() {}, dock() {}, destroy() {} };
     try { return new Louis(opts).mount(el); }
     catch (e) { el.classList.add("is-fallback"); return { setState() {}, dock() {}, destroy() {} }; }
   };
-  // r20C: both are the 3D wireframe bust (louis.js); the mesh tier follows the device, not the options
+  // Real 3D Louis geometry, with directional line lighting and pointer-driven rotation.
   const louisHero = mountLouis({}, $("#louisHero"));
   mountLouis({}, $("#louisWild"));
 
@@ -553,6 +560,8 @@
       el.classList.toggle("is-on", j === skI);
       el.classList.toggle("is-prev", j === was && j !== skI && !reduced);   // stays opaque under the incoming screen
       el.setAttribute("aria-hidden", j === skI ? "false" : "true");
+      el.tabIndex = j === skI ? 0 : -1;
+      if (j === skI) el.scrollTop = 0;
     });
     if (!reduced) skPrevT = setTimeout(() => skShots.forEach((el) => el.classList.remove("is-prev")), SK_FADE + 40);
     skCaps.forEach((el, j) => el.classList.toggle("is-on", j === skI));
@@ -596,6 +605,12 @@
   new MutationObserver(() => { if (skWrap.classList.contains("is-in")) setTimeout(skSettle, 1200); }).observe(skWrap, { attributes: true, attributeFilter: ["class"] });
   if (!skWrap.hasAttribute("data-preset")) skSettled = true;
   new IntersectionObserver((es) => { skSeen = es[0].intersectionRatio >= 0.55; skSync(); }, { threshold: [0, 0.55, 1] }).observe(skPhone);
+  // Reading inside the screen pauses rotation; the existing play control resumes it.
+  skShots.forEach((shot) => {
+    const stopForReading = () => { if (!skStopped) { skStopped = true; skSync(); } };
+    shot.addEventListener("pointerdown", stopForReading);
+    shot.addEventListener("scroll", () => { if (shot.scrollTop > 0) stopForReading(); }, { passive: true });
+  });
   skSync();
   function suikou(p) {
     const pin = $("#suikou .pin");
@@ -621,7 +636,45 @@
   }
 
   /* ---- 06 TaoTao */
+  // One card per completed episode; covers, previews and full videos share one record.
+  const ttEscape = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+  $("#ttWall").innerHTML = byKey.taotao.episodes.map((e, i) => {
+    const ready = !!(e.href && e.preview), tag = ready ? "a" : "div";
+    const action = ready ? `href="${ttEscape(e.href)}" target="_blank" rel="noopener noreferrer"` : '';
+    const label = ready ? { zh: "在 YouTube 观看完整版（新窗口）", en: "Watch on YouTube (new tab)" } : e.status;
+    return `<${tag} class="tt-cell c${i + 1}${ready ? "" : " is-upcoming"}" ${action}
+      data-label-zh="${ttEscape(e.title.zh)} · ${ttEscape(label.zh)}" data-label-en="${ttEscape(e.title.en)} · ${ttEscape(label.en)}">
+      <div class="tt-media"><img src="${ttEscape(e.poster)}" alt="" width="800" height="450" loading="lazy" decoding="async">
+        ${ready ? `<video data-src="${ttEscape(e.preview)}" muted playsinline loop preload="none" aria-hidden="true"></video>` : ''}</div>
+      <span class="tt-caption">${ready ? '<b aria-hidden="true">↗</b>' : ''}<span data-zh="${ttEscape(e.title.zh)}" data-en="${ttEscape(e.title.en)}">${ttEscape(e.title.en)}</span>
+        ${ready ? `<em>${ttEscape(e.duration)}</em>` : `<em data-zh="${ttEscape(e.status.zh)}" data-en="${ttEscape(e.status.en)}">${ttEscape(e.status.en)}</em>`}</span>
+    </${tag}>`;
+  }).join("");
   const ttCells = $$("#ttWall .tt-cell");
+  function setTTPlaying(playing) {
+    ttCells.forEach((c) => {
+      const v = $("video", c);
+      if (!v) return;
+      const on = playing.includes(c) && !document.hidden;
+      c.classList.toggle("is-playing", on);
+      if (on && !v.dataset.failed) {
+        if (!v.getAttribute("src")) v.src = v.dataset.src;
+        if (v.paused && !v.dataset.starting) {
+          v.dataset.starting = "1";
+          v.play().catch(() => { v.dataset.failed = "1"; c.classList.remove("has-preview"); }).finally(() => { delete v.dataset.starting; });
+        }
+      } else { v.pause(); }
+    });
+  }
+  ttCells.forEach((c) => {
+    const v = $("video", c);
+    if (!v) return;
+    v.addEventListener("playing", () => c.classList.add("has-preview"));
+    v.addEventListener("pause", () => c.classList.remove("has-preview"));
+    v.addEventListener("error", () => { v.dataset.failed = "1"; c.classList.remove("has-preview"); });
+  });
+  new IntersectionObserver(([entry]) => { if (!entry.isIntersecting) setTTPlaying([]); }).observe($("#ttWall"));
+  document.addEventListener("visibilitychange", () => { if (document.hidden) setTTPlaying([]); });
   let ttHover = null, ttHome = [];
   ttCells.forEach((c) => {
     c.addEventListener("pointerenter", () => { ttHover = c; });
@@ -643,7 +696,7 @@
     }
     // at most 2 playing (1 on mobile): hovered first, then nearest to viewport centre
     const limit = isMobile() ? 1 : 2;
-    const vis = ttCells.filter((c) => c.offsetParent !== null);
+    const vis = ttCells.filter((c) => c.offsetParent !== null && $("video", c));
     const mid = innerHeight / 2, midX = innerWidth / 2;
     const ranked = vis.map((c) => { const r = c.getBoundingClientRect(); return [c, Math.hypot(r.left + r.width / 2 - midX, (r.top + r.height / 2 - mid) * 1.6), r]; })
       .filter(([, , r]) => r.bottom > 0 && r.top < innerHeight)
@@ -651,11 +704,12 @@
     let playing = (reduced || saveData) ? [] : ranked.slice(0, limit);
     // desktop: the two playing cells walk the wall (snake order) as the stage scrolls, so every clip gets a turn
     if (!isMobile() && !reduced && !saveData && ranked.length) {
-      const snake = [0, 1, 2, 5, 4, 3], k = Math.min(4, Math.floor(clamp((p - 0.22) / 0.7) * 5));
-      playing = [ttCells[snake[k]], ttCells[snake[k + 1]]];
+      const playable = ttCells.filter((c) => $("video", c));
+      const k = Math.max(0, Math.min(playable.length - 2, Math.floor(clamp((p - 0.22) / 0.7) * (playable.length - 1))));
+      playing = playable.slice(k, k + limit);
     }
-    if (ttHover && !reduced) playing = [ttHover].concat(playing.filter((c) => c !== ttHover)).slice(0, limit);
-    ttCells.forEach((c) => c.classList.toggle("is-playing", playing.includes(c)));
+    if (ttHover && ranked.includes(ttHover) && !reduced && !saveData) playing = [ttHover].concat(playing.filter((c) => c !== ttHover)).slice(0, limit);
+    setTTPlaying(playing.filter((c) => ranked.includes(c)));
   }
 
   /* ---- 08 Wild Louis: the portrait grows in as the chapter arrives (r14: source / runtime / log panels removed) */
@@ -663,37 +717,68 @@
   const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
   function wild(p) {
     wlPin.style.setProperty("--grow", isMobile() || reduced ? 1 : sstep(0, 0.36, p).toFixed(3));
-    document.documentElement.dataset.portrait = louisHero.live ? "canvas" : "fallback";   // r12 readout, now an attribute
+    document.documentElement.dataset.portrait = document.documentElement.dataset.portraitReview === "off" ? "pending" : louisHero.live ? "webgl-3d" : "fallback";
   }
 
-  /* ------------------------------------------------------------------ footer voiceprint (Atomic nod) */
+  /* Footer: a layered contour ribbon with travelling highlights and local pointer response.
+     Visual references: Three.js points/waves and ocean examples; native Canvas, no added library. */
   const voice = mod(() => {
     const c = $("#voiceprint"), ctx = c && c.getContext("2d");
     if (!ctx) return { tick() {} };
-    let w = 0, h = 0, on = false;
-    function resize() { const dpr = Math.min(2, devicePixelRatio || 1); w = c.clientWidth; h = c.clientHeight; c.width = w * dpr; c.height = h * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); draw(0); }
-    new IntersectionObserver(([e]) => { on = e.isIntersecting; }).observe(c);
-    function draw(now) {
-      const t = now / 1000;
-      ctx.clearRect(0, 0, w, h);
-      const x0 = w * 0.04, x1 = w * 0.96, mid = h / 2;   // r20B: the strip is short and wide
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = "rgba(255,255,255,.08)"; ctx.beginPath(); ctx.moveTo(0, mid); ctx.lineTo(w, mid); ctx.stroke();
-      for (let k = 0; k < 5; k++) {
-        const g = ctx.createLinearGradient(x0, 0, x1, 0);
-        g.addColorStop(0, "rgba(236,235,230,0)"); g.addColorStop(0.3, "rgba(236,235,230,.6)"); g.addColorStop(0.7, "rgba(170,172,176,.6)"); g.addColorStop(1, "rgba(170,172,176,0)");
-        ctx.strokeStyle = g; ctx.beginPath();
-        for (let x = x0; x <= x1; x += 4) {
-          const u = (x - x0) / (x1 - x0);
-          const env = Math.sin(Math.PI * u) ** 1.6;
-          const y = mid + env * h * 0.34 * Math.sin(u * (5 + k * 1.1) * Math.PI + t * (0.6 + k * 0.13) + k);
-          x === x0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-        }
-        ctx.stroke();
+    let w = 0, h = 0, on = false, last = 0, phase = 0, activePointer = false;
+    let px = .5, py = .5, targetX = .5, targetY = .5, influence = 0;
+    const motion = matchMedia('(prefers-reduced-motion: reduce)');
+    function resize() {
+      const dpr = Math.min(2, devicePixelRatio || 1);
+      w = c.clientWidth; h = c.clientHeight;
+      c.width = w * dpr; c.height = h * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); draw();
+    }
+    new IntersectionObserver(([e]) => { on = e.isIntersecting; last = 0; }).observe(c);
+    c.addEventListener('pointermove', e => {
+      const r=c.getBoundingClientRect(); targetX=(e.clientX-r.left)/r.width; targetY=(e.clientY-r.top)/r.height; activePointer=true;
+    }, { passive:true });
+    c.addEventListener('pointerleave',()=>{activePointer=false;});
+    function point(u,v) {
+      const env = Math.sin(Math.PI*u)**1.2;
+      const swell = Math.sin(u*8.2-phase*.58+v*.75)*.17;
+      const crossing = Math.sin(u*14.5+phase*.34-v*1.65)*.055;
+      const twist = v*Math.cos(u*7.4-phase*.3)*.23;
+      const hover = influence*Math.exp(-((u-px)**2)/.013)*(py-.5)*.36;
+      return [w*(.035+.93*u), h*(.5+env*(swell+crossing+twist+hover))];
+    }
+    function draw() {
+      ctx.clearRect(0,0,w,h);
+      const rows=w<600?15:23, cols=w<600?90:150;
+      for(let j=0;j<rows;j++) {
+        const v=j/(rows-1)*2-1,alpha=.10+.22*(1-Math.abs(v));
+        const grad=ctx.createLinearGradient(0,0,w,0);
+        grad.addColorStop(0,'rgba(224,230,235,0)');
+        grad.addColorStop(.2,`rgba(224,230,235,${alpha})`);
+        grad.addColorStop(.7,`rgba(224,230,235,${alpha*.85})`);
+        grad.addColorStop(1,'rgba(224,230,235,0)');
+        ctx.strokeStyle=grad;ctx.lineWidth=j%5===0?.85:.55;ctx.beginPath();
+        for(let i=0;i<=cols;i++){const [x,y]=point(i/cols,v);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.stroke();
+      }
+      // Intermittent transverse threads reveal the ribbon's changing depth.
+      ctx.strokeStyle='rgba(210,220,230,.065)';ctx.lineWidth=.5;
+      for(let i=1;i<36;i++){ctx.beginPath();for(let j=0;j<=16;j++){const [x,y]=point(i/36,j/8-1);if(j===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.stroke();}
+      // Small travelling highlights instead of a broad glowing waveform.
+      for(let k=0;k<7;k++){
+        const u=(phase*.035+k*.147)%1,v=Math.sin(k*2.4)*.82,[x,y]=point(u,v);
+        ctx.fillStyle=`rgba(232,237,240,${(Math.sin(Math.PI*u)**2*.44).toFixed(3)})`;
+        ctx.beginPath();ctx.arc(x,y,k%3===0?1.05:.7,0,Math.PI*2);ctx.fill();
       }
     }
-    resize(); addEventListener("resize", resize);   // r12: listen only once a first draw has worked
-    return { tick(now) { if (on && !reduced) draw(now); } };
+    resize();addEventListener('resize',resize);
+    motion.addEventListener('change',()=>{last=0;draw();});
+    return { tick(now) {
+      if(!on||document.hidden||motion.matches){last=0;return;}
+      if(last&&now-last<32)return;
+      phase+=last?Math.min(.06,(now-last)/1000):0;last=now;
+      px+=(targetX-px)*.08;py+=(targetY-py)*.08;influence+=((activePointer?1:0)-influence)*.06;
+      draw();
+    } };
   }, { tick() {} });
 
   /* ------------------------------------------------------------------ maze (deterministic) */

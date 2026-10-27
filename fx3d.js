@@ -32,7 +32,15 @@
   // kind: 0 still · 1 terrain (rides the wave) · 2 star (no fog, twinkles) · 3 vertex point
   // returns { L: line vertices (pairs), P: point vertices }
   function build(lo) {
-    var A = [], S = [], FL = 0, K = 0, seed = 11, i, j, k, a, x, z;
+    var A = [], S = [], T = [], FL = 0, K = 0, seed = 11, i, j, k, a, x, z;
+    // Hidden-line surfaces are depth-only. Never shade a solid surface into the image.
+    function tri(a, b, c) { T.push.apply(T, a.concat(b, c)); }
+    function quad(a, b, c, d) { tri(a, b, c); tri(a, c, d); }
+    function shellBox(x0, y0, z0, x1, y1, z1) {
+      var a=[x0,y0,z0],b=[x1,y0,z0],c=[x1,y0,z1],d=[x0,y0,z1];
+      var e=[x0,y1,z0],f=[x1,y1,z0],g=[x1,y1,z1],h=[x0,y1,z1];
+      quad(a,b,f,e);quad(b,c,g,f);quad(c,d,h,g);quad(d,a,e,h);quad(e,f,g,h);quad(d,c,b,a);
+    }
     function rnd() { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
     var sm = function (e0, e1, v) { var t = Math.min(1, Math.max(0, (v - e0) / (e1 - e0))); return t * t * (3 - 2 * t); };
     var h2 = function (x, y) { var s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return s - Math.floor(s); };
@@ -57,6 +65,8 @@
     function ring(cx, y, cz, r, n, b) { var P = []; for (var j = 0; j < n; j++) { var t = j / n * TAU; P.push([cx + r * Math.cos(t), y, cz + r * Math.sin(t)]); } line(P, b, true); }
     function rect(x0, z0, x1, z1, y, b) { seg([x0, y, z0], [x1, y, z0], b); seg([x1, y, z0], [x1, y, z1], b); seg([x1, y, z1], [x0, y, z1], b); seg([x0, y, z1], [x0, y, z0], b); }
     function box(x0, y0, z0, x1, y1, z1, b, hl) {
+      // Large hall outlines are deliberately open; columns, piers and small plinths occlude.
+      if (Math.max(x1-x0,z1-z0) < 4.5) shellBox(x0,y0,z0,x1,y1,z1);
       rect(x0, z0, x1, z1, y0, b * 0.8); rect(x0, z0, x1, z1, y1, b);
       [[x0, z0], [x1, z0], [x1, z1], [x0, z1]].forEach(function (p) { seg([p[0], y0, p[1]], [p[0], y1, p[1]], b); if (hl) pt([p[0], y1, p[1]], hl); });
     }
@@ -64,7 +74,15 @@
     function mould(x0, z0, x1, z1, y, prof) {
       prof.forEach(function (m, j) {
         var o = m[1]; rect(x0 - o, z0 - o, x1 + o, z1 + o, y + m[0], m[2]);
-        if (j) { var p = prof[j - 1], po = p[1]; [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(function (s) {
+        if (j) { var p = prof[j - 1], po = p[1];
+          var a0=[[x0-po,y+p[0],z0-po],[x1+po,y+p[0],z0-po],[x1+po,y+p[0],z1+po],[x0-po,y+p[0],z1+po]];
+          var a1=[[x0-o,y+m[0],z0-o],[x1+o,y+m[0],z0-o],[x1+o,y+m[0],z1+o],[x0-o,y+m[0],z1+o]];
+          for(var side=0;side<4;side++)quad(a0[side],a0[(side+1)%4],a1[(side+1)%4],a1[side]);
+          if (!lo) for (var d = p[0] + 0.16; d < m[0] - 0.06; d += 0.16) {
+            var f = (d - p[0]) / (m[0] - p[0]), offset = po + (o - po) * f;
+            rect(x0 - offset, z0 - offset, x1 + offset, z1 + offset, y + d, Math.min(p[2], m[2]) * 0.4);
+          }
+          [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(function (s) {
           var X = s[0] < 0 ? x0 : x1, Z = s[1] < 0 ? z0 : z1;
           L([X + s[0] * po, y + p[0], Z + s[1] * po], [X + s[0] * o, y + m[0], Z + s[1] * o], m[2] * 0.7);
         }); }
@@ -79,10 +97,19 @@
 
     // column: plinth, base mouldings, a fluted shaft with entasis (arrises bright, grooves dim), echinus and abacus
     function column(x, z, y0, r, h, b) {
-      var nf = lo ? 8 : 24, ns = lo ? 2 : 6, rs = lo ? 12 : 24,   // r20B: 16 → 24 flutes, 4 → 6 divisions (high)
+      var nf = lo ? 10 : 24, ns = lo ? 2 : 6, rs = lo ? 16 : 32,   // r20B: 16 → 24 flutes, 4 → 6 divisions (high)
          ys = y0 + r, yt = y0 + h - r, j, s, P, P2;
       box(x - 1.4 * r, y0, z - 1.4 * r, x + 1.4 * r, y0 + 0.28 * r, z + 1.4 * r, b * 0.7, lo ? 0 : 0.5);
       (lo ? [[0.5, 1.22], [0.86, 1.1]] : [[0.4, 1.28], [0.58, 1.18], [0.72, 1.06], [0.88, 1.12]]).forEach(function (m) { ring(x, y0 + m[0] * r, z, m[1] * r, rs, b * 0.55); });
+      for (var band=0;band<ns;band++) for(var sector=0;sector<nf;sector++) {
+        var f0=band/ns,f1=(band+1)/ns,a0=sector/nf*TAU,a1=(sector+1)/nf*TAU;
+        var r0=r*(1-.14*f0+.035*Math.sin(f0*PI))*.895;
+        var r1=r*(1-.14*f1+.035*Math.sin(f1*PI))*.895;
+        quad([x+r0*Math.cos(a0),ys+(yt-ys)*f0,z+r0*Math.sin(a0)],
+          [x+r0*Math.cos(a1),ys+(yt-ys)*f0,z+r0*Math.sin(a1)],
+          [x+r1*Math.cos(a1),ys+(yt-ys)*f1,z+r1*Math.sin(a1)],
+          [x+r1*Math.cos(a0),ys+(yt-ys)*f1,z+r1*Math.sin(a0)]);
+      }
       for (j = 0; j < nf; j++) {
         a = j / nf * TAU; P = []; P2 = [];
         for (s = 0; s <= ns; s++) {
@@ -90,14 +117,54 @@
           P.push([x + rad * Math.cos(a), ys + (yt - ys) * f, z + rad * Math.sin(a)]);
           if (!lo) P2.push([x + rad * 0.9 * Math.cos(a + PI / nf), ys + (yt - ys) * f, z + rad * 0.9 * Math.sin(a + PI / nf)]);
         }
-        line(P, b); if (!lo) line(P2, b * 0.32);
+        line(P, b * 0.9); if (!lo) line(P2, b * 0.22);
       }
       ring(x, ys, z, r * 1.02, rs, b * 0.6); ring(x, yt - 0.12 * r, z, r * 0.95, rs, b * 0.6);
-      if (!lo) for (s = 1; s < 6; s++) ring(x, ys + (yt - ys) * s / 6, z, r * (1 - 0.14 * s / 6 + 0.03), rs, b * 0.16);
+      // Fine contour rings describe the shaft volume, beneath the stronger vertical arrises.
+      var shaftRows = Math.max(6, Math.ceil((yt - ys) / (lo ? 0.8 : 0.28)));
+      for (s = 1; s < shaftRows; s++) {
+        var f = s / shaftRows;
+        ring(x, ys + (yt - ys) * f, z, r * (1 - 0.14 * f + 0.035 * Math.sin(f * PI)), rs, b * (lo ? 0.2 : 0.18));
+      }
       if (!lo) { ring(x, yt - 0.34 * r, z, r * 0.9, rs, b * 0.45); ring(x, yt - 0.22 * r, z, r * 0.9, rs, b * 0.3); }   // r20B: necking astragal
       (lo ? [[0.05, 0.94], [0.45, 1.3]] : [[0.05, 0.94], [0.22, 1.06], [0.36, 1.2], [0.47, 1.32]]).forEach(function (m) { ring(x, yt + m[0] * r, z, m[1] * r, rs, b * 0.7); });
       box(x - 1.45 * r, yt + 0.5 * r, z - 1.45 * r, x + 1.45 * r, yt + r, z + 1.45 * r, b * 0.9, 0.9);
+      // Paired scrolls on the capital; a larger motif, not more parallel shaft lines.
+      for (var face = 0; face < (lo ? 2 : 4); face++) {
+        var ang = face * (lo ? PI : PI / 2), ux = Math.cos(ang), uz = Math.sin(ang), nx = -uz, nz = ux;
+        [-1, 1].forEach(function (side) {
+          var coil = [], steps = lo ? 12 : 24;
+          for (var t = 0; t <= steps; t++) {
+            var f = t / steps, theta = f * TAU * 1.35, rad = r * 0.38 * (1 - f * 0.88);
+            coil.push([x + nx * r * 1.32 + ux * (side * r * 0.98 + rad * Math.cos(theta)),
+              yt + r * 0.48 + rad * Math.sin(theta), z + nz * r * 1.32 + uz * (side * r * 0.98 + rad * Math.cos(theta))]);
+          }
+          line(coil, b * 0.85);
+        });
+      }
+
     }
+    // A recessed stone panel; four bevel edges make the surface depth legible.
+    function wallPanel(cx, cz, ux, uz, half, y0, y1, b) {
+      var nx = -uz, nz = ux, inset = Math.min(0.16, half * 0.2), depth = 0.12;
+      var outer = [[cx - ux * half, y0, cz - uz * half], [cx + ux * half, y0, cz + uz * half],
+        [cx + ux * half, y1, cz + uz * half], [cx - ux * half, y1, cz - uz * half]];
+      var inner = outer.map(function (p, i) {
+        var sign = i === 0 || i === 3 ? 1 : -1;
+        return [p[0] + ux * inset * sign + nx * depth, p[1] + (i < 2 ? inset : -inset), p[2] + uz * inset * sign + nz * depth];
+      });
+      line(outer, b, true); line(inner, b * 0.65, true);
+      if (!lo) for (var i = 0; i < 4; i++) L(outer[i], inner[i], b * 0.7);
+      // A vertical chain of carved lozenges adds a finer scale inside the tall pilaster.
+      var motifs = lo ? 2 : 3, width = (half - inset) * 0.55, span = (y1 - y0 - inset * 2) / motifs;
+      for (var m = 0; m < motifs; m++) {
+        var cy = y0 + inset + span * (m + 0.5);
+        var X = cx + nx * depth, Z = cz + nz * depth;
+        line([[X, cy - span * 0.33, Z], [X + ux * width, cy, Z + uz * width],
+          [X, cy + span * 0.33, Z], [X - ux * width, cy, Z - uz * width]], b * 0.7, true);
+      }
+    }
+
     // entablature over a rectangular footprint: three fasciae, a frieze with triglyph marks, dentils, corona and sima
     var EP = [[0, 0, 0.8], [0.38, 0.04, 0.4], [0.76, 0.08, 0.4], [1.1, 0.12, 0.75], [1.22, 0.12, 0.35], [2.0, 0.14, 0.5],
       [2.16, 0.3, 0.45], [2.42, 0.56, 0.85], [2.6, 0.62, 0.45], [2.8, 0.78, 0.9]];
@@ -121,30 +188,111 @@
       });
       [[x0, z0], [x1, z0], [x1, z1], [x0, z1]].forEach(function (p) { pt([p[0] + (p[0] === x0 ? -0.78 : 0.78), y + 2.8, p[1] + (p[1] === z0 ? -0.78 : 0.78)], 1); });
     }
-    // pediment on the short (x) sides of a footprint: raking cornice (doubled), tympanum, ridge
+    // Pediment hierarchy: strong cornice + central rosette, quieter laurel sprays, fine edge carving.
     function pediment(x0, x1, za, zb, y, hg, b) {
-      var cx = (x0 + x1) / 2;
+      var cx = (x0 + x1) / 2, half = (x1 - x0) / 2;
+      tri([x0-.8,y,za],[cx,y+hg,za],[x1+.8,y,za]);
+      tri([x1+.8,y,zb],[cx,y+hg,zb],[x0-.8,y,zb]);
+      quad([x0-.8,y,za],[x0-.8,y,zb],[cx,y+hg,zb],[cx,y+hg,za]);
+      quad([cx,y+hg,za],[cx,y+hg,zb],[x1+.8,y,zb],[x1+.8,y,za]);
       [za, zb].forEach(function (z, j) {
-        var bb = j ? b * 0.6 : b;
+        var bb = j ? b * 0.5 : b * 1.25, faceZ = z + (j ? -0.08 : 0.08);
+        function P(x, yy, depth) { return [cx + x, y + yy, faceZ + (j ? -1 : 1) * (depth || 0)]; }
         line([[x0 - 0.8, y, z], [cx, y + hg, z], [x1 + 0.8, y, z]], bb);
-        line([[x0 - 0.4, y + 0.3, z], [cx, y + hg - 0.35, z], [x1 + 0.4, y + 0.3, z]], bb * 0.55);
-        line([[x0 + 0.4, y + 0.55, z], [cx, y + hg - 0.75, z], [x1 - 0.4, y + 0.55, z]], bb * 0.3);
+        line([[x0 - 0.4, y + 0.3, z], [cx, y + hg - 0.35, z], [x1 + 0.4, y + 0.3, z]], bb * 0.72);
+        line([[x0 + 0.4, y + 0.55, z], [cx, y + hg - 0.75, z], [x1 - 0.4, y + 0.55, z]], bb * 0.4);
+        // The medallion has its own relief depth, double rim and a sculpted petal crown.
+        var centerY = hg * 0.44, radius = hg * 0.255;
+        [1, 0.9, 0.73].forEach(function (scale, rim) {
+          if (lo && rim === 1) return;
+          line(arc(P(0, centerY, 0.12 - rim * 0.035), [1, 0, 0], radius * scale, 0, TAU, lo ? 28 : 56), bb * [0.98, 0.5, 0.78][rim]);
+        });
+        var petals = lo ? 8 : 12;
+        for (var petal = 0; petal < petals; petal++) {
+          var theta = petal * TAU / petals, outline = [], steps = lo ? 8 : 14;
+          for (var t = 0; t <= steps; t++) {
+            var angle = t / steps * TAU;
+            var radial = radius * (0.43 + 0.25 * Math.cos(angle));
+            var tangent = radius * 0.115 * Math.sin(angle);
+            outline.push(P(radial * Math.cos(theta) - tangent * Math.sin(theta),
+              centerY + radial * Math.sin(theta) + tangent * Math.cos(theta), 0.15));
+          }
+          line(outline, bb * 0.65);
+          if (!lo) L(P(radius * 0.2 * Math.cos(theta), centerY + radius * 0.2 * Math.sin(theta), 0.16),
+            P(radius * 0.64 * Math.cos(theta), centerY + radius * 0.64 * Math.sin(theta), 0.16), bb * 0.32);
+        }
+        line(arc(P(0, centerY, 0.2), [1, 0, 0], radius * 0.14, 0, TAU, lo ? 16 : 24), bb * 0.95);
+        // Tapered laurel branches follow the triangular field, with clear breathing room around the centre.
+        [-1, 1].forEach(function (side) {
+          var start = radius * 1.28, end = half * 0.78, stem = [], leaves = lo ? 5 : 8;
+          function sy(f) { return hg * (0.235 + 0.075 * Math.sin(f * PI) - 0.035 * f); }
+          for (var t = 0; t <= 20; t++) {
+            var f = t / 20; stem.push(P(side * (start + (end - start) * f), sy(f), 0.04));
+          }
+          line(stem, bb * 0.52);
+          for (var leaf = 0; leaf < leaves; leaf++) {
+            var f = (leaf + 0.35) / leaves, X = start + (end - start) * f, Y = sy(f);
+            var length = (end - start) / leaves * 0.84, height = hg * (0.15 - 0.09 * f);
+            [-1, 1].forEach(function (up) {
+              var outline = [], n = lo ? 6 : 10;
+              for (var t = 0; t <= n; t++) {
+                var angle = t / n * TAU, travel = (1 - Math.cos(angle)) * 0.5;
+                outline.push(P(side * (X + length * travel + Math.sin(angle) * length * 0.2),
+                  Y + up * (height * travel - Math.sin(angle) * height * 0.18), 0.06));
+              }
+              line(outline, bb * 0.4);
+              if (!lo) L(P(side * X, Y, 0.08), P(side * (X + length), Y + up * height, 0.08), bb * 0.26);
+            });
+          }
+          // Small paired cuts in the raking cornice form a fine third scale.
+          var edgeSteps = lo ? 18 : 36;
+          for (var cut = 1; cut < edgeSteps; cut++) {
+            var f = cut / edgeSteps;
+            var X = side * (half + 0.15) * f, Y = (hg - 0.35) * (1 - f) + 0.3 * f;
+            var cutWidth = lo ? 0.09 : 0.065;
+            line([P(X - side * cutWidth, Y - 0.05), P(X - side * cutWidth, Y - 0.17),
+              P(X + side * cutWidth, Y - 0.17), P(X + side * cutWidth, Y - 0.05)], bb * 0.32);
+          }
+        });
+        // A restrained lower band grounds the floral field without competing with the rosette.
+        seg(P(-half + 0.7, 0.23), P(half - 0.7, 0.23), bb * 0.6);
+        seg(P(-half + 0.9, 0.4), P(half - 0.9, 0.4), bb * 0.36);
+        if (!lo) for (var bead = -half + 1.1; bead < half - 1; bead += 0.45) {
+          line([P(bead - 0.055, 0.31), P(bead, 0.36), P(bead + 0.055, 0.31), P(bead, 0.26)], bb * 0.28, true);
+        }
         pt([cx, y + hg, z], 1);
       });
       seg([cx, y + hg, za], [cx, y + hg, zb], b * 0.7);
       seg([x0 - 0.8, y, za], [x0 - 0.8, y, zb], b * 0.5); seg([x1 + 0.8, y, za], [x1 + 0.8, y, zb], b * 0.5);
-      if (!lo) for (var zi = 1; zi < 8; zi++) { var zz = za + (zb - za) * zi / 8; line([[x0 - 0.8, y, zz], [cx, y + hg, zz], [x1 + 0.8, y, zz]], b * 0.16); }
+      if (!lo) for (var zi = 1; zi < 8; zi++) { var zz = za + (zb - za) * zi / 8; line([[x0 - 0.8, y, zz], [cx, y + hg, zz], [x1 + 0.8, y, zz]], b * 0.13); }
     }
     // an arch on two faces (centre o at the springing, u along the face, n through the depth): voussoir joints, keystone, intrados
     function arch(o, u, n, r, R, D, nv, b) {
-      var o2 = add(o, n, D), ni = lo ? nv : nv * 2;
+      var o2 = add(o, n, D), ni = Math.max(lo ? 14 : 28, nv * (lo ? 1 : 2));
+      var inner=arc(o,u,r,0,PI,ni),outer=arc(o,u,R,0,PI,ni);
+      for(var face=0;face<ni;face++) {
+        quad(inner[face],inner[face+1],outer[face+1],outer[face]);
+        quad(add(inner[face],n,D),add(outer[face],n,D),add(outer[face+1],n,D),add(inner[face+1],n,D));
+        quad(inner[face],add(inner[face],n,D),add(inner[face+1],n,D),inner[face+1]);
+      }
       line(arc(o, u, r, 0, PI, ni), b); line(arc(o, u, R, 0, PI, ni), b * 0.8);
       line(arc(o2, u, r, 0, PI, ni), b * 0.5); line(arc(o2, u, R, 0, PI, ni), b * 0.4);
+      // A quiet archivolt between the structural edges, following the same curve.
+      if (R - r > 0.08) line(arc(o, u, r + (R - r) * 0.28, 0, PI, ni), b * 0.3);
       for (var j = 0; j <= nv; j++) {
         var t = j / nv * PI, ci = Math.cos(t), si = Math.sin(t);
         var pi = [o[0] + u[0] * r * ci, o[1] + r * si, o[2] + u[2] * r * ci], po = [o[0] + u[0] * R * ci, o[1] + R * si, o[2] + u[2] * R * ci];
         if (j > 0 && j < nv) L(pi, po, b * (j * 2 === nv ? 0.9 : 0.42));
         if (!lo || j % 2 === 0) L(pi, add(pi, n, D), b * 0.3);
+      }
+      // Inset faces articulate each wedge of stone without thickening the arch silhouette.
+      if (R - r > 0.12) for (var stone = 0; stone < nv; stone++) {
+        if (lo && stone % 2) continue;
+        var start = (stone + 0.16) / nv * PI, end = (stone + 0.84) / nv * PI;
+        var insetR = r + (R - r) * 0.4, outerR = R - (R - r) * 0.16;
+        var face = arc(add(o, n, 0.035), u, insetR, start, end, lo ? 1 : 3);
+        var rim = arc(add(o, n, 0.035), u, outerR, end, start, lo ? 1 : 3);
+        line(face.concat(rim), b * 0.62, true);
       }
       pt([o[0], o[1] + R, o[2]], 0.95); pt([o[0] + u[0] * R, o[1], o[2] + u[2] * R], 0.7); pt([o[0] - u[0] * R, o[1], o[2] - u[2] * R], 0.7);
     }
@@ -152,6 +300,8 @@
     function stair(x0, x1, z0, y0, n, rise, run, b) {
       for (var j = 0; j < n; j++) {
         var yb = y0 + j * rise, yt = yb + rise, zf = z0 - j * run, zb = zf - run;
+        quad([x0,yb,zf],[x1,yb,zf],[x1,yt,zf],[x0,yt,zf]);
+        quad([x0,yt,zf],[x1,yt,zf],[x1,yt,zb],[x0,yt,zb]);
         seg([x0, yt, zf], [x1, yt, zf], b, 3); seg([x0, yb, zf], [x1, yb, zf], b * 0.3, 3);
         if (!lo) { seg([x0, yt - 0.07, zf + 0.06], [x1, yt - 0.07, zf + 0.06], b * 0.35, 3); seg([x0, yt - 0.13, zf], [x1, yt - 0.13, zf], b * 0.2, 3); }   // r20B: nosing moulding
         [x0, x1].forEach(function (X) { L([X, yb, zf], [X, yt, zf], b * 0.7); L([X, yt, zf], [X, yt, zb], b * 0.7); });
@@ -159,34 +309,77 @@
         pt([x0, yt, zf], 0.8); pt([x1, yt, zf], 0.8);
       }
     }
+    // Surface-space coffer: stepped structural frames, bevels and a restrained central mark.
+    // The mapping keeps decoration attached to the surface through the entire camera route.
+    function coffer(surface, u0, u1, v0, v1, depth, b) {
+      function frame(inset, d) {
+        var ua = u0 + (u1 - u0) * inset, ub = u1 - (u1 - u0) * inset;
+        var va = v0 + (v1 - v0) * inset, vb = v1 - (v1 - v0) * inset;
+        var corners = [[ua, va], [ub, va], [ub, vb], [ua, vb]], outline = [];
+        for (var edge = 0; edge < 4; edge++) {
+          var p = corners[edge], q = corners[(edge + 1) % 4], steps = lo ? 2 : 3;
+          for (var t = 0; t < steps; t++) outline.push(surface(p[0] + (q[0] - p[0]) * t / steps, p[1] + (q[1] - p[1]) * t / steps, d));
+        }
+        line(outline, b * (inset ? 0.7 : 1), true);
+        return corners.map(function (p) { return surface(p[0], p[1], d); });
+      }
+      var outer = frame(0.07, 0), inner = frame(0.2, depth);
+      for (var i = 0; i < 4; i++) L(outer[i], inner[i], b * 0.8);
+      // Keep a small, quiet central mark; surface subdivision supplies the visual richness.
+      if (!lo) frame(0.25, depth * 1.15);
+      var u = (u0 + u1) / 2, v = (v0 + v1) / 2, du = u1 - u0, dv = v1 - v0;
+      var flower = [], samples = lo ? 12 : 16;
+      for (var petal = 0; petal < samples; petal++) {
+        var theta = petal / samples * TAU, radius = 0.11 + 0.025 * Math.cos(4 * theta);
+        flower.push(surface(u + du * radius * Math.cos(theta), v + dv * radius * Math.sin(theta), depth * 0.72));
+      }
+      line(flower, b * 0.32, true);
+    }
+
     // a lat-long dome (hemisphere radius R on y0): ribs every fourth meridian brighter, coffers as doubled parallels
     function dome(cx, y0, cz, R, nl, nr, b) {
       var j, l, P;
       for (j = 0; j < nl; j++) {
         a = j / nl * TAU; P = [];
         for (l = 0; l <= nr; l++) { var f = l / nr * PI / 2 * 0.94; P.push([cx + R * Math.cos(f) * Math.cos(a), y0 + R * Math.sin(f), cz + R * Math.cos(f) * Math.sin(a)]); }
-        line(P, j % 4 ? b * 0.55 : b);
+        line(P, j % 4 ? b * 0.28 : b * 1.3);
       }
       for (l = 1; l <= nr; l++) {
         var g = l / nr * PI / 2 * 0.94, rr = R * Math.cos(g), yy = y0 + R * Math.sin(g);
-        ring(cx, yy, cz, rr, nl, b * 0.6);
-        if (!lo && l < nr) ring(cx, yy + R * 0.018, cz, rr * 0.998, nl, b * 0.25);
+        ring(cx, yy, cz, rr, nl * 2, b * 0.52);
+        if (!lo && l < nr) ring(cx, yy + R * 0.018, cz, rr * 0.998, nl * 2, b * 0.28);
         if (l % 3 === 0) for (j = 0; j < nl; j += 4) { a = j / nl * TAU; pt([cx + rr * Math.cos(a), yy, cz + rr * Math.sin(a)], 0.8); }
       }
       ring(cx, y0, cz, R, nl * 2, b);
-      // r20B: coffers — an inset frame in every cell between two meridians and two parallels (high)
-      if (!lo) for (l = 0; l < nr - 2; l++) {
-        var f0 = l / nr * PI / 2 * 0.94, f1 = (l + 1) / nr * PI / 2 * 0.94, df = (f1 - f0) * 0.2, R3 = R * 0.988;
-        for (j = 0; j < nl; j++) {
-          var a0 = j / nl * TAU, a1 = (j + 1) / nl * TAU, da = (a1 - a0) * 0.2;
-          var cp = function (aa, ff) { return [cx + R3 * Math.cos(ff) * Math.cos(aa), y0 + R3 * Math.sin(ff), cz + R3 * Math.cos(ff) * Math.sin(aa)]; };
-          line([cp(a0 + da, f0 + df), cp(a1 - da, f0 + df), cp(a1 - da, f1 - df), cp(a0 + da, f1 - df)], b * 0.17, true);
-        }
+      var sub = lo ? 2 : 3, fineRows = nr * sub;
+      for (var row = 1; row < fineRows; row++) {
+        if (row % sub === 0) continue;
+        var angle = row / fineRows * PI / 2 * 0.94;
+        ring(cx, y0 + R * Math.sin(angle), cz, R * Math.cos(angle), nl * 2, b * 0.17);
       }
+      if (!lo) for (var meridian = 0; meridian < nl; meridian++) {
+        var aa = (meridian + 0.5) / nl * TAU, points = [];
+        for (var row = 0; row <= nr * 2; row++) {
+          var angle = row / (nr * 2) * PI / 2 * 0.94;
+          points.push([cx + R * Math.cos(angle) * Math.cos(aa), y0 + R * Math.sin(angle), cz + R * Math.cos(angle) * Math.sin(aa)]);
+        }
+        line(points, b * 0.12);
+      }
+      // Broader recessed panels remain readable at normal viewport scale.
+      var bands = lo ? Math.max(3, nr - 2) : nr - 2, sectors = Math.max(8, Math.floor(nl / 2));
+      var surface = function (aa, ff, depth) {
+        var rr = R + depth;
+        return [cx + rr * Math.cos(ff) * Math.cos(aa), y0 + rr * Math.sin(ff), cz + rr * Math.cos(ff) * Math.sin(aa)];
+      };
+      for (l = 0; l < bands; l++) for (j = 0; j < sectors; j++) {
+        coffer(surface, j / sectors * TAU, (j + 1) / sectors * TAU,
+          l / nr * PI / 2 * 0.94, (l + 1) / nr * PI / 2 * 0.94, R * 0.012, b * 0.57);
+      }
+
     }
     // a cypress: a spindle of meridians and parallels
     function cypress(x, y0, z, hg, r, b) {
-      var nl = lo ? 6 : 10, nr = lo ? 4 : 8, j, l, P;
+      var nl = lo ? 6 : 12, nr = lo ? 6 : 12, j, l, P;
       var rad = function (f) { return r * Math.pow(Math.sin(PI * Math.pow(f, 0.8)), 0.9); };
       for (j = 0; j < nl; j++) { a = j / nl * TAU; P = []; for (l = 0; l <= nr; l++) { var f = l / nr; P.push([x + rad(f) * Math.cos(a), y0 + 0.6 + f * hg, z + rad(f) * Math.sin(a)]); } line(P, b); }
       for (l = 1; l < nr; l++) ring(x, y0 + 0.6 + l / nr * hg, z, rad(l / nr), nl, b * 0.7);
@@ -214,11 +407,32 @@
       }
     }
 
+    // Fine coursed stone on a solid wall strip. Segments stay short for distance fog.
+    // Split strips around openings at call sites instead of drawing through them.
+    function masonry(p, q2, y0, y1, b) {
+      var len = Math.hypot(q2[0] - p[0], q2[2] - p[2]);
+      if (len < 0.01) return;
+      var ux = (q2[0] - p[0]) / len, uz = (q2[2] - p[2]) / len;
+      var course = lo ? 1.1 : 0.56, block = course * 2.6;
+      for (var row = 0, yy = y0; yy < y1 - 0.01; row++, yy += course) {
+        var top = Math.min(yy + course, y1);
+        seg([p[0], top, p[2]], [q2[0], top, q2[2]], b * 1.35, block);
+        for (var d = row % 2 ? block / 2 : block; d < len; d += block) {
+          L([p[0] + ux * d, yy, p[2] + uz * d], [p[0] + ux * d, top, p[2] + uz * d], b * 0.85);
+        }
+      }
+    }
+    // Recessed ceiling panels, with the inner frame slightly higher than the rim.
+    function ceilingPanel(x0, z0, x1, z1, y, b) {
+      coffer(function (x, z, depth) { return [x, y + depth, z]; }, x0, x1, z0, z1, 0.22, b * 2.1);
+    }
+
+
     var Y0 = 4.8;   // the podium the complex stands on
 
     // 0 · hero: hills either side of a shallow valley, scanline rows plus cross lines (the portrait's language, as a mesh)
     K = 1;
-    var NX = lo ? 64 : 150, DZ = lo ? 1.3 : 0.6, rows = [], row;
+    var NX = lo ? 72 : 180, DZ = lo ? 1.0 : 0.42, rows = [], row;
     for (z = 7; z >= -44; z -= DZ) {
       row = [];
       for (i = 0; i < NX; i++) {
@@ -229,8 +443,8 @@
       rows.push(row);
     }
     rows.forEach(function (row, ri) {
-      for (i = 0; i < NX - 1; i++) L(row[i], row[i + 1], 0.55 * (1 - sm(0.75, 1, Math.abs(row[i][0]) / 46)));
-      if (ri) for (i = 0; i < NX; i += lo ? 2 : 2) L(rows[ri - 1][i], row[i], 0.24 * (1 - sm(0.75, 1, Math.abs(row[i][0]) / 46)));
+      for (i = 0; i < NX - 1; i++) L(row[i], row[i + 1], 0.35 * (1 - sm(0.75, 1, Math.abs(row[i][0]) / 46)));
+      if (ri) for (i = 0; i < NX; i += lo ? 2 : 2) L(rows[ri - 1][i], row[i], 0.18 * (1 - sm(0.75, 1, Math.abs(row[i][0]) / 46)));
     });
     K = 0;
     // forecourt (y 0) and the open ground around the podium: a perspective grid, finer near the route
@@ -251,6 +465,9 @@
     var gp = lo ? 6 : 2;
     for (x = PX0; x <= PX1; x += gp) seg([x, Y0, PZ0], [x, Y0, PZ1], (x % 12 ? 0.13 : 0.24), 6);
     for (z = PZ0; z >= PZ1; z -= gp) seg([PX0, Y0, z], [PX1, Y0, z], (z % 12 ? 0.13 : 0.24), 6);
+
+    masonry([PX0, 0, PZ0], [-11, 0, PZ0], 0.5, Y0 - 0.8, 0.16);
+    masonry([11, 0, PZ0], [PX1, 0, PZ0], 0.5, Y0 - 0.8, 0.16);
 
     // 1 · Aviso: the grand stair and the gatehouse (two rows of six columns, entablature, pediments front and back)
     FL = 0;
@@ -277,6 +494,11 @@
     for (z = SZ0; z > SZ1; z -= 4) rect(-6.5, z - 4, 6.5, z, Y0 + 0.02, 0.22);
     if (!lo) pave(-6.5, SZ1, 6.5, SZ0, Y0 + 0.015, 13 / 12, 0.07);                      // r20B: paving
 
+    for (z = SZ0; z - 4 >= SZ1; z -= 4) {
+      var cells = lo ? 3 : 6, cw = 13 / cells;
+      for (i = 0; i < cells; i++) ceilingPanel(-6.5 + i * cw + 0.2, z - 3.7, -6.5 + (i + 1) * cw - 0.2, z - 0.3, Y0 + 8.62, 0.24);
+    }
+
     // 3 · Design Work: the atrium, two-storey arcades on both long sides (piers and arches below, small columns above)
     var AZ0 = -128, AZ1 = -196, BAY = 6.8, NB = 10;
     [-1, 1].forEach(function (s) {
@@ -284,6 +506,9 @@
       for (k = 0; k <= NB; k++) {
         var zp = AZ0 - k * BAY;
         box(X - 0.7, Y0, zp - 0.7, X + 0.7, Y0 + 5, zp + 0.7, 0.75, 0.7);
+        wallPanel(X - s * 0.72, zp, 0, -s, 0.52, Y0 + 0.45, Y0 + 4.6, 0.52);
+        // Horizontal stone joints on the piers, below the arch springing.
+        for (j = 1; j < (lo ? 4 : 7); j++) rect(X - 0.7, zp - 0.7, X + 0.7, zp + 0.7, Y0 + j * 5 / (lo ? 4 : 7), 0.18);
         mould(X - 0.7, zp - 0.7, X + 0.7, zp + 0.7, Y0 + 5, [[0, 0, 0.5], [0.22, 0.14, 0.6]]);
         if (k < NB) arch([X, Y0 + 5.22, zp - BAY / 2], u, nn, BAY / 2 - 0.7, BAY / 2, s * 1.4, 9, 0.85);
         seg([Xb, Y0, zp], [Xb, Y0 + 14, zp], 0.2);                     // back wall pilasters
@@ -294,6 +519,8 @@
       }
       mould(Math.min(X, X + s * 0.9), AZ1 - 0.7, Math.max(X, X + s * 0.9), AZ0 + 0.7, Y0 + 8.5, [[0, 0, 0.6], [0.3, 0.1, 0.4], [0.7, 0.25, 0.75]]);
       mould(Math.min(X, X + s * 0.9), AZ1 - 0.7, Math.max(X, X + s * 0.9), AZ0 + 0.7, Y0 + 13.6, [[0, 0, 0.6], [0.4, 0.2, 0.5], [0.8, 0.5, 0.85], [1.0, 0.6, 0.5]]);
+      masonry([Xb, 0, AZ1], [Xb, 0, AZ0], Y0 + 5.3, Y0 + 8.8, 0.17);
+      masonry([Xb, 0, AZ1], [Xb, 0, AZ0], Y0 + 9.3, Y0 + 13.8, 0.13);
       seg([Xb, Y0 + 14, AZ0], [Xb, Y0 + 14, AZ1], 0.3); seg([Xb, Y0 + 9, AZ0], [Xb, Y0 + 9, AZ1], 0.22);
       for (k = 0; k <= NB; k++) seg([X, Y0 + 14.6, AZ0 - k * BAY], [Xb, Y0 + 14, AZ0 - k * BAY], 0.2);   // roof rafters
     });
@@ -317,14 +544,36 @@
     arch([DX + BX, Y0 + 4.5, DZ0], [0, 0, 1], [-1, 0, 0], 2.8, 3.5, 1.6, 9, 0.85);
     [[DX - 3.4, DZ0 + BX], [DX + 3.4, DZ0 + BX]].forEach(function (p) { L([p[0], Y0, p[1]], [p[0], Y0 + 5.5, p[1]], 0.8); });
     [[DX + BX, DZ0 - 2.8], [DX + BX, DZ0 + 2.8]].forEach(function (p) { L([p[0], Y0, p[1]], [p[0], Y0 + 4.5, p[1]], 0.8); });
+    [DZ0 - BX, DZ0 + BX].forEach(function (zz) {
+      masonry([DX - BX, 0, zz], [DX - 4.3, 0, zz], Y0 + 0.7, Y0 + HB - 1.2, 0.2);
+      masonry([DX + 4.3, 0, zz], [DX + BX, 0, zz], Y0 + 0.7, Y0 + HB - 1.2, 0.2);
+    });
+    [DX - BX, DX + BX].forEach(function (xx) {
+      masonry([xx, 0, DZ0 - BX], [xx, 0, DZ0 - 3.6], Y0 + 0.7, Y0 + HB - 1.2, 0.2);
+      masonry([xx, 0, DZ0 + 3.6], [xx, 0, DZ0 + BX], Y0 + 0.7, Y0 + HB - 1.2, 0.2);
+    });
     var DR = 13, DY = Y0 + HB, NL = lo ? 24 : 64;
     ring(DX, DY, DZ0, DR, NL, 0.75); ring(DX, DY + 0.5, DZ0, DR + 0.3, NL, 0.5); ring(DX, DY + 5.4, DZ0, DR + 0.3, NL, 0.55); ring(DX, DY + 6, DZ0, DR, NL, 0.8);
     for (i = 0; i < 24; i++) {
       a = i / 24 * TAU; var ca = Math.cos(a), sa = Math.sin(a);
       L([DX + (DR + 0.3) * ca, DY + 0.5, DZ0 + (DR + 0.3) * sa], [DX + (DR + 0.3) * ca, DY + 5.4, DZ0 + (DR + 0.3) * sa], 0.55);
-      if (!lo) { var am = a + PI / 24; arch([DX + DR * Math.cos(am), DY + 3.4, DZ0 + DR * Math.sin(am)], [-Math.sin(am), 0, Math.cos(am)], [0, 0, 0], 0.62, 0.62, 0, 4, 0.3);
+      if (!lo) { var am = a + PI / 24, wc = Math.cos(am), ws = Math.sin(am);
+        var wo = [DX + DR * wc, DY + 3.4, DZ0 + DR * ws], wu = [-ws, 0, wc];
+        arch(wo, wu, [-wc, 0, -ws], 0.62, 0.84, 0.12, 7, 0.48);
+        for (var mullion = -1; mullion <= 1; mullion++) {
+          var offset = mullion * 0.3;
+          L([wo[0] + wu[0] * offset, DY + 1.4, wo[2] + wu[2] * offset],
+            [wo[0] + wu[0] * offset, DY + 3.4 + Math.sqrt(0.62 * 0.62 - offset * offset), wo[2] + wu[2] * offset], 0.32);
+        }
+        for (var sill = 0; sill < 2; sill++) {
+          var wy = DY + 1.4 + sill * 1.15;
+          L([wo[0] - wu[0] * 0.7, wy, wo[2] - wu[2] * 0.7], [wo[0] + wu[0] * 0.7, wy, wo[2] + wu[2] * 0.7], 0.4);
+        }
         L([DX + DR * Math.cos(am) - Math.sin(am) * 0.62, DY + 1.4, DZ0 + DR * Math.sin(am) + Math.cos(am) * 0.62], [DX + DR * Math.cos(am) - Math.sin(am) * 0.62, DY + 3.4, DZ0 + DR * Math.sin(am) + Math.cos(am) * 0.62], 0.25);
         L([DX + DR * Math.cos(am) + Math.sin(am) * 0.62, DY + 1.4, DZ0 + DR * Math.sin(am) - Math.cos(am) * 0.62], [DX + DR * Math.cos(am) + Math.sin(am) * 0.62, DY + 3.4, DZ0 + DR * Math.sin(am) - Math.cos(am) * 0.62], 0.25); }
+    }
+    for (var courseY = DY + 0.8; courseY < DY + 5.4; courseY += lo ? 0.8 : 0.26) {
+      ring(DX, courseY, DZ0, DR + 0.06, lo ? 48 : 128, 0.23);
     }
     dome(DX, DY + 6, DZ0, DR, NL, lo ? 8 : 18, 0.8);
     var TY = DY + 6 + DR * Math.sin(PI / 2 * 0.94);
@@ -342,7 +591,27 @@
       if (x + GB <= GX1) [-1, 1].forEach(function (s) { arch([x + GB / 2 + 0.15, Y0 + 2.9, GZ + s * GW], [1, 0, 0], [0, 0, s * 0.5], 1.4, 1.75, 1, 6, 0.55); });
     }
     for (i = 1; i < (lo ? 6 : 14); i++) { a = i / (lo ? 6 : 14) * PI; seg([GX0 + 2, GS + (GW + 0.45) * Math.sin(a), GZ + (GW + 0.45) * Math.cos(a)], [GX1, GS + (GW + 0.45) * Math.sin(a), GZ + (GW + 0.45) * Math.cos(a)], 0.3, 4); }
+    for (var vx = GX0 + 2.5; vx < GX1; vx += lo ? 1.2 : 0.42) {
+      line(arc([vx, GS, GZ], [0, 0, 1], GW + 0.4, 0, PI, lo ? 18 : 40), 0.2);
+    }
     for (z = -GW; z <= GW; z += lo ? GW : 1.2) seg([GX0, Y0 + 0.02, GZ + z], [GX1, Y0 + 0.02, GZ + z], 0.2, 4);
+
+    // Recessed vault panels occupy each bay, with secondary frames and bevel edges.
+    var vaultCells = lo ? 6 : 10;
+    var vaultSurface = function (xx, aa, depth) { return [xx, GS + (GW + 0.4 + depth) * Math.sin(aa), GZ + (GW + 0.4 + depth) * Math.cos(aa)]; };
+    for (x = GX0 + 2; x + GB <= GX1; x += GB) {
+      for (i = 0; i < vaultCells; i++) {
+        coffer(vaultSurface, x + 0.72, x + GB - 0.15, i / vaultCells * PI, (i + 1) / vaultCells * PI, 0.16, 0.65);
+      }
+      [-1, 1].forEach(function (s) {
+        wallPanel(x + 0.15, GZ + s * (GW - 0.32), s, 0, 0.3, Y0 + 0.45, GS - 0.45, 0.6);
+        mould(x - 0.4, GZ + s * GW - 0.4, x + 0.7, GZ + s * GW + 0.4, Y0, [[0.12, 0.08, 0.55], [0.34, 0, 0.4]]);
+      });
+      // A central inlay lends the floor a rhythm distinct from the roof grid.
+      var mid = x + GB / 2;
+      line([[mid - 1.25, Y0 + 0.035, GZ], [mid, Y0 + 0.035, GZ - 1.3], [mid + 1.25, Y0 + 0.035, GZ], [mid, Y0 + 0.035, GZ + 1.3]], 0.44, true);
+      if (!lo) line([[mid - 0.85, Y0 + 0.035, GZ], [mid, Y0 + 0.035, GZ - 0.9], [mid + 0.85, Y0 + 0.035, GZ], [mid, Y0 + 0.035, GZ + 0.9]], 0.28, true);
+    }
 
     // 6 · TaoTao: the garden court — low wall, a pool with a rim, a fountain, cypresses, a small contour mound
     var CX = 94, CZ = -224;
@@ -352,6 +621,13 @@
     if (!lo) for (k = 1; k < 4; k++) rect(CX - 12 + k * 0.9, CZ - 8 + k * 0.9, CX + 12 - k * 0.9, CZ + 8 - k * 0.9, Y0 + 0.05, 0.12);
     [[3.2, 0.7], [3.4, 0.9]].forEach(function (m) { ring(CX, Y0 + m[1], CZ, m[0], 48, 0.6); });
     ring(CX, Y0 + 1.9, CZ, 1.8, 32, 0.7); ring(CX, Y0 + 1.6, CZ, 1.2, 24, 0.4); L([CX, Y0 + 0.9, CZ], [CX, Y0 + 2.9, CZ], 0.6); ring(CX, Y0 + 2.9, CZ, 0.9, 24, 0.7); pt([CX, Y0 + 3.6, CZ], 1);
+    var bowl = [[0.95, 0.55], [1.15, 0.7], [1.4, 1.1], [1.7, 1.65], [1.9, 1.8]];
+    bowl.forEach(function (p) { ring(CX, Y0 + p[0], CZ, p[1], lo ? 24 : 48, 0.48); });
+    for (i = 0; i < (lo ? 12 : 24); i++) {
+      var angle = i / (lo ? 12 : 24) * TAU;
+      line(bowl.map(function (p) { return [CX + p[1] * Math.cos(angle), Y0 + p[0], CZ + p[1] * Math.sin(angle)]; }), 0.52);
+      L([CX + 2 * Math.cos(angle), Y0 + 0.9, CZ + 2 * Math.sin(angle)], [CX + 3.4 * Math.cos(angle), Y0 + 0.9, CZ + 3.4 * Math.sin(angle)], 0.38);
+    }
     for (z = CZ - 18; z <= CZ + 18; z += 6) { cypress(CX - 20, Y0, z, 7 + 1.5 * h2(z, 1), 0.95, 0.5); cypress(CX + 20, Y0, z, 7 + 1.5 * h2(z, 2), 0.95, 0.5); }
     for (k = 0; k < (lo ? 6 : 10); k++) {
       var rk = 6.5 * Math.pow(1 - k / (lo ? 6 : 10), 0.8), CP = [], nc = lo ? 32 : 64;
@@ -407,9 +683,9 @@
       S.push(40 + R2 * Math.cos(el) * Math.cos(az), R2 * Math.sin(el), -150 + R2 * Math.cos(el) * Math.sin(az), 0, rnd(), 0, 0.25 + 0.75 * Math.pow(rnd(), 3), 2);
     }
     // small bright points on a share of the model's vertices
-    var share = lo ? 0.018 : 0.035;
+    var share = lo ? 0.003 : 0.006;
     for (i = 0; i < A.length; i += 8) if (A[i + 7] === 0 && A[i + 6] >= 0.6 && rnd() < share) S.push(A[i], A[i + 1], A[i + 2], A[i + 3], rnd(), 0, A[i + 6] * 0.8, 3);
-    return { L: new Float32Array(A), P: new Float32Array(S) };
+    return { L: new Float32Array(A), P: new Float32Array(S), T: new Float32Array(T) };
   }
 
   /* ---------------------------------------------------------------- r24: relief (normal + convexity per line vertex) */
@@ -609,22 +885,23 @@
       "  if (uMir > 0.5) p.y = aQ.x - h;",          // the mirror image in the floor the vertex stands on
       "  vec4 v = uV * vec4(p, 1.0), c = uP * v;",
       "  if (c.w > 0.0) w = wave(vec2(0.5 + 0.5 * c.x / c.w, 0.5 - 0.5 * c.y / c.w));",
-      "  v.y += terr * w * 0.55;",            // a lift along the view-space up axis, the same in every pose
+      "  v.y += terr * w * 0.22;",            // a lift along the view-space up axis, the same in every pose
       "  gl_Position = uP * v;",
       "  gl_Position.xy += uOff * gl_Position.w;",
       "  float d = length(v.xyz);",
       "  float a = br * mix(exp(-d * uFog) * smoothstep(0.8, 4.0, d) * (1.0 - terr * smoothstep(30.0, 64.0, d)), 1.0, star);",
-      "  a *= 1.0 + w * mix(0.25, 0.9, terr);",
+      "  a *= 1.0 + w * mix(0.04, 0.35, terr);",
       // r24 relief: lines that stand out (convex: aN.w high), face the light or the camera, or are near are brighter (and,
       // on the high tier, drawn again a pixel over: wider); recesses, inner corners and the far distance darker and finer
       "  vec3 n = normalize(mat3(uV) * aN.xyz); float still = (1.0 - terr) * (1.0 - star) * step(k, 2.5);",
       "  float key = 0.5 + 0.5 * dot(n, normalize(vec3(-0.45, 0.6, 0.65))), face = max(dot(n, normalize(-v.xyz)), 0.0);",
       "  float near = smoothstep(46.0, 5.0, d);",
       "  float pr = clamp(0.45 * aN.w + 0.3 * key + 0.15 * face + 0.35 * near - 0.25, 0.0, 1.0);",
-      "  a *= mix(1.0, mix(0.55, 1.35, pr), still);",
+      "  a *= mix(1.0, mix(0.72, 1.3, pr), still);",
+      "  a *= mix(1.0, mix(0.6, 1.12, 1.0 - smoothstep(18.0, 95.0, d)), still * (1.0 - smoothstep(0.55, 0.8, br)));",
       "  if (uWt > 0.5) a *= still * smoothstep(0.55, 0.85, pr) * smoothstep(0.35, 0.6, br);",
       "  a *= mix(1.0, 0.55 + 0.45 * sin(uT * (0.5 + aQ.y * 1.8) + aQ.y * 40.0), star);",
-      "  a *= mix(1.0, 0.15 * exp(-h * 0.13) * step(0.02, h) * (1.0 - terr) * (1.0 - star), uMir);",
+      "  a *= mix(1.0, 0.035 * exp(-h * 0.13) * step(0.02, h) * (1.0 - terr) * (1.0 - star), uMir);",
       "  vA = a * step(uMin, br); vR = aQ.y;",
       "  gl_PointSize = uPS * mix(clamp(42.0 / d, 1.0, 2.6), 0.8 + aQ.y * 1.3, star);",
       "}"
@@ -642,7 +919,7 @@
       // the hero copy: a soft ellipse, no edge to see
       "  m = min(m, mix(0.1, 1.0, smoothstep(0.5, 1.3, length((p - uHC.xy) / uHC.zw))));",
       // fewer lines as well as fainter ones: a share of the lines (by their random) drops out where m is low
-      "  if (vR < (1.0 - m) * 0.8) discard;",
+      "  if (vR < (1.0 - m) * 0.35) discard;",
       "  float hd = length((p - uHole.xy) / uHole.zw); m *= mix(0.2, 1.0, smoothstep(0.55, 1.05, hd));",
       "  float a = vA * uK * m;",
       "  if (uPt > 0.5) a *= smoothstep(0.5, 0.1, length(gl_PointCoord - 0.5));",
@@ -661,7 +938,15 @@
     if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) throw new Error("link");
     gl.useProgram(pr);
 
-    var M = build(!HI), NV = M.L.length / 8, NP = M.P.length / 8;
+    var depthPr = gl.createProgram();
+    gl.attachShader(depthPr, sh(gl.VERTEX_SHADER, "attribute vec3 aP;uniform mat4 uV,uP;void main(){vec4 v=uV*vec4(aP,1.0);v.xyz*=1.0+0.055/max(length(v.xyz),.1);gl_Position=uP*v;}"));
+    gl.attachShader(depthPr, sh(gl.FRAGMENT_SHADER, "precision mediump float;void main(){gl_FragColor=vec4(0.0);}"));
+    gl.linkProgram(depthPr);
+    if(!gl.getProgramParameter(depthPr,gl.LINK_STATUS))throw new Error("depth-link");
+    var depthLoc=gl.getAttribLocation(depthPr,"aP"),depthV=gl.getUniformLocation(depthPr,"uV"),depthP=gl.getUniformLocation(depthPr,"uP");
+    var M = build(!HI), NV = M.L.length / 8, NP = M.P.length / 8, NT=M.T.length/3;
+    var depthBuffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,depthBuffer);gl.bufferData(gl.ARRAY_BUFFER,M.T,gl.STATIC_DRAW);
+    root.setAttribute("data-fx-depth-triangles",String(NT/3));
     // r24: each vertex gains its relief (normal, convexity): 8 → 12 floats; the points get a neutral one
     var widen = function (A, R) {
       var n = A.length / 8, B = new Float32Array(n * 12), i, j;
@@ -679,7 +964,7 @@
     root.setAttribute("data-fx-verts", String(NV + NP));
     M = null;
     var U = {}; ["uV", "uP", "uT", "uFog", "uMir", "uMin", "uPS", "uW", "uWP", "uWS", "uOff", "uK", "uDim", "uPt", "uR", "uHole", "uHC", "uWt"].forEach(function (n) { U[n] = gl.getUniformLocation(pr, n); });
-    gl.disable(gl.DEPTH_TEST); gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE);
+    gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE);
     gl.clearColor(0, 0, 0, 0);
 
     var w = 0, h = 0, dpr = 1, mobile = false, fig = null, lh = null, R = new Float32Array(16);
@@ -718,8 +1003,10 @@
       pose(scrollY, E);
       var e = [E[0] + mx * 1.1 + Math.sin(t * 0.07) * 0.4, E[1] - my * 0.5 + Math.sin(t * 0.05 + 1) * 0.2, E[2]];
       var o = [E[3] + mx * 0.6 + Math.sin(t * 0.06 + 2) * 0.6, E[4] - my * 0.4, E[5]];
-      gl.uniformMatrix4fv(U.uV, false, look(e, o));
-      gl.uniformMatrix4fv(U.uP, false, persp((mobile ? 62 : 50) * Math.PI / 180, w / h, 0.3, 900));
+      var view=look(e,o), projection=persp((mobile?62:50)*Math.PI/180,w/h,.3,900);
+      gl.useProgram(pr);
+      gl.uniformMatrix4fv(U.uV, false, view);
+      gl.uniformMatrix4fv(U.uP, false, projection);
       gl.uniform1f(U.uT, t); gl.uniform1f(U.uFog, E[6]);
       gl.uniform4f(U.uW, W.freq, W.phase, W.bend, t); gl.uniform4f(U.uWP, P.x, P.y, P.k, W.aspect); gl.uniform2f(U.uWS, W.scale * W.amp, W.scroll);
       // reading blocks → device-pixel rectangles (GL y is up)
@@ -729,7 +1016,7 @@
         if (r) { R[i * 4] = r[0] * dpr; R[i * 4 + 1] = (h - r[3]) * dpr; R[i * 4 + 2] = r[2] * dpr; R[i * 4 + 3] = (h - r[1]) * dpr; }
         else { R[i * 4] = R[i * 4 + 1] = R[i * 4 + 2] = R[i * 4 + 3] = -1e4; }
       }
-      gl.uniform4fv(U.uR, R); gl.uniform1f(U.uDim, mobile ? 0.34 : 0.4);   // r20B: milder (was 0.06 / 0.1); text-shadow carries the copy
+      gl.uniform4fv(U.uR, R); gl.uniform1f(U.uDim, mobile ? 0.18 : 0.20);   // r20B: milder (was 0.06 / 0.1); text-shadow carries the copy
       var cr = heroCopy && heroCopy.getBoundingClientRect();
       if (cr && cr.bottom > 0 && cr.width) gl.uniform4f(U.uHC, (cr.left + cr.width / 2) * dpr, (h - (cr.top + cr.height / 2)) * dpr, (cr.width / 2 + 60) * dpr, (cr.height / 2 + 50) * dpr);
       else gl.uniform4f(U.uHC, -1e5, -1e5, 1, 1);
@@ -744,19 +1031,25 @@
         var nx = Math.round(-mx * 10), ny = Math.round(Math.min(scrollY, h) * 0.12);
         if (nx !== hx || ny !== hy) { hx = nx; hy = ny; fig.style.translate = nx + "px " + ny + "px"; }
       }
-      var K = HI ? 0.5 : 0.6;
-      gl.clear(gl.COLOR_BUFFER_BIT);
+      var K = HI ? 0.50 : 0.52;
+      gl.depthMask(true);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+      // Resolve opaque architectural parts before drawing their fine visible edges.
+      loc.forEach(function(s){gl.disableVertexAttribArray(s[0]);});
+      gl.useProgram(depthPr);gl.uniformMatrix4fv(depthV,false,view);gl.uniformMatrix4fv(depthP,false,projection);
+      gl.bindBuffer(gl.ARRAY_BUFFER,depthBuffer);gl.enableVertexAttribArray(depthLoc);gl.vertexAttribPointer(depthLoc,3,gl.FLOAT,false,12,0);
+      gl.colorMask(false,false,false,false);gl.drawArrays(gl.TRIANGLES,0,NT);gl.colorMask(true,true,true,true);
+      gl.disableVertexAttribArray(depthLoc);gl.useProgram(pr);loc.forEach(function(s){gl.enableVertexAttribArray(s[0]);});gl.depthMask(false);
       bind(lb); gl.uniform1f(U.uPt, 0); gl.uniform1f(U.uMin, 0); gl.uniform2f(U.uOff, 0, 0);
       if (HI && !lite) { gl.uniform1f(U.uMir, 1); gl.uniform1f(U.uK, K); gl.drawArrays(gl.LINES, 0, NV); }   // reflection
       gl.uniform1f(U.uMir, 0); gl.uniform1f(U.uK, K); gl.drawArrays(gl.LINES, 0, NV);
       if (HI && !lite) {
         // r24: the weight pass (was r19's glow): the prominent lines — main members that stand out, face the light and
-        // are near — once more, a pixel over, so they read wider; the recessed and far ones stay a hairline
-        gl.uniform1f(U.uWt, 1); gl.uniform1f(U.uK, K * 0.6);
-        gl.uniform2f(U.uOff, 1.1 / c.width * dpr, -1.1 / c.height * dpr); gl.drawArrays(gl.LINES, 0, NV);
+        // are near — with a subpixel offset and restrained opacity, so the edges stay fine; the recessed and far ones stay a hairline
+        gl.uniform1f(U.uWt, 1); gl.uniform1f(U.uK, K * 0.12);
+        gl.uniform2f(U.uOff, 0.5 / c.width * dpr, -0.5 / c.height * dpr); gl.drawArrays(gl.LINES, 0, NV);
         gl.uniform1f(U.uWt, 0); gl.uniform2f(U.uOff, 0, 0);
       }
-      bind(pb); gl.uniform1f(U.uPt, 1); gl.uniform1f(U.uPS, dpr); gl.uniform1f(U.uK, HI ? 0.9 : 1);
+      bind(pb); gl.uniform1f(U.uPt, 1); gl.uniform1f(U.uPS, dpr); gl.uniform1f(U.uK, HI ? 0.65 : 0.8);
       gl.drawArrays(gl.POINTS, 0, NP);
     }
     var subbed = false;
@@ -789,8 +1082,8 @@
     if (q === "off") { flat(); return set("2d", "param"); }
     if (mm("(prefers-reduced-motion: reduce)")) { flat(); return set("2d", "reduced-motion"); }
     var tier = q === "high" ? "high" : q === "low" ? "low" : weak ? "low" : "high";
-    var gl = c.getContext("webgl", { alpha: true, antialias: tier === "high", depth: false, stencil: false, premultipliedAlpha: true, powerPreference: "low-power", failIfMajorPerformanceCaveat: tier === "high" && !q });
-    if (!gl && tier === "high" && !q) { tier = "low"; gl = c.getContext("webgl", { alpha: true, antialias: false, depth: false, powerPreference: "low-power" }); }
+    var gl = c.getContext("webgl", { alpha: true, antialias: tier === "high", depth: true, stencil: false, premultipliedAlpha: true, powerPreference: "low-power", failIfMajorPerformanceCaveat: tier === "high" && !q });
+    if (!gl && tier === "high" && !q) { tier = "low"; gl = c.getContext("webgl", { alpha: true, antialias: false, depth: true, powerPreference: "low-power" }); }
     if (!gl) { flat(); return set("2d", "no-webgl"); }
     start(gl, tier);
   } catch (e) { try { flat(); } catch (_) {} set("2d", "error"); }

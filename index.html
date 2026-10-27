@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-portrait-review="off">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -16,7 +16,7 @@
 <meta property="og:locale:alternate" content="zh_CN">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="canonical" href="https://ailiu.online/">
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v=20261027-release-1">
 <script>
 /* r12: page-level safety net. If any script fails (or the app never finishes booting), every reveal-on-scroll
    block is shown in its end state so the page never stays blank. Silent: no UI, nothing sent anywhere. */
@@ -72,7 +72,7 @@
     <div class="hero-copy">
       <p class="kicker mono" data-preset="reveal-up"><span class="live-dot" aria-hidden="true"></span><span data-en="ailiu.online · portfolio" data-zh="ailiu.online · 作品集">ailiu.online · portfolio</span></p>
       <h1 class="display hero-h" id="hero-h" data-preset="reveal-up">
-        <span data-en="I'm Louis," data-zh="我是路易斯（Louis），">I'm Louis,</span>
+        <span data-en="I'm Louis," data-zh="我是路易斯，">I'm Louis,</span>
         <span data-en="a UX designer." data-zh="一名 UX 设计师。">a UX designer.</span>
       </h1>
       <div class="hero-note" data-preset="reveal-up">
@@ -266,6 +266,7 @@
         <h2 class="slot-title" data-slot="title"></h2>
         <p class="slot-tagline" data-slot="tagline"></p>
         <p class="slot-blurb" data-slot="blurb"></p>
+        <div class="slot-row"><a class="slot-cta" data-slot="cta" target="_blank" rel="noopener"></a></div>
       </header>
       <div class="st-drawing">
         <svg class="st-svg" id="stSvg" viewBox="0 0 1000 520" preserveAspectRatio="xMinYMax meet" aria-label="One-pipe steam system schematic" role="img">
@@ -343,9 +344,9 @@
           <div class="sk-phone" id="skPhone">
             <div class="sk-island" aria-hidden="true"></div>
             <div class="sk-track" id="skTrack">
-              <div class="sk-shot is-on" id="skShot0" role="group" aria-roledescription="slide" data-label-en="1 of 3 · Home" data-label-zh="第 1 张，共 3 张 · 首页" aria-label="1 of 3 · Home"><img src="assets/suikou/home.webp" srcset="assets/suikou/home-sm.webp 400w, assets/suikou/home.webp 720w" sizes="(max-width: 760px) 66vw, 300px" width="720" height="1558" loading="lazy" decoding="async" alt="Suikou English prototype home: today's few English lines, a check-in card and the tab bar" data-alt-en="Suikou English prototype home: today's few English lines, a check-in card and the tab bar" data-alt-zh="随口英语原型首页：今天要说的几句英语、打卡卡片和底部导航"></div>
-              <div class="sk-shot" id="skShot1" role="group" aria-roledescription="slide" data-label-en="2 of 3 · Scene library" data-label-zh="第 2 张，共 3 张 · 场景库" aria-label="2 of 3 · Scene library" aria-hidden="true"><img src="assets/suikou/scenes.webp" srcset="assets/suikou/scenes-sm.webp 400w, assets/suikou/scenes.webp 720w" sizes="(max-width: 760px) 66vw, 300px" width="720" height="1558" loading="lazy" decoding="async" alt="Suikou English prototype scene library: parent–child scenes grouped as morning, heading out and meals" data-alt-en="Suikou English prototype scene library: parent–child scenes grouped as morning, heading out and meals" data-alt-zh="随口英语原型场景库：按早晨、出门、吃饭分组的亲子场景"></div>
-              <div class="sk-shot" id="skShot2" role="group" aria-roledescription="slide" data-label-en="3 of 3 · Card" data-label-zh="第 3 张，共 3 张 · 英语卡片" aria-label="3 of 3 · Card" aria-hidden="true"><img src="assets/suikou/card.webp" srcset="assets/suikou/card-sm.webp 400w, assets/suikou/card.webp 720w" sizes="(max-width: 760px) 66vw, 300px" width="720" height="1558" loading="lazy" decoding="async" alt="Suikou English prototype card: one English line, its Chinese meaning, how a child might answer, and a usage tip" data-alt-en="Suikou English prototype card: one English line, its Chinese meaning, how a child might answer, and a usage tip" data-alt-zh="随口英语原型英语卡片：一句英语、中文释义、孩子可以怎么接和使用提示"></div>
+              <div class="sk-shot is-on" id="skShot0" tabindex="0" role="group" aria-roledescription="slide" data-label-en="1 of 3 · Home" data-label-zh="第 1 张，共 3 张 · 首页" aria-label="1 of 3 · Home"><img src="assets/suikou/home-full.jpg" width="780" height="3044" loading="lazy" decoding="async" alt="Suikou English prototype home: today's few English lines, a check-in card and the tab bar" data-alt-en="Suikou English prototype home: today's few English lines, a check-in card and the tab bar" data-alt-zh="随口英语原型首页：今天要说的几句英语、打卡卡片和底部导航"></div>
+              <div class="sk-shot" id="skShot1" tabindex="-1" role="group" aria-roledescription="slide" data-label-en="2 of 3 · Scene library" data-label-zh="第 2 张，共 3 张 · 场景库" aria-label="2 of 3 · Scene library" aria-hidden="true"><img src="assets/suikou/scenes-full.jpg" width="780" height="3681" loading="lazy" decoding="async" alt="Suikou English prototype scene library: parent–child scenes grouped as morning, heading out and meals" data-alt-en="Suikou English prototype scene library: parent–child scenes grouped as morning, heading out and meals" data-alt-zh="随口英语原型场景库：按早晨、出门、吃饭分组的亲子场景"></div>
+              <div class="sk-shot" id="skShot2" tabindex="-1" role="group" aria-roledescription="slide" data-label-en="3 of 3 · Card" data-label-zh="第 3 张，共 3 张 · 英语卡片" aria-label="3 of 3 · Card" aria-hidden="true"><img src="assets/suikou/card-full.jpg" width="780" height="1986" loading="lazy" decoding="async" alt="Suikou English prototype card: one English line, its Chinese meaning, how a child might answer, and a usage tip" data-alt-en="Suikou English prototype card: one English line, its Chinese meaning, how a child might answer, and a usage tip" data-alt-zh="随口英语原型英语卡片：一句英语、中文释义、孩子可以怎么接和使用提示"></div>
             </div>
           </div>
           <div class="sk-ctl">
@@ -383,15 +384,8 @@
           <span class="slot-status mono" data-slot="status"></span>
         </div>
       </header>
-      <div class="tt-wall" id="ttWall">
-        <figure class="tt-cell c1" style="--i:0"><div class="tt-art art-peach"><span class="pch"></span><span class="lf"></span></div><figcaption><b>♪</b><span data-en="clip 01 · pending" data-zh="片段 01 · 待授权">clip 01 · pending</span><em>00:04</em></figcaption></figure>
-        <figure class="tt-cell c2" style="--i:1"><div class="tt-art art-notes"><i></i><i></i><i></i></div><figcaption><b>♪</b><span data-en="clip 02 · pending" data-zh="片段 02 · 待授权">clip 02 · pending</span><em>00:04</em></figcaption></figure>
-        <figure class="tt-cell c3" style="--i:2"><div class="tt-art art-balls"><i></i><i></i><i></i></div><figcaption><b>♪</b><span data-en="clip 03 · pending" data-zh="片段 03 · 待授权">clip 03 · pending</span><em>00:03</em></figcaption></figure>
-        <figure class="tt-cell c4" style="--i:3"><div class="tt-art art-rainbow"><i></i><i></i><i></i><i></i></div><figcaption><b>♪</b><span data-en="clip 04 · pending" data-zh="片段 04 · 待授权">clip 04 · pending</span><em>00:04</em></figcaption></figure>
-        <figure class="tt-cell c5" style="--i:4"><div class="tt-art art-moon"><span class="moon"></span><i></i><i></i><i></i><i></i></div><figcaption><b>♪</b><span data-en="clip 05 · pending" data-zh="片段 05 · 待授权">clip 05 · pending</span><em>00:03</em></figcaption></figure>
-        <figure class="tt-cell c6" style="--i:5"><div class="tt-art art-ducks"><span class="duck"></span><span class="duck d2"></span><i class="wv"></i></div><figcaption><b>♪</b><span data-en="clip 06 · pending" data-zh="片段 06 · 待授权">clip 06 · pending</span><em>00:04</em></figcaption></figure>
-      </div>
-      <p class="mock-note mono tt-note" data-en="Animated stand-ins · real clips to come" data-zh="动画占位 · 真实片段待替换">Animated stand-ins · real clips to come</p>
+      <div class="tt-wall" id="ttWall"></div>
+      <p class="mock-note mono tt-note" data-en="Original songs · open a card to watch on YouTube" data-zh="原创儿歌 · 点击卡片观看 YouTube 完整版">Original songs · open a card to watch on YouTube</p>
     </div>
   </div>
 </section>
@@ -459,7 +453,7 @@
   <!-- r21: the footer is a display line, the contact row on the twelve-column grid (mono label in columns 1–3, handles in
        4–12), the voiceprint strip, then the © / back-to-top line ("How this site is made" and the build log removed) -->
   <div class="wrap foot">
-    <h2 class="display foot-h"><span data-en="Want to make" data-zh="想一起">Want to make</span> <span data-en="something together?" data-zh="做点什么？">something together?</span></h2>
+    <h2 class="display foot-h" id="footTitle"></h2>
     <div class="foot-row">
       <p class="foot-k mono"><span data-en="Contact" data-zh="联系">Contact</span></p>
       <ul class="foot-links" id="footContact"></ul>
@@ -476,10 +470,11 @@
 </footer>
 </main>
 
-<script src="content/manifest.js"></script>
+<script src="content/manifest.js?v=20261027-release-1"></script>
 <script src="louis-data.js"></script>
-<script src="louis.js"></script>
-<script src="fx3d.js"></script>
-<script src="app.js"></script>
+<script src="louis-refine.js?v=20261027-release-1"></script>
+<script src="louis.js?v=20261027-release-1"></script>
+<script src="fx3d.js?v=20261027-release-1"></script>
+<script src="app.js?v=20261027-release-1"></script>
 </body>
 </html>
